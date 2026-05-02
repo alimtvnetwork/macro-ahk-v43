@@ -1,42 +1,6 @@
 {
-  "GeneratedAt": "2026-05-01T08:11:58.536Z",
+  "GeneratedAt": "2026-05-02T15:34:50.273Z",
   "Items": [
-    {
-      "Id": "a2e58908054f",
-      "Severity": "P0",
-      "File": "src/background/handlers/injection-wrapper.ts",
-      "Line": 48,
-      "Rule": "no-empty-catch",
-      "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
-      "Snippet": "catch {"
-    },
-    {
-      "Id": "d808307c97a9",
-      "Severity": "P0",
-      "File": "src/background/handlers/logging-handler.ts",
-      "Line": 281,
-      "Rule": "no-empty-catch",
-      "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
-      "Snippet": "catch {"
-    },
-    {
-      "Id": "488e0b3fa59b",
-      "Severity": "P0",
-      "File": "src/background/script-resolver.ts",
-      "Line": 75,
-      "Rule": "no-empty-catch",
-      "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
-      "Snippet": "catch {"
-    },
-    {
-      "Id": "31f438bb2aa4",
-      "Severity": "P0",
-      "File": "src/background/service-worker-main.ts",
-      "Line": 39,
-      "Rule": "no-empty-catch",
-      "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
-      "Snippet": "catch {"
-    },
     {
       "Id": "ea4ec7cbb1e9",
       "Severity": "P1",
