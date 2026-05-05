@@ -470,8 +470,9 @@ function FloatingShell(props: {
             ref={containerRef}
             className={cn(
                 "fixed z-[2147483600]",
-                // Default top-right anchor only when the user hasn't dragged yet.
-                positioned ? null : "top-4 right-4",
+                // Default bottom-right anchor only when the user hasn't dragged yet.
+                // Keep the controller away from Options header CTAs such as "New Project".
+                positioned ? null : "bottom-4 right-4",
                 "rounded-lg border border-border bg-card/95 backdrop-blur",
                 "shadow-lg shadow-black/30 text-card-foreground",
                 "p-2 flex flex-col gap-1",
