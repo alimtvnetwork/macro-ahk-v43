@@ -39,6 +39,8 @@ const LibraryView = lazy(() => import("@/components/options/LibraryView"));
 const StepGroupLibraryPanel = lazy(() => import("@/components/options/StepGroupLibraryPanel"));
 const StepGroupListPanel = lazy(() => import("@/components/options/StepGroupListPanel"));
 const ErrorSwallowAuditView = lazy(() => import("@/components/options/ErrorSwallowAuditView"));
+const SECTION_STEP_GROUPS: SidebarSection = "step-groups";
+const HASH_STEP_GROUPS_LIST = "step-groups-list";
 
 function LazyFallback() {
   return (
@@ -115,6 +117,7 @@ function getChromeRuntime(): ChromeRuntimeLike | undefined {
 const OptionsPage = () => {
   const mountTime = useRef(performance.now());
   const mountBudgetMs = useRef(1000);
+  const hideFloatingControllerForE2E = new URLSearchParams(window.location.search).get("e2eHideFloatingController") === "1";
   const { isComplete, loading: onboardingLoading, completeOnboarding } = useOnboarding();
   const { projects, loading: pLoading, save: pSave, remove: pRemove } = useProjects();
   const { scripts, loading: sLoading, save: sSave, remove: sRemove } = useScripts();
@@ -168,10 +171,10 @@ const OptionsPage = () => {
     const validSections: SidebarSection[] = [
       "projects", "scripts", "prompts", "activity", "logging",
       "automation", "updaters", "timing", "data", "network",
-      "storage", "api", "library", "step-groups", "settings", "about", "audit",
+      "storage", "api", "library", SECTION_STEP_GROUPS, "settings", "about", "audit",
     ];
-    if (hash === "step-groups-list") {
-      return { section: "step-groups", stepGroupView: "list" };
+    if (hash === HASH_STEP_GROUPS_LIST) {
+      return { section: SECTION_STEP_GROUPS, stepGroupView: "list" };
     }
     if (hash !== "" && validSections.includes(hash as SidebarSection)) {
       return { section: hash as SidebarSection, stepGroupView: "tree" };
@@ -388,7 +391,7 @@ const OptionsPage = () => {
       <div className="min-h-screen flex w-full">
         {stateMarker}
         <Toaster />
-        <FloatingControllerHost />
+        {hideFloatingControllerForE2E ? null : <FloatingControllerHost />}
         <OptionsSidebar selection={selection} onSelect={handleSidebarSelect} onErrorDrawerOpen={() => setErrorDrawerOpen(true)} />
 
         <div className="flex-1 flex flex-col">
@@ -539,13 +542,13 @@ const OptionsPage = () => {
                 <StorageBrowserView />
               ) : selection.section === "library" ? (
                 <LibraryView />
-              ) : selection.section === "step-groups" ? (
+              ) : selection.section === SECTION_STEP_GROUPS ? (
                 <StepGroupsSection
                   view={stepGroupView}
                   onViewChange={(v: "tree" | "list") => {
                     setStepGroupView(v);
                     // Keep the URL in sync so refresh / share preserves the sub-view.
-                    const nextHash = v === "list" ? "step-groups-list" : "step-groups";
+                    const nextHash = v === "list" ? HASH_STEP_GROUPS_LIST : SECTION_STEP_GROUPS;
                     if (window.location.hash !== `#${nextHash}`) {
                       history.replaceState(null, "", `#${nextHash}`);
                     }

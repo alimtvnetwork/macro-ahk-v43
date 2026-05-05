@@ -53,6 +53,8 @@ const ONBOARDING_KEY = 'marco_onboarding_complete';
 const INTERACTIVE_LOG_PREFIX = '[Options] ── INTERACTIVE ──';
 const INTERACTIVE_TIMEOUT_MS = 15_000;
 const FLOATING_CONTROLLER_SELECTOR = '[data-testid^="floating-controller"]';
+const FLOATING_CONTROLLER_STYLE_ID = 'e2e-disable-floating-controller';
+const OPTIONS_PROJECTS_E2E_QUERY = '?e2eHideFloatingController=1#projects';
 
 /**
  * Seed `marco_onboarding_complete = true` from the service worker AND read it
@@ -90,6 +92,33 @@ async function ensureOnboardingSeededFromPage(page: Page): Promise<boolean> {
   }, ONBOARDING_KEY);
 }
 
+async function installFloatingControllerBlocker(page: Page): Promise<void> {
+  await page.addInitScript(
+    ({ selector, styleId }: { selector: string; styleId: string }) => {
+      const hideController = () => {
+        if (document.getElementById(styleId) === null) {
+          const style = document.createElement('style');
+          style.id = styleId;
+          style.textContent = `${selector} { display: none !important; pointer-events: none !important; visibility: hidden !important; }`;
+          document.documentElement.appendChild(style);
+        }
+
+        for (const node of document.querySelectorAll(selector)) {
+          if (node instanceof HTMLElement) {
+            node.style.setProperty('display', 'none', 'important');
+            node.style.setProperty('pointer-events', 'none', 'important');
+            node.style.setProperty('visibility', 'hidden', 'important');
+          }
+        }
+      };
+
+      hideController();
+      new MutationObserver(hideController).observe(document.documentElement, { childList: true, subtree: true });
+    },
+    { selector: FLOATING_CONTROLLER_SELECTOR, styleId: FLOATING_CONTROLLER_STYLE_ID },
+  );
+}
+
 /**
  * The recorder overlay is unrelated to project CRUD but lives above the full
  * Options page (`z-[2147483600]`). In CI its compact default position can cover
@@ -98,13 +127,14 @@ async function ensureOnboardingSeededFromPage(page: Page): Promise<boolean> {
  */
 async function disableFloatingControllerHitTarget(page: Page): Promise<void> {
   await page.addStyleTag({
-    content: `${FLOATING_CONTROLLER_SELECTOR} { display: none !important; pointer-events: none !important; }`,
+    content: `${FLOATING_CONTROLLER_SELECTOR} { display: none !important; pointer-events: none !important; visibility: hidden !important; }`,
   });
   await page.locator(FLOATING_CONTROLLER_SELECTOR).evaluateAll((nodes) => {
     for (const node of nodes) {
       if (node instanceof HTMLElement) {
-        node.style.display = 'none';
-        node.style.pointerEvents = 'none';
+        node.style.setProperty('display', 'none', 'important');
+        node.style.setProperty('pointer-events', 'none', 'important');
+        node.style.setProperty('visibility', 'hidden', 'important');
       }
     }
   });
@@ -174,13 +204,14 @@ async function captureDiagnostic(page: Page, label: string): Promise<string> {
  */
 async function openProjectsView(context: BrowserContext, extensionId: string): Promise<Page> {
   const page = await context.newPage();
+  await installFloatingControllerBlocker(page);
 
   // Stage 3: subscribe BEFORE navigation so we never miss the interactive log.
   const interactive = waitForOptionsInteractive(page, INTERACTIVE_TIMEOUT_MS);
 
   // Force #projects in the initial URL so parseHash never picks up a stale
   // section from a prior in-context navigation.
-  await page.goto(`${optionsUrl(extensionId)}#projects`);
+  await page.goto(`${optionsUrl(extensionId)}${OPTIONS_PROJECTS_E2E_QUERY}`);
   await page.waitForLoadState('domcontentloaded');
 
   // Stage 2: re-seed from the page context to defeat MV3 SW teardown races.
@@ -225,7 +256,18 @@ async function openProjectsView(context: BrowserContext, extensionId: string): P
 }
 
 async function createProject(page: Page, name: string): Promise<void> {
-  await page.getByRole('button', { name: /^new project$/i }).click();
+  const newProjectBtn = page.getByRole('button', { name: /^new project$/i });
+  await expect(newProjectBtn).toBeVisible({ timeout: SETUP_TIMEOUT_MS });
+  await disableFloatingControllerHitTarget(page);
+  await newProjectBtn.evaluate((node) => {
+    if (!(node instanceof HTMLButtonElement)) {
+      throw new Error('[e2e-02] New Project target is not an HTML button.');
+    }
+    if (node.disabled) {
+      throw new Error('[e2e-02] New Project button is disabled.');
+    }
+    node.click();
+  });
   const nameInput = page.getByPlaceholder(/^project name$/i);
   await expect(nameInput).toBeVisible({ timeout: 10_000 });
   await nameInput.fill(name);
