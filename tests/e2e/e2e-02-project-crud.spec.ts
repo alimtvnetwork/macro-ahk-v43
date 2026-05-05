@@ -52,6 +52,7 @@ const SETUP_TIMEOUT_MS = 20_000;
 const ONBOARDING_KEY = 'marco_onboarding_complete';
 const INTERACTIVE_LOG_PREFIX = '[Options] ── INTERACTIVE ──';
 const INTERACTIVE_TIMEOUT_MS = 15_000;
+const FLOATING_CONTROLLER_SELECTOR = '[data-testid^="floating-controller"]';
 
 /**
  * Seed `marco_onboarding_complete = true` from the service worker AND read it
@@ -87,6 +88,26 @@ async function ensureOnboardingSeededFromPage(page: Page): Promise<boolean> {
     const result = await chrome.storage.local.get(key);
     return result[key] === true;
   }, ONBOARDING_KEY);
+}
+
+/**
+ * The recorder overlay is unrelated to project CRUD but lives above the full
+ * Options page (`z-[2147483600]`). In CI its compact default position can cover
+ * the header CTA and make Playwright wait until the test times out. Hide it for
+ * this suite so assertions exercise ProjectsListView directly.
+ */
+async function disableFloatingControllerHitTarget(page: Page): Promise<void> {
+  await page.addStyleTag({
+    content: `${FLOATING_CONTROLLER_SELECTOR} { display: none !important; pointer-events: none !important; }`,
+  });
+  await page.locator(FLOATING_CONTROLLER_SELECTOR).evaluateAll((nodes) => {
+    for (const node of nodes) {
+      if (node instanceof HTMLElement) {
+        node.style.display = 'none';
+        node.style.pointerEvents = 'none';
+      }
+    }
+  });
 }
 
 /**
@@ -168,6 +189,8 @@ async function openProjectsView(context: BrowserContext, extensionId: string): P
     await captureDiagnostic(page, 'page-reseed-failed');
     throw new Error('[e2e-02] Page-side onboarding re-seed did not commit.');
   }
+
+  await disableFloatingControllerHitTarget(page);
 
   // Stage 3: await interactivity. The Options page exposes a deterministic
   // DOM marker (`[data-testid="options-state-marker"][data-branch="ready"]`)
