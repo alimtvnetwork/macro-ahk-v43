@@ -699,11 +699,15 @@ function Remove-PathSafely {
     try {
         Rename-Item -LiteralPath $Path -NewName (Split-Path -Leaf $rotated) -Force -ErrorAction Stop
     } catch {
-        # If even rename fails, schedule the original path itself.
-        # Still informational — the new install can land alongside.
-        Write-Note "Could not rotate locked path; scheduling original for reboot delete:"
+        # If even in-process rename fails (e.g. file held with
+        # FileShare.None), ask the kernel to perform the rename at next
+        # reboot via MoveFileEx + MOVEFILE_DELAY_UNTIL_REBOOT. This still
+        # produces the canonical `.<leaf>.delete-pending-marco-<runid>`
+        # destination so post-reboot sweeps can attribute & clean it up.
+        Write-Note "Could not rotate locked path in-process; scheduling rename-on-reboot:"
         Write-Host "    $Path" -ForegroundColor DarkGray
-        Invoke-DelayedDelete -path $Path -reason $Reason | Out-Null
+        Write-Host "    -> $rotated" -ForegroundColor DarkGray
+        Invoke-DelayedRename -source $Path -destination $rotated -reason $Reason | Out-Null
         return
     }
 
