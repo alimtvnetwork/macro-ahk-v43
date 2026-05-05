@@ -48,10 +48,10 @@ import { launchExtension, getExtensionId, optionsUrl } from './fixtures';
  * Priority: P0 | Auto: ✅ | Est: 3 min
  */
 
-const SETUP_TIMEOUT_MS = 30_000;
+const SETUP_TIMEOUT_MS = 20_000;
 const ONBOARDING_KEY = 'marco_onboarding_complete';
 const INTERACTIVE_LOG_PREFIX = '[Options] ── INTERACTIVE ──';
-const INTERACTIVE_TIMEOUT_MS = 20_000;
+const INTERACTIVE_TIMEOUT_MS = 15_000;
 
 /**
  * Seed `marco_onboarding_complete = true` from the service worker AND read it
@@ -221,6 +221,12 @@ async function createProject(page: Page, name: string): Promise<void> {
  * Onboarding races) is now eliminated by stages 1–3.
  */
 test.describe.serial('E2E-02 — Project CRUD Lifecycle', () => {
+  // Each test walks four readiness gates (SW seed → page reseed → interactive
+  // log → "New Project" CTA) before any UI assertion. Worst-case stacking of
+  // those waits plus the actual CRUD interactions exceeds the global 60s
+  // budget on a cold CI runner, so we widen this suite's per-test timeout.
+  test.setTimeout(120_000);
+
   let context: BrowserContext;
   let extensionId: string;
 
