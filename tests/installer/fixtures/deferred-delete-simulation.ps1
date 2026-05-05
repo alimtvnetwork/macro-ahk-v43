@@ -362,6 +362,18 @@ function global:Rename-Item {
     throw (New-AccessDeniedException)
 }
 
+# Override Invoke-DelayedRename to simulate MoveFileEx scheduling failing,
+# forcing fallback to Invoke-DelayedDelete on the original source path.
+# (The real Invoke-DelayedRename would call the real Win32 MoveFileEx,
+# which on a non-locked test path actually succeeds — bypassing the
+# fallback we're trying to assert here.)
+function global:Invoke-DelayedRename([string]$source, [string]$destination, [string]$reason) {
+    Write-Note "Could not rotate locked path; scheduling original for reboot delete:"
+    Write-Host "    $source" -ForegroundColor DarkGray
+    Write-Host "    Reason: $reason" -ForegroundColor DarkGray
+    return (Invoke-DelayedDelete -path $source -reason "$reason (rename-on-reboot mocked failure)")
+}
+
 # Path must exist for Remove-PathSafely to enter the failure branch.
 $pseudoPath = Join-Path ([System.IO.Path]::GetTempPath()) "marco-sim-locked-$([guid]::NewGuid().ToString('N').Substring(0,8))"
 New-Item -ItemType Directory -Path $pseudoPath -Force | Out-Null
