@@ -8,6 +8,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased] — Webhook delivery result types
 
+---
+
+## [v2.231.0] — 2026-05-06
+
+### Changed
+- **Version bump**: 2.230.0 → 2.231.0 across all 11 version-carrying files (manifest, `src/shared/constants.ts`, and standalone-scripts: `lovable-common`, `lovable-owner-switch`, `lovable-user-add`, `macro-controller` (instruction + shared-state), `marco-sdk`, `payment-banner-hider` (index + instruction), `xpath`).
+- Verified with `node scripts/check-version-sync.mjs` — all version strings synchronized.
+
+### Fixed
+- **CI — Quality Badges workflow** (`.github/workflows/quality-badges.yml`): no longer hard-fails when neither `CODACY_PROJECT_ID` nor `CODECLIMATE_REPO_TOKEN` is configured. The verify step now emits a `::notice::`, sets `skip=true`, and exits 0; downstream badge verification and summary steps are gated on `steps.verify_secrets.outputs.skip != 'true'`.
+- **CI — Release artifact upload**: prior fix for `gh: Resource not accessible by integration (HTTP 403)` retained.
+
 ### Changed
 - **`WebhookDeliveryResult` is now a discriminated union** keyed by the `Kind` field (`"success" | "skipped" | "failure"`). Each variant is exported from `src/background/recorder/step-library/result-webhook.ts` as `WebhookDeliverySuccess`, `WebhookDeliverySkipped`, and `WebhookDeliveryFailure`.
 - Added runtime validator `validateWebhookDeliveryResult(raw)` — corrupt/legacy log entries are now surfaced as a synthetic `WebhookDeliveryFailure` with a clear `Corrupt webhook log entry — …` message instead of rendering `undefined` in the UI.
