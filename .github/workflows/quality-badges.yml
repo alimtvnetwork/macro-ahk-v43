@@ -61,20 +61,23 @@ jobs:
           node-version: "20"
 
       - name: Verify at least one secret is configured
+        id: verify_secrets
         env:
           CODACY_PROJECT_ID: ${{ secrets.CODACY_PROJECT_ID }}
           CODECLIMATE_REPO_TOKEN: ${{ secrets.CODECLIMATE_REPO_TOKEN }}
         run: |
           if [ -z "$CODACY_PROJECT_ID" ] && [ -z "$CODECLIMATE_REPO_TOKEN" ]; then
-            echo "::error::Neither CODACY_PROJECT_ID nor CODECLIMATE_REPO_TOKEN is set."
-            echo "Add at least one in Settings → Secrets and variables → Actions."
-            exit 1
+            echo "::notice::Neither CODACY_PROJECT_ID nor CODECLIMATE_REPO_TOKEN is set — skipping badge verification."
+            echo "To enable, add at least one in Settings → Secrets and variables → Actions."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           # Surface which providers will be checked, without leaking values.
           [ -n "$CODACY_PROJECT_ID" ]      && echo "✓ Codacy secret present"      || echo "↷ Codacy secret missing — skipping"
           [ -n "$CODECLIMATE_REPO_TOKEN" ] && echo "✓ Code Climate secret present" || echo "↷ Code Climate secret missing — skipping"
 
       - name: Run badge script with --check
+        if: steps.verify_secrets.outputs.skip != 'true'
         env:
           CODACY_PROJECT_ID: ${{ secrets.CODACY_PROJECT_ID }}
           CODECLIMATE_REPO_TOKEN: ${{ secrets.CODECLIMATE_REPO_TOKEN }}
@@ -96,6 +99,6 @@ jobs:
             echo "## Quality badge report"
             echo ""
             echo '```'
-            cat badge-report.txt 2>/dev/null || echo "(no report produced)"
+            cat badge-report.txt 2>/dev/null || echo "(no report produced — no badge secrets configured)"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
