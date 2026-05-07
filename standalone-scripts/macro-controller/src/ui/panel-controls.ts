@@ -112,7 +112,12 @@ export function buildButtonRow(deps: PanelBuilderDeps): ButtonRowResult {
   // the button row must keep gap+padding regardless of container width.
   // This guarantees the row holds a consistent layout even when the panel
   // is restored from a minimized state inside a narrow Lovable sidebar.
-  btnRow.style.cssText = 'display:flex;gap:8px;row-gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;padding:8px 10px 10px;min-width:460px;margin:0 auto;box-sizing:border-box;';
+  // v2.233.0: Removed `min-width:460px` — it forced the button row wider than
+  // the panel's `overflow:hidden` content area, clipping the rightmost buttons
+  // (menu/error toggle) when the panel is at its default 494px width inside
+  // a narrow Lovable sidebar. Flex-wrap already keeps the buttons readable
+  // at any width, so the min-width was the sole cause of the clipping bug.
+  btnRow.style.cssText = 'display:flex;gap:8px;row-gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;padding:8px 10px 10px;width:100%;margin:0 auto;box-sizing:border-box;';
 
   const btnStyle = 'padding:6px 14px;border:none;border-radius:8px;font-weight:600;font-size:' + tFontSm + ';cursor:pointer;transition:all ' + trNormal + ';line-height:1;height:34px;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;';
 
