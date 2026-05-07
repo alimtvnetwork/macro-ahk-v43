@@ -267,6 +267,15 @@ jobs:
       - name: Assert changelog.md has an entry for EXTENSION_VERSION
         run: node scripts/check-changelog-entry.mjs
 
+      - name: Self-test the changelog-entry checker (synthetic fixtures)
+        # Runs the script-level test suite for check-changelog-entry.mjs
+        # using `node --test`. Validates exit codes + diagnostic
+        # messages for every documented failure mode (missing manifest,
+        # invalid JSON, missing version, wrong heading shape, em-dash
+        # vs hyphen, missing date/title, invalid date, missing entry
+        # with nearest-entries hint). No deps; runs in ~1s.
+        run: node --test scripts/__tests__/check-changelog-entry.test.mjs
+
   # ════════════════════════════════════════════════════════════
   # Job 0a3: PascalCase instruction migration — fast-fail guard
   #
