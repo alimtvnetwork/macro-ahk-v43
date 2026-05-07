@@ -93,7 +93,7 @@ if (!canonicalMatch) {
 
 // Extra sanity: date components must be plausible (month 01-12, day 01-31).
 const [, dateStr] = canonicalMatch;
-const [, mm, dd] = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+const [, , mm, dd] = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
 const month = Number(mm);
 const day = Number(dd);
 if (month < 1 || month > 12 || day < 1 || day > 31) {
