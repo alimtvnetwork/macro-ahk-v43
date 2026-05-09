@@ -411,11 +411,10 @@ function reportProject(name, result) {
 
         if (res.parseError) {
             process.stderr.write(
-                `\n┌─ ✗ ${name} ${label.trim()} — JSON parse error ───────────────\n` +
-                `│  file (relative): ${fileRel}\n` +
-                `│  file (absolute): ${fileAbs}\n` +
-                `│  error:           ${res.parseError}\n` +
-                `└──────────────────────────────────────────────────────────────\n`,
+                `\n[FAIL] ${name} ${label.trim()} - JSON parse error\n` +
+                `  file (relative): ${fileRel}\n` +
+                `  file (absolute): ${fileAbs}\n` +
+                `  error:           ${res.parseError}\n`,
             );
             annotateFile(fileRel, `Invalid JSON in ${fileRel}: ${res.parseError}`);
             failures.push({ project: name, label: label.trim(), shape, fileRel, fileAbs, kind: "parse-error", count: 1 });
@@ -428,13 +427,12 @@ function reportProject(name, result) {
                 ? `tree exceeded MAX_NODES=${a.limit} (visited ${a.nodes} nodes before aborting at ${a.path})`
                 : `tree exceeded MAX_DEPTH=${a.limit} (depth ${a.depth} at ${a.path})`;
             process.stderr.write(
-                `\n┌─ ✗ ${name} ${label.trim()} — walker aborted ─────────────────\n` +
-                `│  file (relative): ${fileRel}\n` +
-                `│  file (absolute): ${fileAbs}\n` +
-                `│  reason:          ${explain}\n` +
-                `│  partial scan:    ${res.violations.length} violation(s) before abort\n` +
-                `│  override:        INSTRUCTION_CASING_MAX_NODES / INSTRUCTION_CASING_MAX_DEPTH env vars\n` +
-                `└──────────────────────────────────────────────────────────────\n`,
+                `\n[FAIL] ${name} ${label.trim()} - walker aborted\n` +
+                `  file (relative): ${fileRel}\n` +
+                `  file (absolute): ${fileAbs}\n` +
+                `  reason:          ${explain}\n` +
+                `  partial scan:    ${res.violations.length} violation(s) before abort\n` +
+                `  override:        INSTRUCTION_CASING_MAX_NODES / INSTRUCTION_CASING_MAX_DEPTH env vars\n`,
             );
             // Walker-aborted: emit the file-level summary AND per-key
             // annotations for whatever partial violations were collected
@@ -451,7 +449,7 @@ function reportProject(name, result) {
             continue;
         }
         if (res.violations.length === 0) {
-            console.log(`✓ ${name} ${label} — ${fileRel} is pure ${shape}`);
+            console.log(`[OK] ${name} ${label} - ${fileRel} is pure ${shape}`);
             continue;
         }
 
