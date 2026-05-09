@@ -1,5 +1,12 @@
 #!/usr/bin/env node
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+
+const LOCAL_NODE_BINARIES = {
+    tsc: "node_modules/typescript/bin/tsc",
+    vite: "node_modules/vite/bin/vite.js",
+};
 
 const PROJECTS = {
     "lovable-common": [
@@ -46,7 +53,16 @@ if (!project || !(project in PROJECTS)) {
 for (const [cmd, args] of PROJECTS[project]) {
     const finalArgs = cmd === "vite" && mode === "development" ? [...args, "--mode", "development"] : args;
     console.log(`[build-step] ${project}: ${cmd} ${finalArgs.join(" ")}`);
-    const result = spawnSync(cmd, finalArgs, { stdio: "inherit", shell: process.platform === "win32" });
+    const localBinary = LOCAL_NODE_BINARIES[cmd];
+    const resolvedCommand = localBinary ? process.execPath : process.execPath;
+    const resolvedArgs = localBinary ? [localBinary, ...finalArgs] : finalArgs;
+    const requiredPath = localBinary ? join(process.cwd(), localBinary) : null;
+    if (requiredPath && !existsSync(requiredPath)) {
+        console.error(`[FAIL] ${project}: missing local executable at ${requiredPath}`);
+        console.error(`[FAIL] ${project}: missing item=${localBinary}; Reason=DependencyBinaryMissing; ReasonDetail=run pnpm install before standalone builds`);
+        process.exit(2);
+    }
+    const result = spawnSync(resolvedCommand, resolvedArgs, { stdio: "inherit", shell: false });
     if (result.error) {
         console.error(`[FAIL] ${project}: could not start ${cmd}: ${result.error.message}`);
         process.exit(2);
