@@ -881,6 +881,9 @@ jobs:
       - name: Preflight · no nested pnpm run in build scripts
         run: node scripts/check-no-nested-pnpm-run.mjs
 
+      - name: Preflight · pnpm built dependencies approved
+        run: node scripts/check-pnpm-built-dependencies.mjs
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
