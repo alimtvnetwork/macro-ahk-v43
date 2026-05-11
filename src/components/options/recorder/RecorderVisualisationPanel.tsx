@@ -243,8 +243,15 @@ export default function RecorderVisualisationPanel({ projectSlug }: Props) {
     }
     if (error) {
         return (
-            <div className="text-xs text-destructive p-4 border border-destructive/40 rounded-md bg-destructive/5 font-mono">
-                {error}
+            <div className="space-y-3">
+                <div className="text-xs text-destructive p-3 border border-destructive/40 rounded-md bg-destructive/5 font-mono">
+                    {error}
+                </div>
+                <RecorderEmptyState
+                    projectSlug={projectSlug}
+                    hasDbError={true}
+                    onReload={() => { void reload(); }}
+                />
             </div>
         );
     }
