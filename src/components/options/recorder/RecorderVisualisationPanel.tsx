@@ -113,7 +113,13 @@ export default function RecorderVisualisationPanel({ projectSlug }: Props) {
                 toast.success("Step deleted");
                 await reload();
             } catch (err) {
-                toast.error(err instanceof Error ? err.message : "Failed to delete step");
+                const msg = err instanceof Error ? err.message : "Failed to delete step";
+                toast.error(msg);
+                logError(
+                    "RecorderVisualisationPanel.delete",
+                    `RECORDER_STEP_DELETE failed for project='${projectSlug}' stepId=${stepId}: ${msg}`,
+                    err,
+                );
             }
         },
         [projectSlug, reload],
@@ -127,11 +133,17 @@ export default function RecorderVisualisationPanel({ projectSlug }: Props) {
                 await updateStepMeta(stepId, { Description: description });
                 toast.success("Description updated");
             } catch (err) {
-                toast.error(err instanceof Error ? err.message : "Failed to update description");
+                const msg = err instanceof Error ? err.message : "Failed to update description";
+                toast.error(msg);
+                logError(
+                    "RecorderVisualisationPanel.description",
+                    `updateStepMeta(Description) failed for project='${projectSlug}' stepId=${stepId}: ${msg}`,
+                    err,
+                );
                 throw err;
             }
         },
-        [updateStepMeta],
+        [projectSlug, updateStepMeta],
     );
 
     const handleTagsSave = useCallback(
@@ -139,11 +151,17 @@ export default function RecorderVisualisationPanel({ projectSlug }: Props) {
             try {
                 await setStepTags(stepId, tags);
             } catch (err) {
-                toast.error(err instanceof Error ? err.message : "Failed to update tags");
+                const msg = err instanceof Error ? err.message : "Failed to update tags";
+                toast.error(msg);
+                logError(
+                    "RecorderVisualisationPanel.tags",
+                    `setStepTags failed for project='${projectSlug}' stepId=${stepId} tags=[${tags.join(",")}]: ${msg}`,
+                    err,
+                );
                 throw err;
             }
         },
-        [setStepTags],
+        [projectSlug, setStepTags],
     );
 
     const handleLinkChange = useCallback(
@@ -160,11 +178,17 @@ export default function RecorderVisualisationPanel({ projectSlug }: Props) {
                         : `${slot} → ${targetProjectSlug}`,
                 );
             } catch (err) {
-                toast.error(err instanceof Error ? err.message : "Failed to update link");
+                const msg = err instanceof Error ? err.message : "Failed to update link";
+                toast.error(msg);
+                logError(
+                    "RecorderVisualisationPanel.link",
+                    `setStepLink(${slot}=${targetProjectSlug ?? "null"}) failed for project='${projectSlug}' stepId=${stepId}: ${msg}`,
+                    err,
+                );
                 throw err;
             }
         },
-        [setStepLink],
+        [projectSlug, setStepLink],
     );
 
     const handleExport = useCallback(
@@ -178,7 +202,13 @@ export default function RecorderVisualisationPanel({ projectSlug }: Props) {
                 downloadRecorderExport({ projectSlug, data, tagsByStep }, format);
                 toast.success(`Exported ${data.steps.length} step(s) as ${format.toUpperCase()}`);
             } catch (err) {
-                toast.error(err instanceof Error ? err.message : "Export failed");
+                const msg = err instanceof Error ? err.message : "Export failed";
+                toast.error(msg);
+                logError(
+                    "RecorderVisualisationPanel.export",
+                    `downloadRecorderExport(format='${format}') failed for project='${projectSlug}' steps=${data.steps.length}: ${msg}`,
+                    err,
+                );
             }
         },
         [data, projectSlug, tagsByStep],
