@@ -310,19 +310,45 @@ function createTitleBar(panel: HTMLElement): HTMLElement {
     return bar;
 }
 
-function createFooter(onRefresh: () => void): HTMLElement {
+function createFooter(
+    onRefresh: () => void,
+    onExport: (statusEl: HTMLElement) => void,
+): HTMLElement {
     const footer = document.createElement('div');
-    footer.style.cssText = 'padding:6px 10px;border-top:1px solid rgba(124,58,237,0.3);display:flex;justify-content:space-between;align-items:center;gap:6px;';
+    footer.style.cssText = 'padding:6px 10px;border-top:1px solid rgba(124,58,237,0.3);display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;';
+
     const legend = document.createElement('span');
-    legend.style.cssText = 'font-size:9px;color:#64748b;';
+    legend.style.cssText = 'font-size:9px;color:#64748b;flex:1;min-width:120px;';
     legend.innerHTML = '<span style="color:#10b981;">●</span> open in Chrome &nbsp; <span style="color:#334155;">○</span> closed';
+
+    const status = document.createElement('span');
+    status.id = 'marco-projects-export-status';
+    status.style.cssText = 'font-size:9px;color:#94a3b8;flex-basis:100%;order:3;min-height:11px;';
+    status.textContent = '';
+
+    const actions = document.createElement('span');
+    actions.style.cssText = 'display:flex;gap:6px;';
+
+    const exportBtn = document.createElement('button');
+    exportBtn.type = 'button';
+    exportBtn.id = 'marco-projects-export-btn';
+    exportBtn.textContent = '⬇ Export CSV';
+    exportBtn.title = 'Export all loaded projects to CSV with workspace, credits, GitHub repo + branch, version, and last activity';
+    exportBtn.style.cssText = 'padding:3px 10px;background:#1e3a5f;color:#cbd5e1;border:1px solid #3b6fa0;border-radius:3px;font-size:10px;cursor:pointer;';
+    exportBtn.onclick = function (): void { onExport(status); };
+
     const refresh = document.createElement('button');
     refresh.type = 'button';
     refresh.textContent = '⟳ Refresh';
     refresh.style.cssText = 'padding:3px 10px;background:#1e3a5f;color:#cbd5e1;border:1px solid #3b6fa0;border-radius:3px;font-size:10px;cursor:pointer;';
     refresh.onclick = function (): void { onRefresh(); };
+
+    actions.appendChild(exportBtn);
+    actions.appendChild(refresh);
+
     footer.appendChild(legend);
-    footer.appendChild(refresh);
+    footer.appendChild(actions);
+    footer.appendChild(status);
     return footer;
 }
 
