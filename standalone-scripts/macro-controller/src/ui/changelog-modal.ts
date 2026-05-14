@@ -18,30 +18,30 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
-  { ver: 'v2.241.0', date: '2026-05-14', changes: [
+  { ver: 'v2.241.0', date: DATE_2026_05_14, changes: [
     'Projects modal: Export CSV button with sequential per-project git fetch and progress indicator',
     'CSV columns: workspace, credits used/total, project, GitHub repo + branch, last activity, version, exported timestamp',
     'New SDK endpoint: marco.api.projects.get(projectId) for per-project metadata'
   ]},
-  { ver: 'v2.240.0', date: '2026-05-14', changes: [
+  { ver: 'v2.240.0', date: DATE_2026_05_14, changes: [
     'Changelog modal updated with recent prompt additions and macro-controller UI fixes'
   ]},
-  { ver: 'v2.239.0', date: '2026-05-14', changes: [
+  { ver: 'v2.239.0', date: DATE_2026_05_14, changes: [
     'Unified AI Prompt v4 updated — 3-part framework (analysis, spec fix, test failures)'
   ]},
-  { ver: 'v2.238.0', date: '2026-05-14', changes: [
+  { ver: 'v2.238.0', date: DATE_2026_05_14, changes: [
     'Rejog the Memory v1 prompt updated — reliability reports and suggestions workflow'
   ]},
-  { ver: 'v2.237.0', date: '2026-05-14', changes: [
+  { ver: 'v2.237.0', date: DATE_2026_05_14, changes: [
     'Coding Guidelines prompt added for project synthesis and task planning'
   ]},
-  { ver: 'v2.236.0', date: '2026-05-14', changes: [
+  { ver: 'v2.236.0', date: DATE_2026_05_14, changes: [
     'Write Memory prompt added for session-end memory persistence'
   ]},
-  { ver: 'v2.235.0', date: '2026-05-14', changes: [
+  { ver: 'v2.235.0', date: DATE_2026_05_14, changes: [
     'Minor Bump and Major Bump prompts added for automated version bumps'
   ]},
-  { ver: 'v2.234.0', date: '2026-05-14', changes: [
+  { ver: 'v2.234.0', date: DATE_2026_05_14, changes: [
     'Read Memory prompt added for AI assistant onboarding'
   ]},
   { ver: 'v7.41', date: DATE_2026_03_21, changes: [
