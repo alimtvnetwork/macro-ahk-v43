@@ -112,7 +112,7 @@ export function buildButtonRow(deps: PanelBuilderDeps): ButtonRowResult {
   // the button row must keep gap+padding regardless of container width.
   // This guarantees the row holds a consistent layout even when the panel
   // is restored from a minimized state inside a narrow Lovable sidebar.
-  // v2.233.0: Removed `min-width:460px` — it forced the button row wider than
+  // v2.234.0: Removed `min-width:460px` — it forced the button row wider than
   // the panel's `overflow:hidden` content area, clipping the rightmost buttons
   // (menu/error toggle) when the panel is at its default 494px width inside
   // a narrow Lovable sidebar. Flex-wrap already keeps the buttons readable
