@@ -60,8 +60,19 @@ interface OpenTabIndex {
     byUrlProjectId: Map<string, OpenTabRow>;
 }
 
+/** Module-scope state — exposed to footer Export button without prop-drilling. */
+interface ModalState {
+    blocks: WorkspaceBlock[];
+    tabIndex: OpenTabIndex | null;
+    exporting: boolean;
+}
+const state: ModalState = { blocks: [], tabIndex: null, exporting: false };
+
 export function showProjectsModal(): void {
     removeProjectsModal();
+    state.blocks = [];
+    state.tabIndex = null;
+    state.exporting = false;
 
     const panel = createPanel();
     const titleBar = createTitleBar(panel);
@@ -72,7 +83,10 @@ export function showProjectsModal(): void {
     body.innerHTML = renderEmpty('Loading workspaces…');
     panel.appendChild(body);
 
-    const footer = createFooter(function () { void loadAndRender(body); });
+    const footer = createFooter(
+        function () { void loadAndRender(body); },
+        function (statusEl) { void exportCsv(statusEl); },
+    );
     panel.appendChild(footer);
 
     document.body.appendChild(panel);
