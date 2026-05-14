@@ -28,6 +28,7 @@ const DB_SEEDED_IDS = [
   'default-unit-test-issues-v2-enhanced',
   'default-read-memory',
   'default-write-memory',
+  'default-coding-guidelines',
 ];
 
 // ── prompt-loader.ts DEFAULT_PROMPTS ids ──
@@ -47,6 +48,7 @@ const LOADER_DEFAULT_IDS = [
   'default-unit-test-issues-v2-enhanced',
   'default-read-memory',
   'default-write-memory',
+  'default-coding-guidelines',
 ];
 
 describe('Prompt parity check — DEFAULT_PROMPTS ↔ DB seed', () => {

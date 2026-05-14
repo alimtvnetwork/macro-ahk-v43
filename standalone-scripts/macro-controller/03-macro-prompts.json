@@ -144,6 +144,16 @@
       "order": 16,
       "isDefault": true,
       "category": "onboarding"
+    },
+    {
+      "name": "Coding Guidelines",
+      "text": "# Coding Guidelines\n\n> **Purpose:** Read and synthesize existing repository context from the Lovable memory folder and the full specification set, then produce a reliability risk report before any implementation work begins. Do not implement anything. Only produce a report and specification-side artifacts for memory, suggestions, and planning.\n\n## Goals\n1. Reconstruct project requirements from .lovable memory + all spec/idea files.\n2. Produce a detailed risk and failure-chance report.\n3. Establish disciplined workflow for Lovable suggestions tracking and future planning.\n\n## Inputs to read\n- .lovable/ (memories/, memory/, memory/suggestions/, other state). Skip skipped/ folders.\n- All spec folders: ideas, frontend/backend specs, instruction builder, seeding/config, data models, acceptance criteria.\n\n## Deliverable 1 — Reliability and Failure-Chance Report\n1. Success probability by module complexity tier with assumptions.\n2. Failure map (where, why, how it manifests).\n3. Corrective actions (prioritized; what/where/expected gain).\n4. Readiness decision.\n\n## Deliverable 2 — Lovable Suggestions Workflow\n- Location: .lovable/memory/suggestions, one file per suggestion.\n- Naming: YYYYMMDD-HHMMSS-suggestion-<slug>.md\n- Fields: suggestionId, createdAt, source, affectedProject, description, rationale, proposed change, acceptance criteria, status, completion notes.\n- On completion → status done.\n\n## Deliverable 3 — plan.md Future Work Roadmap\nRepo-root plan.md: prioritized backlog grouped by phase/project. Each task: objective, dependencies, expected outputs, acceptance criteria. Include Next task selection section.\n\n## Interaction\nAfter producing the report and artifacts, ask the user which task to implement next.\n\n*Prompt v1.0. Trigger phrase: \"coding guidelines\".*",
+      "id": "default-coding-guidelines",
+      "slug": "coding-guidelines",
+      "version": "1.0.0",
+      "order": 17,
+      "isDefault": true,
+      "category": "onboarding"
     }
   ]
 }
