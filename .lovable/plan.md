@@ -90,6 +90,17 @@ _(Stability — Loop & Leak Prevention shipped in v2.243.0; see Completed below.
 
 ## ✅ Completed
 
+### Session 2026-05-15 — Loop & Leak Audit Fixes (v2.243.0)
+
+| Task | Result |
+|---|---|
+| **L-1 workspace observer reschedule cap** | ✅ — bounded reinstalls (10/60s window, 2s→5s→15s→60s backoff), tracked timers cleared on `disconnect()`. |
+| **L-2 recorder-toolbar tick** | ✅ — 5s cadence, paused on `document.hidden`, `pagehide` teardown removes interval + both listeners. |
+| **L-3 startup-persistence observer** | ✅ — prefers `<main>`/`#root` (warns on `<body>`), returns `teardown()`, auto-fires on `pagehide`. |
+| **L-4 marco-sdk pollUntil tracking** | ✅ — `_activePolls` Set + `_diagActivePolls()` helper. |
+| **L-5 message-relay in-flight cap** | ✅ — `MAX_INFLIGHT=50`, rejects with `"Relay overloaded"`, decrement on every code path. |
+| **Version bump + readme + changelog** | ✅ — v2.242.0 → v2.243.0; `check-version-sync.mjs` and `check-changelog-entry.mjs` green. Audit footer marked Resolved. |
+
 ### Session 2026-04-29 — SchemaVersion contract, readme.txt prohibition enforcement, `result-webhook.ts` rebuild
 
 | Task | Result |
