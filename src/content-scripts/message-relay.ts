@@ -177,17 +177,44 @@ function handlePageMessage(event: MessageEvent): void {
 /**
  * Sends the validated message to the background service worker
  * and relays the response back to the page.
+ *
+ * L-5 (audit 2026-05-15): bound the number of in-flight sendMessage
+ * callbacks. A stuck/slow background worker that never invokes the
+ * callback would otherwise let the page accumulate unbounded closures.
  */
+const MAX_INFLIGHT_RELAY_REQUESTS = 50;
+let _inFlightRelayRequests = 0;
+
 function forwardToBackground(
     message: Record<string, unknown>,
     requestId: string | undefined,
     isSdkSource: boolean = false,
 ): void {
+    if (_inFlightRelayRequests >= MAX_INFLIGHT_RELAY_REQUESTS) {
+        console.warn(
+            `[Marco Relay] In-flight cap reached (${MAX_INFLIGHT_RELAY_REQUESTS}) — rejecting message type="${String(message.type ?? "unknown")}" to prevent leak`,
+        );
+        postResponseToPage(requestId, {
+            isOk: false,
+            errorMessage: "Relay overloaded — too many in-flight requests",
+        }, isSdkSource);
+        return;
+    }
+
+    _inFlightRelayRequests++;
+    let settled = false;
+    const release = (): void => {
+        if (settled) { return; }
+        settled = true;
+        _inFlightRelayRequests--;
+    };
+
     try {
         chrome.runtime.sendMessage(message, (response: unknown) => {
             const hasError = chrome.runtime.lastError;
 
             if (hasError) {
+                release();
                 postResponseToPage(requestId, {
                     isOk: false,
                     errorMessage:
@@ -197,9 +224,11 @@ function forwardToBackground(
                 return;
             }
 
+            release();
             postResponseToPage(requestId, response, isSdkSource);
         });
     } catch (sendError) {
+        release();
         const errorMessage = sendError instanceof Error
             ? sendError.message
             : String(sendError);
