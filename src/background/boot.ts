@@ -29,6 +29,7 @@ import {
     ensureDefaultProjectSingleScript,
 } from "./default-project-seeder";
 import { seedFromManifest } from "./manifest-seeder";
+import { runStorageMigrations } from "./storage-migration";
 import { setBootStep, setBootPersistenceMode, finalizeBoot, setBootError, getBootErrorContext, getWasmProbeResult } from "./boot-diagnostics";
 import { configureUserScriptWorld } from "./csp-fallback";
 import { markInitialized, drainBuffer } from "./message-buffer";
@@ -94,6 +95,18 @@ export async function boot(): Promise<void> {
         setBootStep(step);
         const sessionId = await startSession(chrome.runtime.getManifest().version);
         setCurrentSessionId(sessionId);
+
+        step = "storage-migrations";
+        setBootStep(step);
+        try {
+            const migrationResult = await runStorageMigrations();
+            if (migrationResult.applied > 0) {
+                console.log("[Marco] ✓ Storage migrations: v%d → v%d (%d applied)",
+                    migrationResult.fromVersion, migrationResult.toVersion, migrationResult.applied);
+            }
+        } catch (err) {
+            logCaughtError(BgLogTag.BOOT, "Storage migrations failed (non-fatal)", err);
+        }
 
         step = "seed-scripts";
         setBootStep(step);
