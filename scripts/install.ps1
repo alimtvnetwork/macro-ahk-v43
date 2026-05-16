@@ -145,11 +145,33 @@ function Get-VersionFromUrl {
 function Get-LatestVersion {
     Write-Step "Resolving latest release from $Repo (via $script:ApiBase)..."
     $url = "$script:ApiBase/repos/$Repo/releases/latest"
+
+    # Two-stage probe (mirrors install.sh fetch_latest_version, spec §2 step 5 / AC-2):
+    #   - 200 OK + tag_name           → return tag
+    #   - 200 OK + missing tag_name   → return MainBranchSentinel
+    #   - 404 (no releases at all)    → return MainBranchSentinel
+    #   - 5xx / network failures      → exit 5
     try {
-        $release = Invoke-RestMethod -Uri $url -UseBasicParsing
-        return $release.tag_name
+        $response = Invoke-WebRequest -Uri $url -UseBasicParsing -ErrorAction Stop
+        $body = $null
+        try { $body = $response.Content | ConvertFrom-Json -ErrorAction Stop } catch { $body = $null }
+        if ($null -ne $body -and $body.PSObject.Properties['tag_name'] -and -not [string]::IsNullOrEmpty($body.tag_name)) {
+            return $body.tag_name
+        }
+        # 200 OK + no tag → zero releases. Spec §2 step 5 / AC-2.
+        $script:MainFallback = $true
+        return $script:MarcoMainBranchSentinel
     }
     catch {
+        $statusCode = $null
+        if ($_.Exception.PSObject.Properties['Response'] -and $_.Exception.Response) {
+            try { $statusCode = [int]$_.Exception.Response.StatusCode } catch { $statusCode = $null }
+        }
+        if ($statusCode -eq 404) {
+            # 404 = "no published releases" per GitHub API. AC-2 fallback.
+            $script:MainFallback = $true
+            return $script:MarcoMainBranchSentinel
+        }
         Write-Err "Failed to fetch latest release: $_"
         Write-Err "Spec §2.3: discovery-mode API failure exits 5."
         exit 5
