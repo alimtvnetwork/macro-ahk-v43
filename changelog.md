@@ -6,6 +6,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [v2.249.0] — 2026-05-16 Shared LOVABLE_TAB_PATTERNS constant
+
+### Added
+- **`src/shared/lovable-tab-patterns.ts`** — single source of truth for `chrome.tabs.query()` match patterns covering the Lovable platform.
+
+### Changed
+- **`src/background/handlers/open-tabs-handler.ts`**, **`src/background/auth-health-handler.ts`**, **`src/background/cookie-watcher.ts`**, **`src/background/handlers/config-auth-handler.ts`** — replaced four local copies of the pattern array with imports of the shared constant. `config-auth-handler` spreads the shared list and appends its dev-only `localhost` patterns.
+
+### Fixed (collateral)
+- **`open-tabs-handler`** previously listed only 4 patterns (missing `lovableproject.com`), so the "Open Lovable Tabs" panel silently omitted any tab on `*.lovableproject.com`. Now matches the same 6 hosts the rest of the background uses.
+
+### Why
+- Closes plan.md "Open Lovable Tabs → Workspace Mapping" follow-up #4. Removes drift risk: previously each new platform host had to be added in three different files by hand.
+
+---
+
 ## [v2.248.0] — 2026-05-16 Open-tabs probe failure logging (LOG-1 compliance)
 
 ### Added
