@@ -37,14 +37,7 @@ const TARGET_COOKIE_DOMAIN_PARTS = [
     "lovable.app",
     "lovableproject.com",
 ] as const;
-const TARGET_TAB_PATTERNS = [
-    "https://lovable.dev/*",
-    "https://*.lovable.dev/*",
-    "https://lovable.app/*",
-    "https://*.lovable.app/*",
-    "https://lovableproject.com/*",
-    "https://*.lovableproject.com/*",
-];
+import { LOVABLE_TAB_PATTERNS as TARGET_TAB_PATTERNS } from "../shared/lovable-tab-patterns";
 
 /* ------------------------------------------------------------------ */
 /*  Public API                                                         */
