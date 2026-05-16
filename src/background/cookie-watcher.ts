@@ -50,10 +50,40 @@ const TARGET_TAB_PATTERNS = [
 /*  Public API                                                         */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Trailing-debounce window (ms) for cookie events. Browsers may fire
+ * `cookies.onChanged` several times per logical login/refresh (one per
+ * cookie touched, plus an overwrite pair). Collapsing into a single
+ * handler invocation prevents the U-8 fan-out where `tabs.query()` ran
+ * once per cookie change. Single timer per cookie name — no retry, no
+ * exponential backoff (No-Retry policy).
+ */
+const COOKIE_DEBOUNCE_MS = 200;
+
+interface PendingChange {
+    timer: ReturnType<typeof setTimeout>;
+    latest: chrome.cookies.CookieChangeInfo;
+}
+const pendingByName: Map<string, PendingChange> = new Map();
+
 /** Registers the chrome.cookies.onChanged listener. */
 export function registerCookieWatcher(): void {
-    chrome.cookies.onChanged.addListener(handleCookieChange);
-    console.log("[cookie-watcher] Registered cookie change listener");
+    chrome.cookies.onChanged.addListener(scheduleCookieChange);
+    console.log("[cookie-watcher] Registered cookie change listener (debounced)");
+}
+
+/** Trailing-debounce wrapper. Keyed by cookie name so unrelated cookies don't block each other. */
+function scheduleCookieChange(changeInfo: chrome.cookies.CookieChangeInfo): void {
+    const key = changeInfo.cookie.name;
+    const existing = pendingByName.get(key);
+    if (existing !== undefined) {
+        clearTimeout(existing.timer);
+    }
+    const timer = setTimeout(() => {
+        pendingByName.delete(key);
+        void handleCookieChange(changeInfo);
+    }, COOKIE_DEBOUNCE_MS);
+    pendingByName.set(key, { timer, latest: changeInfo });
 }
 
 /* ------------------------------------------------------------------ */
