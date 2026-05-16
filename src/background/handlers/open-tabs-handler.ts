@@ -102,6 +102,8 @@ interface ProbePayload {
 interface ProbeResult {
     payload: ProbePayload | null;
     error: string | null;
+    reason: ProbeFailureReason | null;
+    reasonDetail: string | null;
 }
 
 export async function handleGetOpenLovableTabs(): Promise<OpenLovableTabsResponse> {
