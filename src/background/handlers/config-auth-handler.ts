@@ -52,16 +52,14 @@ const REFRESH_COOKIE_NAME_CANDIDATES = [
     COOKIE_REFRESH_TOKEN_HOST,
 ] as const;
 
-const PLATFORM_TAB_PATTERNS = [
-    "https://lovable.dev/*",
-    "https://*.lovable.dev/*",
-    "https://lovable.app/*",
-    "https://*.lovable.app/*",
-    "https://lovableproject.com/*",
-    "https://*.lovableproject.com/*",
+import { LOVABLE_TAB_PATTERNS } from "../../shared/lovable-tab-patterns";
+
+// Extends the shared platform list with localhost for dev-mode auth probing.
+const PLATFORM_TAB_PATTERNS: readonly string[] = [
+    ...LOVABLE_TAB_PATTERNS,
     "http://localhost/*",
     "https://localhost/*",
-] as const;
+];
 
 const AUTH_COOKIE_NAME_PATTERN = /(lovable|session|token|auth)/i;
 
