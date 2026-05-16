@@ -50,14 +50,7 @@ export interface AuthHealthResponse {
 
 const AUTH_API_BASE = "https://api.lovable.dev";
 
-const PLATFORM_TAB_PATTERNS = [
-    "https://lovable.dev/*",
-    "https://*.lovable.dev/*",
-    "https://lovable.app/*",
-    "https://*.lovable.app/*",
-    "https://lovableproject.com/*",
-    "https://*.lovableproject.com/*",
-] as const;
+import { LOVABLE_TAB_PATTERNS as PLATFORM_TAB_PATTERNS } from "../shared/lovable-tab-patterns";
 
 import { getChromeRef } from "./chrome-ref";
 // Chrome extension APIs — typed via shared ChromeRef
