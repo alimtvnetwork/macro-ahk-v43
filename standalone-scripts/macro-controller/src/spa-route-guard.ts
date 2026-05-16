@@ -28,7 +28,7 @@
 
 import { log } from './logging';
 import { logError } from './error-utils';
-import { extractProjectIdFromUrl } from './workspace-detection';
+import { extractProjectIdFromUrl, invalidateProjectIdCache } from './workspace-detection';
 import { state } from './shared-state';
 import { stopLoop } from './loop-engine';
 import { showToast } from './toast';
@@ -123,6 +123,8 @@ function onPageHide(): void {
  * (including to/from null), stop the loop and notify once.
  */
 function evaluateRouteChange(source: 'history' | 'popstate'): void {
+  // U-4: href just changed; drop the memoized project ID so the next read recomputes.
+  invalidateProjectIdCache();
   const currentProjectId = extractProjectIdFromUrl();
   const isSame = currentProjectId === lastProjectId;
   if (isSame) {

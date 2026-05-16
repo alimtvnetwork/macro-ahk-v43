@@ -32,9 +32,29 @@ function isAuthFailure(status: number): boolean {
 // ============================================
 // Extract project ID from URL
 // ============================================
+// U-4: Per-href memoization. ~10 callers invoke this per loop iteration; the
+// regex chain is cheap individually but adds up. Cache invalidates automatically
+// when window.location.href changes (SPA nav, refresh, tab switch all update it).
+let _cachedHref: string | null = null;
+let _cachedProjectId: string | null = null;
+
 export function extractProjectIdFromUrl(): string | null {
   const url = window.location.href;
+  if (url === _cachedHref) {
+    return _cachedProjectId;
+  }
+  _cachedHref = url;
+  _cachedProjectId = computeProjectIdFromUrl(url);
+  return _cachedProjectId;
+}
 
+/** Force-invalidate the project ID cache. Called by spa-route-guard on history mutations. */
+export function invalidateProjectIdCache(): void {
+  _cachedHref = null;
+  _cachedProjectId = null;
+}
+
+function computeProjectIdFromUrl(url: string): string | null {
   // Pattern 1: /projects/{id} editor route
   const pathMatch = url.match(/\/projects\/([^/?#]+)/);
 

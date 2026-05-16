@@ -6,6 +6,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [v2.246.0] — 2026-05-16 Project-ID cache (audit U-4)
+
+### Changed
+- **`standalone-scripts/macro-controller/src/workspace-detection.ts`** — `extractProjectIdFromUrl()` is now memoized per `window.location.href`. The function has ~10 callers per loop tick (credit balance, page workspace responder, startup heartbeat, global handlers, MacroController); each call previously re-ran the full pattern chain. Cache key is the raw `href`, so any URL change (push/replace/popstate, full reload, tab switch into a new URL) naturally invalidates by mismatch.
+- **`standalone-scripts/macro-controller/src/spa-route-guard.ts`** — calls the new `invalidateProjectIdCache()` before reading the project ID inside `evaluateRouteChange()` to guarantee the post-navigation read is fresh (defensive — href is already updated by the time history mutations fire, but explicit invalidation removes any ordering doubt).
+
+### Why
+- Closes audit item **U-4** in `.lovable/audits/2026-05-16-url-trigger-and-energy-audit.md`. Eliminates redundant URL regex work on the hot path without changing semantics.
+
+---
+
 ## [v2.245.0] — 2026-05-16 SPA route guard (audit U-5)
 
 ### Added
