@@ -313,6 +313,7 @@ download_asset() {
 
     ok "Downloaded successfully."
     verify_checksum "${version}" "${asset_name}" "${archive_path}"
+    verify_signature "${version}"
     echo "${archive_path}"
 }
 
@@ -414,6 +415,60 @@ compute_sha256() {
     else
         echo ""
     fi
+}
+
+# ── Signature verification (spec §7.1.5, AC-24/25/26) ──────────────
+#
+# Optional v0.3 hardening: when the release ships a
+# `checksums.txt.minisig` and the operator has provisioned a minisign
+# public key via $MARCO_MINISIGN_PUBKEY, verify the signature over the
+# already-fetched checksums.txt. The signature gates the checksum file
+# itself — combined with the existing SHA-256 check (AC-21/22), this
+# extends end-to-end integrity from "matches mirror" to "matches what
+# the release signer produced".
+#
+# Strictness matches AC-23: soft-warn + continue when ANY precondition
+# is missing (pubkey unset, .minisig 404, or `minisign` CLI absent),
+# hard-abort (exit 6) only on an actual signature mismatch.
+verify_signature() {
+    local version="$1"
+    local pubkey="${MARCO_MINISIGN_PUBKEY:-}"
+    local sig_file="${MARCO_SIGNATURE_FILE:-checksums.txt.minisig}"
+    local sig_url="${MARCO_DOWNLOAD_BASE}/${REPO}/releases/download/${version}/${sig_file}"
+    local sig_path="${TMP_DIR}/${sig_file}"
+    local checksums_path="${TMP_DIR}/checksums.txt"
+
+    if [ -z "${pubkey}" ]; then
+        return 0
+    fi
+    if [ ! -f "${checksums_path}" ]; then
+        warn "Signature verification skipped: checksums.txt was not downloaded."
+        return 0
+    fi
+    if ! download "${sig_url}" "${sig_path}" 2>/dev/null; then
+        warn "Signature file not found at ${sig_url}"
+        warn "Skipping signature verification (release predates v0.3 signing)."
+        return 0
+    fi
+    if ! command -v minisign >/dev/null 2>&1; then
+        warn "minisign CLI not found — skipping signature verification."
+        warn "Install minisign (https://jedisct1.github.io/minisign/) to enable v0.3 signature checks."
+        return 0
+    fi
+
+    step "Verifying minisign signature of checksums.txt..."
+    if minisign -V -P "${pubkey}" -m "${checksums_path}" -x "${sig_path}" >/dev/null 2>&1; then
+        ok "Signature verified (checksums.txt)."
+        return 0
+    fi
+
+    err "Signature MISMATCH for checksums.txt"
+    err "  source: ${sig_url}"
+    err "  pubkey: \${MARCO_MINISIGN_PUBKEY} (first 16 chars: ${pubkey:0:16}…)"
+    err ""
+    err "The release's checksums.txt does not validate against the configured public key."
+    err "Refusing to install — possible mirror tampering or wrong key."
+    exit 6
 }
 
 
