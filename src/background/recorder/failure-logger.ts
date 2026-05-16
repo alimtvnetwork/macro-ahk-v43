@@ -74,6 +74,7 @@ export type FailureReasonCode =
     | "NoSelectors"            // Step had zero selectors persisted.
     // ---- Other ------------------------------------------------------------
     | "Timeout"                // Wait/Retry exceeded budget (set by callers).
+    | "ConditionTimeout"       // Gate condition not met within TimeoutMs (per spec 19 §2).
     | "JsThrew"                // JsInline step threw inside the sandbox.
     | "Unknown";               // Caller did not classify — last resort.
 

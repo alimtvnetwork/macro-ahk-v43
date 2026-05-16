@@ -40,6 +40,11 @@ import { evaluateAllSelectors } from "./selector-attempt-evaluator";
 import { resolveVerboseLogging } from "./verbose-logging";
 import { waitForElement, type WaitForSpec } from "./wait-for-element";
 import { readStepWait, type WaitConfig } from "./step-library/step-wait";
+import {
+    waitForCondition,
+    type Condition,
+    type ConditionWaitOutcome,
+} from "./condition-evaluator";
 
 const SOURCE_FILE = "src/background/recorder/live-dom-replay.ts";
 
@@ -60,6 +65,22 @@ export interface ReplayStepInput {
      * {@link WaitForSpec} for the selector grammar.
      */
     readonly WaitFor?: WaitForSpec;
+    /**
+     * Spec-19 canonical pre-condition gate. When present, the executor
+     * polls `Condition` against the live DOM **before** actuating the
+     * step. On timeout:
+     *   - `OnTimeout = "Fail"` → step fails with `ConditionTimeout`.
+     *   - `OnTimeout = "Skip"` → step is skipped (no actuation, not a
+     *     failure).
+     */
+    readonly Gate?: StepGate;
+}
+
+export interface StepGate {
+    readonly Condition: Condition;
+    readonly TimeoutMs: number;
+    readonly PollMs?: number;
+    readonly OnTimeout: "Fail" | "Skip";
 }
 
 export interface ReplayPersistOptions {
@@ -105,6 +126,12 @@ export interface ReplayStepResult {
     readonly DurationMs: number;
     /** Structured failure report — populated only when `Ok === false`. */
     readonly FailureReport?: FailureReport;
+    /**
+     * When `true`, the step was intentionally skipped because its
+     * pre-condition gate timed out with `OnTimeout = "Skip"`. Not a
+     * failure — `Ok` is also `true`.
+     */
+    readonly Skipped?: true;
 }
 
 export interface ReplayRunOutcome {
@@ -164,6 +191,38 @@ async function executeStep(
         if (step.Kind === "Wait") {
             await sleep(step.WaitMs ?? 0);
             return finalize(step, options, startedAt, now(), { Ok: true });
+        }
+
+        // Spec 19 §2 — pre-condition gate (checked before actuation).
+        if (step.Gate !== undefined) {
+            const gateOutcome = await waitForCondition(step.Gate.Condition, {
+                Doc: options.Doc,
+                TimeoutMs: step.Gate.TimeoutMs,
+                PollMs: step.Gate.PollMs,
+                Sleep: sleep,
+                Now: () => now().getTime(),
+            });
+            if (!gateOutcome.Ok) {
+                if (step.Gate.OnTimeout === "Skip") {
+                    return finalize(step, options, startedAt, now(), {
+                        Ok: true,
+                        Skipped: true,
+                        Error: new Error(
+                            "Skipped: gate condition not met within " + step.Gate.TimeoutMs + "ms " +
+                            "(polls=" + gateOutcome.Polls + ", elapsed=" + gateOutcome.DurationMs + "ms)",
+                        ),
+                    });
+                }
+                return finalize(step, options, startedAt, now(), {
+                    Ok: false,
+                    Reason: "ConditionTimeout",
+                    ReasonDetail:
+                        "Gate condition not met within " + step.Gate.TimeoutMs + "ms " +
+                        "(polls=" + gateOutcome.Polls + ", elapsed=" + gateOutcome.DurationMs + "ms). " +
+                        "Last evaluation: " + JSON.stringify(gateOutcome.LastEvaluation),
+                    Error: new Error("Gate condition not met within " + step.Gate.TimeoutMs + "ms"),
+                });
+            }
         }
 
         // Resolve {{Token}} variables FIRST (per
@@ -278,6 +337,7 @@ function finalize(
         /** Caller-supplied classification — overrides auto-derivation in `logFailure`. */
         Reason?: FailureReasonCode;
         ReasonDetail?: string;
+        Skipped?: boolean;
     },
 ): ReplayStepResult {
     if (outcome.Ok) {
@@ -285,6 +345,7 @@ function finalize(
             StepId: step.StepId,
             Index: step.Index,
             Ok: true,
+            Skipped: outcome.Skipped === true ? true : undefined,
             ResolvedXPath: outcome.ResolvedXPath,
             StartedAt: toIso(started),
             FinishedAt: toIso(finished),
@@ -342,11 +403,11 @@ function toStepResultDraft(r: ReplayStepResult): ReplayStepResultDraft {
     // user can later copy the full diagnostic blob from the project DB.
     const errorMessage = r.FailureReport !== undefined
         ? JSON.stringify(r.FailureReport)
-        : (r.Error ?? null);
+        : (r.Skipped === true ? (r.Error ?? "Skipped: gate condition not met") : (r.Error ?? null));
     return {
         StepId: r.StepId,
         OrderIndex: r.Index,
-        IsOk: r.Ok,
+        IsOk: r.Ok || r.Skipped === true,
         ErrorMessage: errorMessage,
         ResolvedXPath: r.ResolvedXPath ?? null,
         StartedAt: r.StartedAt,
