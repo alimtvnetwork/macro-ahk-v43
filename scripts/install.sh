@@ -313,6 +313,7 @@ download_asset() {
 
     ok "Downloaded successfully."
     verify_checksum "${version}" "${asset_name}" "${archive_path}"
+    verify_signature "${version}"
     echo "${archive_path}"
 }
 
