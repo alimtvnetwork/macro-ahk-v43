@@ -51,7 +51,9 @@ const timer = setTimeout(() => {
 }, TIMEOUT_MS);
 
 try {
-    const bundlePath = new URL("../chrome-extension/dist/background/index.js", import.meta.url).href;
+    // Vite's DIST_DIR (vite.config.extension.ts) emits directly to `chrome-extension/`,
+    // not `chrome-extension/dist/`. The legacy `/dist/` path silently 404'd this smoke test.
+    const bundlePath = new URL("../chrome-extension/background/index.js", import.meta.url).href;
     await import(bundlePath);
     clearTimeout(timer);
     console.log("✅ Background bundle imported successfully (no top-level crash)");
