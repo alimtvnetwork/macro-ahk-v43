@@ -29,6 +29,7 @@ Updated: just now
 ## Memories
 - [⛔ readme.txt prohibitions (SP-1..SP-8)](mem://constraints/readme-txt-prohibitions) — Sequenced hard ban; honor one-shot explicit writes only; mirrors strictly-avoid.md and spec/01-spec-authoring-guide/09-exceptions.md
 - [Chrome-extension dist path](mem://constraints/chrome-extension-dist-path) — Extension build output is `chrome-extension/` itself (NOT `chrome-extension/dist/`); release/CI must never reference legacy `/dist` subpath. RCA for v2.242.0 missing-asset regression.
+- [URL trigger + sentinel cache](mem://architecture/url-trigger-sentinel-cache) — v2.244.0: only 3 URL re-eval triggers (load/refresh/activate), per-tab `tabDecisionCache` fingerprint gate, `__marco_sentinel__` DOM marker; no polling, no retry, never throw from listener.
 - [Timezone](mem://localization/timezone) — Asia/Kuala_Lumpur for local timezone formatting
 - [Versioning policy](mem://workflow/versioning-policy) — Unified versioning across manifest, constants.ts, scripts
 - [Planning roadmap](mem://workflow/planning-roadmap) — plan.md as authoritative prioritized backlog
