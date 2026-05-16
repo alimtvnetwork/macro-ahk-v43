@@ -128,6 +128,31 @@ Chrome's programmatic injection via `chrome.scripting.executeScript` with `func`
 
 **New**: Programmatic injection already targets specific tabs via `tabId`. The background's `project-matcher.ts` ensures scripts only inject into matching URLs. Domain guards are redundant and removed.
 
+### 4a. New-Tab / Empty-URL Guard (v2.249.5)
+
+**Rule**: The auto-injector and `project-matcher.evaluateUrlMatches` MUST refuse to run when the tab URL is empty, `about:blank`, or any canonical browser new-tab page.
+
+**Helper** (single source of truth — never inline):
+
+```ts
+// src/shared/url-utils.ts
+export function isNewTabOrBlankUrl(url: string | undefined | null): boolean;
+```
+
+Returns `true` for: empty/`undefined`/`null`, `about:blank`, `chrome://newtab/`, `chrome://new-tab-page/`, `chrome-search://local-ntp*`, `edge://newtab/`, `brave://newtab/`, `opera://startpage/`.
+
+**Gate points** (defense in depth):
+1. `auto-injector.handleNavigationCompleted` — early-return before any matcher / DB call. Logs a single info line: `[new-tab-guard] skipped url="<url>" tabId=<n>`.
+2. `project-matcher.evaluateUrlMatches` — returns `[]` immediately. Protects callers outside the navigation listener (popup probes, devtools commands, tests).
+
+**Why**: Chrome blocks content-script injection on internal schemes at the API layer, but the matcher still does DB reads, condition evaluation, and seeding. The guard makes the no-op explicit and cheap.
+
+**Tests**:
+- `src/shared/__tests__/url-utils.test.ts` — table-driven coverage of every variant + real `https://` URLs.
+- `src/background/__tests__/auto-injector-new-tab-guard.test.ts` — verifies the handler early-returns with no matcher call.
+
+See `mem://features/new-tab-no-url-guard`.
+
 ### 5. Keep Idempotent Marker Check (Safety Net)
 
 With programmatic injection, the deduplication `Set<scriptId>` per tab prevents double injection. However, **keep the DOM marker check** as a defense-in-depth safety net:
