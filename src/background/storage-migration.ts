@@ -24,6 +24,34 @@ const STORAGE_SCHEMA_VERSION_KEY = "marco_storage_schema_version";
 /** Current target storage schema version. Bump when adding a migration. */
 export const CURRENT_STORAGE_SCHEMA_VERSION = 1;
 
+/**
+ * Hard ceiling enforced by the runtime guard.
+ *
+ * Phase 2c-storage v2 (PascalCase rewrite of persisted `StoredProject` payloads)
+ * is permanently banned — see `mem://constraints/no-storage-pascalcase-migration`.
+ * Rewriting camelCase keys would break ~50+ UI / background / options consumers
+ * and risk data loss during the migration window.
+ *
+ * Any attempt to register or execute a migration with `version > MAX_ALLOWED_STORAGE_SCHEMA_VERSION`
+ * — or to call `assertNoPascalCaseStorageMigration()` — throws immediately at boot,
+ * making the violation impossible to ship.
+ */
+export const MAX_ALLOWED_STORAGE_SCHEMA_VERSION = 1;
+
+/**
+ * Runtime guard. Call from any code path that proposes to rewrite
+ * `chrome.storage.local` keys from camelCase to PascalCase. Always throws.
+ */
+export function assertNoPascalCaseStorageMigration(context: string): never {
+    const message =
+        `BLOCKED: Storage PascalCase migration attempted from "${context}". ` +
+        `Phase 2c-storage v2 is permanently forbidden — see ` +
+        `mem://constraints/no-storage-pascalcase-migration. ` +
+        `StoredProject in chrome.storage.local MUST remain camelCase.`;
+    logBgWarnError(BgLogTag.BOOT, message);
+    throw new Error(message);
+}
+
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
