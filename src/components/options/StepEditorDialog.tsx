@@ -453,6 +453,120 @@ export default function StepEditorDialog(props: StepEditorDialogProps): JSX.Elem
                                 />
                             </div>
                         </div>
+                    ) : kind === StepKindId.UrlTabClick ? (
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-3 gap-2">
+                                <div className="space-y-1 col-span-2">
+                                    <Label htmlFor="utc-pattern">URL pattern</Label>
+                                    <Input
+                                        id="utc-pattern"
+                                        value={urlTabClick.UrlPattern}
+                                        placeholder="https://example.com/orders/*"
+                                        onChange={(e) => patchUrlTabClick({ UrlPattern: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="utc-match">Match</Label>
+                                    <Select
+                                        value={urlTabClick.UrlMatch}
+                                        onValueChange={(v) => patchUrlTabClick({ UrlMatch: v as UrlMatchDialect })}
+                                    >
+                                        <SelectTrigger id="utc-match"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Exact">Exact</SelectItem>
+                                            <SelectItem value="Prefix">Prefix</SelectItem>
+                                            <SelectItem value="Glob">Glob</SelectItem>
+                                            <SelectItem value="Regex">Regex</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label htmlFor="utc-mode">Mode</Label>
+                                <Select
+                                    value={urlTabClick.Mode}
+                                    onValueChange={(v) => patchUrlTabClick({ Mode: v as UrlTabClickMode })}
+                                >
+                                    <SelectTrigger id="utc-mode"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="OpenNew">Open new tab</SelectItem>
+                                        <SelectItem value="FocusExisting">Focus existing tab</SelectItem>
+                                        <SelectItem value="OpenOrFocus">Focus existing, else open</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-2">
+                                <div className="space-y-1 col-span-2">
+                                    <Label htmlFor="utc-selector">Selector (optional)</Label>
+                                    <Input
+                                        id="utc-selector"
+                                        value={urlTabClick.Selector}
+                                        placeholder="#open-orders, //a[@data-id]"
+                                        onChange={(e) => patchUrlTabClick({ Selector: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="utc-sel-kind">Selector kind</Label>
+                                    <Select
+                                        value={urlTabClick.SelectorKind}
+                                        onValueChange={(v) => patchUrlTabClick({ SelectorKind: v as SelectorKindOption })}
+                                    >
+                                        <SelectTrigger id="utc-sel-kind"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Auto">Auto</SelectItem>
+                                            <SelectItem value="Css">CSS</SelectItem>
+                                            <SelectItem value="XPath">XPath</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label htmlFor="utc-timeout">Timeout (ms, optional)</Label>
+                                <Input
+                                    id="utc-timeout"
+                                    type="number"
+                                    min={0}
+                                    value={urlTabClick.TimeoutMs}
+                                    placeholder="default 15000"
+                                    onChange={(e) => patchUrlTabClick({ TimeoutMs: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <input
+                                    id="utc-direct"
+                                    type="checkbox"
+                                    checked={urlTabClick.DirectOpen}
+                                    onChange={(e) => patchUrlTabClick({
+                                        DirectOpen: e.target.checked,
+                                        Mode: e.target.checked ? "OpenNew" : urlTabClick.Mode,
+                                    })}
+                                />
+                                <Label htmlFor="utc-direct" className="cursor-pointer">
+                                    Direct open (skip click, navigate to literal URL)
+                                </Label>
+                            </div>
+
+                            {urlTabClick.DirectOpen && (
+                                <div className="space-y-1">
+                                    <Label htmlFor="utc-url">Literal URL</Label>
+                                    <Input
+                                        id="utc-url"
+                                        value={urlTabClick.Url}
+                                        placeholder="https://example.com/orders/new"
+                                        onChange={(e) => patchUrlTabClick({ Url: e.target.value })}
+                                    />
+                                </div>
+                            )}
+
+                            <p className="text-[11px] text-muted-foreground">
+                                Saved as PayloadJson with PascalCase keys (UrlPattern, UrlMatch, Mode…).
+                                Runner: <code>executeUrlTabClick</code>.
+                            </p>
+                        </div>
                     ) : (
                         <div className="space-y-1">
                             <Label htmlFor="step-payload">Payload JSON</Label>
