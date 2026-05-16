@@ -68,13 +68,17 @@ const STANDALONE_DIR = resolve(REPO_ROOT, "standalone-scripts");
 /* ----------------------------------------------------------------- */
 /*  Allowlist for CHECK B — files permitted to read compat.json.     */
 /*                                                                    */
-/*  Phase 2b: vite.config.extension.ts (copyProjectScripts plugin).   */
-/*  Phase 2c: this list MUST be empty. When you migrate the plugin,  */
-/*  delete the entry below and the checker becomes a hard zero-tol   */
-/*  guard against any compat reader anywhere.                         */
+/*  Phase 2c (vite plugin slice): the only RUNTIME compat reader     */
+/*  (vite.config.extension.ts → copyProjectScripts) has been         */
+/*  migrated to read the canonical PascalCase instruction.json       */
+/*  directly. The remaining entries are tooling/test fixtures that   */
+/*  reference the literal `instruction.compat.json` FILENAME for     */
+/*  emit/copy/dist-check/schema-validate purposes — none of them    */
+/*  consume the camelCase KEYS. They are permanent residents per     */
+/*  plan.md task 2c allowlist policy and remain until the dual-emit  */
+/*  itself is retired.                                                */
 /* ----------------------------------------------------------------- */
 const COMPAT_READER_ALLOWLIST = new Set([
-    "vite.config.extension.ts",
     // Build-tooling files that legitimately reference the literal
     // string `instruction.compat.json` for emit/copy/dist-check
     // purposes — they don't *consume* the camelCase keys, they just
