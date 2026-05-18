@@ -37,12 +37,16 @@ on:
       - "release/**"
     tags:
       - "v*"
+  # CRITICAL: `release` event fires for ALL publish paths — REST API,
+  # GitHub web UI, gh CLI, external release tooling. This is the only
+  # trigger that reliably catches tags created server-side via the
+  # Releases API (which do NOT fire push/create webhooks). Without this,
+  # API-created releases land with only the uploader's own assets and
+  # GitHub's auto-generated source archives — the symptom seen on v3.1.0.
+  release:
+    types: [published, created, edited, released]
   # Manual replay path — used to recover a release whose original tag/create
-  # event never reached Actions (e.g., tag created via the GitHub web UI's
-  # "Create release from tag" flow, or release tooling which writes
-  # .gitmap/release/v*.json but does not always fire push:tags).
-  # The release-watcher.yml workflow auto-invokes this dispatch when a
-  # new .gitmap/release/v*.json lands on main.
+  # event never reached Actions.
   workflow_dispatch:
     inputs:
       version:
