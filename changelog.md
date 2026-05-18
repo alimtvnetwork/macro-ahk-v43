@@ -6,6 +6,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [v2.250.0] — 2026-05-18 Version bump
+
+### Changed
+- Bumped version `2.249.5` → `2.250.0` across manifest, `src/shared/constants.ts`, macro-controller, marco-sdk, xpath, lovable-common, lovable-owner-switch, and lovable-user-add instruction manifests.
+- Root `readme.md` pinned-version references updated to `v2.250.0`.
+
+---
+
 ## [v2.249.5] — 2026-05-16 New-tab / empty-URL guard
 
 ### Added
