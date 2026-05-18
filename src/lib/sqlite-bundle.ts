@@ -360,6 +360,10 @@ function insertVariables(db: Database, projects: ReadonlyArray<StoredProject>): 
   }
   stmt.free();
 }
+
+/** Fetches all data, builds a SQLite DB, zips it, and triggers download. */
+// eslint-disable-next-line max-lines-per-function
+export async function exportAllAsSqliteZip(): Promise<void> {
   const [projRes, scriptsRes, configsRes, promptsRes] = await Promise.all([
     sendMessage<{ projects: StoredProject[] }>({ type: "GET_ALL_PROJECTS" }),
     sendMessage<{ scripts: StoredScript[] }>({ type: "GET_ALL_SCRIPTS" }),
