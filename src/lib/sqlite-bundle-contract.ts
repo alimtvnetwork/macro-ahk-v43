@@ -128,6 +128,23 @@ export const BUNDLE_SCHEMA: Readonly<Record<string, BundleTableContract>> = {
         ],
         optional: ["Uid", "Value"],
     },
+    /**
+     * v6: prompt category catalog. Optional — absent in v4/v5 bundles.
+     * Names are globally unique; SortOrder reflects discovery order.
+     */
+    PromptsCategory: {
+        required: ["Id", "Name", "CreatedAt"],
+        optional: ["Uid", "SortOrder"],
+    },
+    /**
+     * v6: many-to-many junction between Prompts and PromptsCategory.
+     * Stores PromptUid + CategoryName directly (not INTEGER Id pairs) so
+     * the bundle is self-contained even without follow-up Id lookups.
+     */
+    PromptsToCategory: {
+        required: ["Id", "PromptUid", "CategoryName", "CreatedAt"],
+        optional: [],
+    },
 } as const;
 
 /** Tables that MUST exist in a full bundle. */
