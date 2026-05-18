@@ -460,10 +460,14 @@ export async function exportProjectAsSqliteZip(project: StoredProject): Promise<
   db.run(CREATE_CONFIGS_TABLE);
   db.run(CREATE_PROMPTS_TABLE);
   db.run(CREATE_META_TABLE);
+  db.run(CREATE_DEPENDENCIES_TABLE);
+  db.run(CREATE_VARIABLES_TABLE);
 
   insertProjects(db, [project]);
   insertScripts(db, relatedScripts);
   insertConfigs(db, relatedConfigs);
+  insertDependencies(db, [project]);
+  insertVariables(db, [project]);
   insertMeta(db);
 
   const dbData = db.export();
