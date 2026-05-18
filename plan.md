@@ -181,9 +181,10 @@
 - ✅ Verified aggregator still produces 14 prompts (output shape unchanged).
 - ✅ Wrote ERD + flow Mermaid diagrams for user review.
 
-### Pending — triggered when user replies "next"
-1. **E2E test suite** (12 files, ≈67 tests) — setup-once + parallel asserts. Layout in `spec/30-import-export/03-test-plan.md` §3.
-2. **CI job** `import-export-e2e` runs after `derive-casing-matrix`, uploads bundle artifact on failure.
+### Completed 2026-05-18
+1. ✅ **E2E test suite** — 12 files / 59 cases (52 pass + 7 todo) at `src/test/import-export/*`. Setup-once via module-level promise in `setup-helpers.ts` (no globalSetup needed); cached `zipBytes`/`dbBytes`/`imported` shared across all parallel files. Total wall time ~8.7s locally.
+2. ✅ **CI job `import-export-e2e`** — now `needs: [setup, derive-casing-matrix]`, runs `aggregate-prompts.mjs` before vitest, uploads forensic bundle artifact on failure.
+
 
 ### Follow-ups (queued, not in current task)
 1. Rewire `ProjectEditor.tsx` + `ProjectsSection.tsx` from `project-exporter.ts` → `exportProjectAsSqliteZip()`; delete the legacy file.
