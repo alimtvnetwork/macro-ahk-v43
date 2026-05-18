@@ -34,21 +34,14 @@ on:
   push:
     branches:
       - "release/**"
-      - "main"
     tags:
       - "v*"
-    paths:
-      # Auto-trigger when Lovable release tooling lands a new
-      # .gitmap/release/v*.json descriptor on main. This is the
-      # recovery path for tags created out-of-band (web UI, API,
-      # external tooling) that never fire a `push: tags` event.
-      - ".gitmap/release/v*.json"
-      - ".gitmap/release/latest.json"
   # Manual replay path — used to recover a release whose original tag-push
   # event never reached Actions (e.g., tag created via the GitHub web UI's
-  # "Create release from tag" flow). See
-  # spec/17-app-issues/95-release-page-missing-built-assets-rca.md and
-  # spec/11-chrome-extension/release-procedure.md.
+  # "Create release from tag" flow, or the Lovable release tooling which
+  # writes .gitmap/release/v*.json but does not always fire push:tags).
+  # The release-watcher.yml workflow auto-invokes this dispatch when a
+  # new .gitmap/release/v*.json lands on main.
   workflow_dispatch:
     inputs:
       version:
