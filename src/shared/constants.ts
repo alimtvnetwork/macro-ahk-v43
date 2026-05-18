@@ -5,7 +5,7 @@
  * See spec 12-project-model-and-url-rules.md §Storage.
  */
 
-export const EXTENSION_VERSION = "2.249.5";
+export const EXTENSION_VERSION = "2.250.0";
 
 /* ------------------------------------------------------------------ */
 /*  Storage Keys                                                       */
