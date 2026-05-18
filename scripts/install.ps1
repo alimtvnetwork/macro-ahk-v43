@@ -66,8 +66,13 @@ $ProgressPreference = "SilentlyContinue"
 # defaults, and the checksums settings. When absent (irm-piped standalone
 # install) the inline fallbacks below take over so install.ps1 remains a
 # single self-sufficient file.
-$__constCandidate = Join-Path $PSScriptRoot 'installer-constants.ps1'
-if (Test-Path -LiteralPath $__constCandidate) {
+# NOTE: $PSScriptRoot is empty when this script is piped through
+# `irm <url> | iex` (no file on disk). Join-Path rejects an empty
+# -Path with "Cannot bind argument to parameter 'Path' because it is
+# an empty string", which is exactly the crash users hit when running
+# the canonical one-liner. Guard every $PSScriptRoot use here.
+$__constCandidate = if ($PSScriptRoot) { Join-Path $PSScriptRoot 'installer-constants.ps1' } else { $null }
+if ($__constCandidate -and (Test-Path -LiteralPath $__constCandidate)) {
     . $__constCandidate
 }
 Remove-Variable __constCandidate -ErrorAction SilentlyContinue
