@@ -6,6 +6,34 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [v3.2.0] — 2026-05-18 Release watcher closes descriptor → release.yml gap
+
+### Why
+`v3.1.0` was tagged and `.gitmap/release/v3.1.0.json` landed on main, but
+`release.yml` never ran and the Release page shipped with only auto source
+archives (`"assets": []`). Root cause: tags created out-of-band (Lovable
+release tooling, GitHub web UI/API) do not always fire `push: tags: v*`, so
+the canonical pipeline was bypassed.
+
+### Added
+- **`.github/workflows/release-watcher.yml`** — triggers on `push: main`
+  paths `.gitmap/release/v*.json` / `latest.json`, reads target tag from the
+  descriptor, verifies the tag exists on origin, and dispatches `release.yml`
+  via `gh workflow run release.yml --ref refs/tags/<tag> -f version=<tag>`.
+  `softprops/action-gh-release@v2` then uploads to the existing Release
+  object in place (idempotent).
+- **`.lovable/cicd-issues/03-tag-created-out-of-band-does-not-trigger-release.md`** — RCA + fix.
+
+### Changed
+- Root `readme.md` install snippets pinned to `v3.2.0`.
+- All version-carrying files bumped `3.0.0` → `3.2.0`.
+
+### Recovery for v3.1.0
+Re-run **Release Build** via `workflow_dispatch` for `v3.1.0`, or touch
+`.gitmap/release/latest.json` so the new watcher picks it up.
+
+---
+
 ## [v3.0.0] — 2026-05-18 Release pipeline hardening (major)
 
 ### Why a major bump
