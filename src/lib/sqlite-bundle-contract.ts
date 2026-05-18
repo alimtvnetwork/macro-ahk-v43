@@ -21,13 +21,23 @@
  *   - Required tables are ALWAYS present in a valid bundle.
  *     Optional tables may be absent (e.g. prompts-only export).
  *
- * Format version: '5' (current). v4 still accepted for read-back compat.
+ * Format version: '6' (current). v4/v5 still accepted for read-back compat.
  *
  * v5 additions vs v4 (all optional, additive — v4 bundles still validate):
  *   - Projects: Slug, Cookies, Dependencies, IsGlobal, IsRemovable
  *   - Scripts:  UpdateUrl, LastUpdateCheck
  *   - Prompts:  Slug is now actually emitted (was contract-allowed in v4
  *               but never written — see audit Pr-1 / Task Next resolver).
+ *
+ * v6 additions vs v5 (all optional, additive — v5 bundles still validate):
+ *   - Dependencies (new table): row-per-dependency promotion of the
+ *     Projects.Dependencies JSON blob. JSON blob still emitted for
+ *     backward read by v4/v5-only builds.
+ *   - Variables (new table): row-per-variable promotion of the
+ *     Projects.Settings.variables JSON map. Settings JSON still emitted
+ *     for backward read.
+ *   - Projects.SchemaVersion default bumped 1 → 2 on emit (readers that
+ *     understand row-tables prefer them when SchemaVersion >= 2).
  *
  * See also:
  *   - docs/diagrams/sqlite-bundle-erd.mmd
