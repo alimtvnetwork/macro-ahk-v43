@@ -29,7 +29,7 @@ the wrong release.
 
 ## Status
 
-✅ Resolved — 2026-05-18 (v3.3.0)
+✅ Resolved — 2026-05-18 (v3.4.0)
 
 ## Fix
 
@@ -52,4 +52,4 @@ the wrong release.
 
 - `.github/workflows/release.yml`
 - `.github/workflows/release-watcher.yml`
-- `changelog.md` v3.3.0
+- `changelog.md` v3.4.0

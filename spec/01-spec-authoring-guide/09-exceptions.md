@@ -1,6 +1,6 @@
 # Exceptions & Special Cases
 
-**Version:** 3.3.0
+**Version:** 3.4.0
 **Updated:** 2026-04-27
 
 ---

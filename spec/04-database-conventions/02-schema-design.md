@@ -1,6 +1,6 @@
 # Database Schema Design
 
-**Version:** 3.3.0  
+**Version:** 3.4.0  
 **Updated:** 2026-04-19
 
 ---

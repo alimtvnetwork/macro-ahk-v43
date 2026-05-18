@@ -6,6 +6,42 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [v3.4.0] — 2026-05-18 Release-event trigger hardening (API-created releases)
+
+### Why
+v3.1.0 published with only the two stamped installer scripts (`release-version-v3.1.0.ps1/.sh`)
+and GitHub's auto-generated source archives. None of `marco-extension-v3.1.0.zip`,
+`checksums.txt`, `RELEASE_NOTES.md`, `macro-controller-*.zip`, etc. were uploaded.
+
+### Root cause
+The release was created via the GitHub **REST API** by external release tooling
+(`POST /repos/{owner}/{repo}/releases`). GitHub creates the tag **server-side**
+in that flow, and **API-created tags do NOT fire `push` or `create` webhook
+events**. Our `release.yml` only listened to `push: tags: v*`, `create:`,
+`push: release/**`, and `workflow_dispatch` — so none of them fired. The
+`release-watcher.yml` fallback also did not recover because the descriptor
+commit and tag arrived concurrently with the release creation.
+
+### Fixed
+- **`.github/workflows/release.yml`** — added `on: release: types:
+  [published, created, edited, released]`. The `release` event is the **only**
+  trigger that reliably fires for every publish path: web UI, gh CLI, REST API,
+  and external tooling. The `setup` job now resolves the version from
+  `github.event.release.tag_name`, fetches the tag, and feeds the existing
+  build/verify/upload pipeline. `softprops/action-gh-release@v2` updates the
+  existing Release in place (idempotent), so missing assets are filled in.
+
+### Recovery for v3.1.0
+After this change is on `main`, re-run **Release Build** via `workflow_dispatch`
+with `version: v3.1.0` (or edit the release on GitHub — that fires
+`release: edited` and re-runs the workflow automatically).
+
+### Changed
+- All version-carrying files bumped `3.3.0` → `3.4.0`.
+- Root `readme.md` install snippets pinned to `v3.4.0`.
+
+---
+
 ## [v3.3.0] — 2026-05-18 Release create-event trigger hardening
 
 ### Why
@@ -25,8 +61,8 @@ and leave the Release page with no built ZIPs or installer assets.
   tag.
 
 ### Changed
-- Root `readme.md` install snippets pinned to `v3.3.0`.
-- All version-carrying files bumped `3.2.0` → `3.3.0`.
+- Root `readme.md` install snippets pinned to `v3.4.0`.
+- All version-carrying files bumped `3.2.0` → `3.4.0`.
 
 ---
 

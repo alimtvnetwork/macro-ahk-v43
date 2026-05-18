@@ -58,7 +58,7 @@ Licensed      BOOLEAN
 
 Boolean columns MUST express a **single, self-contained state** — never an explicit negation that begins with `Not` or `No`. The forbidden pattern is the **double negative** (e.g., `WHERE IsNotActive = 0` reads "is not not active").
 
-> **Important clarification (v3.3.0):** Names like `IsDisabled`, `IsInvalid`, `IsUnverified`, and `IsUnpublished` are **NOT considered negatives** here. They are legitimate positive states of a domain concept (a row genuinely *is* in the disabled / invalid / unverified / unpublished state). The forbidden form is the **explicit `Not`/`No` prefix**, which produces double negatives in WHERE clauses.
+> **Important clarification (v3.4.0):** Names like `IsDisabled`, `IsInvalid`, `IsUnverified`, and `IsUnpublished` are **NOT considered negatives** here. They are legitimate positive states of a domain concept (a row genuinely *is* in the disabled / invalid / unverified / unpublished state). The forbidden form is the **explicit `Not`/`No` prefix**, which produces double negatives in WHERE clauses.
 
 ```sql
 -- ❌ FORBIDDEN — explicit Not/No prefix produces double negatives
