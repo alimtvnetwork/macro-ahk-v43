@@ -187,6 +187,45 @@ const memberships = Object.freeze({
             params: { wsId, ...options?.params },
         });
     },
+
+    /**
+     * Invite a user to a workspace by email.
+     * PENDING-VERIFY: confirm endpoint shape on first live call.
+     */
+    invite(
+        wsId: string,
+        email: string,
+        role: "member" | "owner",
+        options?: ApiCallOptions,
+    ): Promise<ApiResponse> {
+        return callEndpoint(apiRegistry.memberships.invite, {
+            ...options,
+            params: { wsId, ...options?.params },
+            body: { email, role, ...((options?.body as Record<string, unknown>) ?? {}) },
+        });
+    },
+
+    /** Remove a member from a workspace. PENDING-VERIFY. */
+    remove(wsId: string, userId: string, options?: ApiCallOptions): Promise<ApiResponse> {
+        return callEndpoint(apiRegistry.memberships.remove, {
+            ...options,
+            params: { wsId, userId, ...options?.params },
+        });
+    },
+
+    /** Change a member's role (typically promote to owner). PENDING-VERIFY. */
+    updateRole(
+        wsId: string,
+        userId: string,
+        role: "member" | "owner",
+        options?: ApiCallOptions,
+    ): Promise<ApiResponse> {
+        return callEndpoint(apiRegistry.memberships.updateRole, {
+            ...options,
+            params: { wsId, userId, ...options?.params },
+            body: { role, ...((options?.body as Record<string, unknown>) ?? {}) },
+        });
+    },
 });
 
 const projects = Object.freeze({
