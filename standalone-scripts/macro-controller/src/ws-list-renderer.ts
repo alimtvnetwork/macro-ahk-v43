@@ -419,6 +419,11 @@ function buildWsRow(
   const selEl = document.getElementById(DomId.LoopWsSelected);
   const isSel = selEl ? selEl.getAttribute(DataAttr.SelectedId) === wsId : false;
   const isChecked = !!getLoopWsCheckedIds()[wsId];
+  // spec/22-app-issues/113: the custom hover card (ws-hover-card.ts) is the
+  // single source of truth for workspace hover info. Stash the fallback text
+  // on a data- attribute (consumed by the hover card / debug tools) instead
+  // of `row.title`, which would re-introduce the native browser tooltip and
+  // produce the duplicate-tooltip bug.
   const tooltip = buildLoopTooltipText(ws).replace(/"/g, '&quot;');
 
   const row = document.createElement('div');
@@ -428,7 +433,7 @@ function buildWsRow(
   row.setAttribute(DataAttr.WsCurrent, isCurrent ? 'true' : 'false');
   row.setAttribute('data-ws-idx', String(count));
   row.setAttribute('data-ws-raw-idx', String(wsIndex));
-  row.title = tooltip;
+  row.setAttribute('data-marco-tip', tooltip);
   // v2.195.0: padding bumped 5px/6px → 7px/8px to give the larger EXPIRED
   // badge room to breathe without crowding adjacent rows.
   row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:7px 8px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);transition:background 0.15s;font-size:11px;' + wsRowBgStyle(isCurrent, isSel);
