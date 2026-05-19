@@ -25,6 +25,7 @@ import { showToast } from './toast';
 
 const PANEL_ID = 'marco-ws-members-panel';
 const Z_INDEX = 100002;
+const CSS_BG = 'background:';
 
 /* ------------------------------------------------------------------ */
 /*  HTML helpers                                                       */
