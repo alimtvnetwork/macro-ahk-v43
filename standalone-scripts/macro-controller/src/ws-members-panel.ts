@@ -20,6 +20,8 @@ import { cPanelBg, cPanelFg, cPanelBorder, cPrimary, cPrimaryLight, lDropdownRad
 import { fetchWorkspaceMembers, clearMembersCache, type WorkspaceMember } from './ws-members-fetch';
 import { logError } from './error-utils';
 import { formatDateDDMMMYY } from './workspace-status';
+import { inviteMember } from './ws-members-mutations';
+import { showToast } from './toast';
 
 const PANEL_ID = 'marco-ws-members-panel';
 const Z_INDEX = 100002;
@@ -174,15 +176,45 @@ function headerHtml(wsName: string, state: PanelState): string {
     + '</div>';
 }
 
-// v3.4.3 (task 11) — Footer scaffold. Task 13 wires the +Add member form.
-function footerHtml(): string {
+// v3.4.3 (task 13) — Footer renders either the collapsed +Add button or the invite form.
+function footerCollapsedHtml(): string {
+  return '<button type="button" data-marco-action="add-member-toggle" '
+    + 'style="width:100%;background:rgba(0,122,204,0.18);color:#bae6fd;border:1px dashed ' + cPrimary + ';'
+    + 'border-radius:3px;padding:4px 6px;font-size:11px;cursor:pointer;line-height:1.2;">'
+    + '+ Add member'
+    + '</button>';
+}
+
+function footerFormHtml(): string {
+  return '<form data-marco-action="add-member-submit" '
+    + 'style="display:flex;flex-direction:column;gap:6px;">'
+    +   '<div style="display:flex;gap:4px;">'
+    +     '<input type="email" required name="email" placeholder="user@example.com" '
+    +       'data-marco-field="invite-email" '
+    +       'style="flex:1;min-width:0;padding:3px 6px;border:1px solid ' + cPrimaryLight + ';'
+    +       'border-radius:3px;background:' + cPanelBg + ';color:' + cPanelFg + ';font-size:11px;outline:none;">'
+    +     '<select name="role" data-marco-field="invite-role" '
+    +       'style="padding:3px 4px;border:1px solid ' + cPrimaryLight + ';border-radius:3px;'
+    +       'background:' + cPanelBg + ';color:' + cPanelFg + ';font-size:11px;">'
+    +       '<option value="member">Member</option>'
+    +       '<option value="owner">Owner</option>'
+    +     '</select>'
+    +   '</div>'
+    +   '<div style="display:flex;gap:4px;justify-content:flex-end;">'
+    +     '<button type="button" data-marco-action="add-member-cancel" '
+    +       'style="background:rgba(100,116,139,0.35);color:#e2e8f0;border:1px solid ' + cPanelBorder + ';'
+    +       'border-radius:3px;padding:3px 8px;font-size:11px;cursor:pointer;">Cancel</button>'
+    +     '<button type="submit" data-marco-field="invite-submit" '
+    +       'style="background:rgba(0,122,204,0.4);color:#e0f2fe;border:1px solid ' + cPrimary + ';'
+    +       'border-radius:3px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;">Send invite</button>'
+    +   '</div>'
+    + '</form>';
+}
+
+function footerHtml(expanded = false): string {
   return '<div data-marco-section="members-footer" '
     + 'style="padding:6px 10px;border-top:1px solid ' + cPanelBorder + ';background:rgba(0,0,0,0.2);">'
-    +   '<button type="button" data-marco-action="add-member-toggle" '
-    +     'style="width:100%;background:rgba(0,122,204,0.18);color:#bae6fd;border:1px dashed ' + cPrimary + ';'
-    +     'border-radius:3px;padding:4px 6px;font-size:11px;cursor:pointer;line-height:1.2;">'
-    +     '+ Add member'
-    +   '</button>'
+    + (expanded ? footerFormHtml() : footerCollapsedHtml())
     + '</div>';
 }
 
@@ -202,6 +234,7 @@ type PanelState = PanelStateLoading | PanelStateError | PanelStateSuccess;
 interface PanelHandlerStore {
   _marcoMembersOutsideClick?: (e: MouseEvent) => void;
   _marcoMembersKey?: (e: KeyboardEvent) => void;
+  _marcoMembersSubmit?: (e: Event) => void;
 }
 
 function ensurePanelEl(): HTMLDivElement {
@@ -253,9 +286,70 @@ function render(el: HTMLElement, wsName: string, state: PanelState): void {
   el.innerHTML = headerHtml(wsName, state) + buildBodyHtml(state) + footerHtml();
 }
 
+function findFooter(el: HTMLElement): HTMLElement | null {
+  return el.querySelector('[data-marco-section="members-footer"]') as HTMLElement | null;
+}
+
+function swapFooter(el: HTMLElement, expanded: boolean): void {
+  const footer = findFooter(el);
+  if (!footer) return;
+  footer.innerHTML = expanded ? footerFormHtml() : footerCollapsedHtml();
+  if (expanded) {
+    const emailInput = footer.querySelector('[data-marco-field="invite-email"]') as HTMLInputElement | null;
+    if (emailInput) emailInput.focus();
+  }
+}
+
+// v3.4.3 (task 13) — Submit invite + optimistic insert. Reverts on failure.
+function submitInvite(el: HTMLElement, wsId: string, wsName: string, form: HTMLFormElement): void {
+  const emailInput = form.querySelector('[data-marco-field="invite-email"]') as HTMLInputElement | null;
+  const roleSelect = form.querySelector('[data-marco-field="invite-role"]') as HTMLSelectElement | null;
+  const submitBtn = form.querySelector('[data-marco-field="invite-submit"]') as HTMLButtonElement | null;
+  const email = (emailInput?.value || '').trim();
+  const roleRaw = (roleSelect?.value || 'member').toLowerCase();
+  const role: 'member' | 'owner' = roleRaw === 'owner' ? 'owner' : 'member';
+  if (!email) {
+    if (emailInput) emailInput.focus();
+    return;
+  }
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+  }
+
+  // Optimistic placeholder row inserted at the top of the list.
+  const body = el.querySelector('div[style*="max-height:380px"]') as HTMLElement | null;
+  const optimisticId = 'optimistic-' + Date.now();
+  let optimisticEl: HTMLElement | null = null;
+  if (body) {
+    optimisticEl = document.createElement('div');
+    optimisticEl.setAttribute('data-marco-optimistic', optimisticId);
+    optimisticEl.style.cssText = 'padding:6px 8px;border-bottom:1px solid rgba(148,163,184,0.12);font-size:11px;color:#bae6fd;opacity:0.75;';
+    optimisticEl.textContent = '⏳ Inviting ' + email + ' (' + role + ')…';
+    body.insertBefore(optimisticEl, body.firstChild);
+  }
+
+  inviteMember(wsId, email, role)
+    .then(function () {
+      showToast('✉️ Invited ' + email, 'success');
+      swapFooter(el, false);
+      // Refetch authoritative list — drops optimistic row.
+      loadAndRender(el, wsId, wsName);
+    })
+    .catch(function (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      showToast('❌ Invite failed: ' + msg, 'error');
+      if (optimisticEl && optimisticEl.parentNode) optimisticEl.parentNode.removeChild(optimisticEl);
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send invite';
+      }
+    });
+}
+
 function attachActionHandlers(el: HTMLElement, wsId: string, wsName: string): void {
   el.onclick = function (e: MouseEvent): void {
-    const target = e.target as HTMLElement | null;
+    const target = (e.target as HTMLElement | null)?.closest('[data-marco-action]') as HTMLElement | null;
     if (!target) return;
     const action = target.getAttribute('data-marco-action');
     if (action === 'close') {
@@ -265,8 +359,33 @@ function attachActionHandlers(el: HTMLElement, wsId: string, wsName: string): vo
       e.stopPropagation();
       clearMembersCache(wsId);
       loadAndRender(el, wsId, wsName);
+    } else if (action === 'add-member-toggle') {
+      e.stopPropagation();
+      swapFooter(el, true);
+    } else if (action === 'add-member-cancel') {
+      e.stopPropagation();
+      swapFooter(el, false);
     }
   };
+
+  // v3.4.3 (task 13) — Form submit hook (Enter or click on Send invite).
+  // Dedupe: remove any previously attached listener before re-binding to the
+  // current (wsId, wsName) pair so reopening the panel for a different
+  // workspace does not stack invite handlers.
+  const store = el as HTMLElement & PanelHandlerStore;
+  if (store._marcoMembersSubmit) {
+    el.removeEventListener('submit', store._marcoMembersSubmit);
+  }
+  const submitHandler = function (e: Event): void {
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+    if (target.getAttribute('data-marco-action') !== 'add-member-submit') return;
+    e.preventDefault();
+    e.stopPropagation();
+    submitInvite(el, wsId, wsName, target as HTMLFormElement);
+  };
+  store._marcoMembersSubmit = submitHandler;
+  el.addEventListener('submit', submitHandler);
 }
 
 function attachDismissHandlers(el: HTMLElement): void {
