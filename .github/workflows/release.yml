@@ -53,12 +53,21 @@ on:
         description: 'Existing tag to (re)publish, e.g. v2.192.0'
         required: true
         type: string
+      source_ref:
+        description: 'Optional source ref/SHA to build from while uploading to the existing version tag. Use only to recover a stale broken tag.'
+        required: false
+        type: string
   workflow_call:
     inputs:
       version:
         description: 'Existing tag to (re)publish, e.g. v2.192.0'
         required: true
         type: string
+      source_ref:
+        description: 'Optional source ref/SHA to build from while uploading to the existing version tag. Use only to recover a stale broken tag.'
+        required: false
+        type: string
+        default: ''
 
 # Release builds must NEVER be cancelled — every release commit
 # must produce a GitHub Release regardless of newer commits.
