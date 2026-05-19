@@ -310,5 +310,10 @@ export function showWsMembersPanel(wsId: string, wsName: string, x: number, y: n
 export function hideWsMembersPanel(): void {
   detachDismissHandlers();
   const el = document.getElementById(PANEL_ID);
-  if (el) el.style.display = 'none';
+  if (el) {
+    // v3.4.3 (task 11) — reset animation state so next open re-plays the slide
+    el.style.display = 'none';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-4px)';
+  }
 }
