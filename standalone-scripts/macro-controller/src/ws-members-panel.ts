@@ -234,6 +234,7 @@ type PanelState = PanelStateLoading | PanelStateError | PanelStateSuccess;
 interface PanelHandlerStore {
   _marcoMembersOutsideClick?: (e: MouseEvent) => void;
   _marcoMembersKey?: (e: KeyboardEvent) => void;
+  _marcoMembersSubmit?: (e: Event) => void;
 }
 
 function ensurePanelEl(): HTMLDivElement {
