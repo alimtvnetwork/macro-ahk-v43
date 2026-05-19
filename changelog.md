@@ -6,7 +6,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [v3.5.0] — 2026-05-19 Error-swallow P1 sweep and CI hygiene
+
+### Changed
+- Bumped extension, SDK, and standalone-script versions to **3.5.0**.
+- Synced `manifest.json`, `src/shared/constants.ts`, and all
+  `standalone-scripts/*/src/instruction.ts` descriptors.
+
+### Fixed
+- Cleared remaining P1 error-swallow audit items in
+  `standalone-scripts/macro-controller/` (`startup.ts`, `toast.ts`,
+  `ui/error-overlay.ts`, `ui/settings-ui.ts`, `ws-move.ts`,
+  `async-utils.ts`, `spa-route-guard.ts`, `startup-timing.ts`) by
+  adding documented `// allow-swallow:` markers. Audit now reports
+  **P1: 0**.
+- Renamed `.lovable/question-and-ambiguity/README.md` to
+  `readme.md` to satisfy the lowercase-`.md` CI check.
+
 ## [v3.4.2] — 2026-05-18 Version bump
+
 
 ### Changed
 - Bumped extension, SDK, and standalone-script versions to **3.4.2**.
