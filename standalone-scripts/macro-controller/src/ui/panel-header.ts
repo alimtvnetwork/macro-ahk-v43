@@ -35,7 +35,6 @@ import { getCurrentWorkspaceDisplayName, getTitleBarDisplayState } from './title
 import { buildHeaderRemixSplitButton } from '../remix-dropdown';
 import { extractProjectIdFromUrl } from '../workspace-detection';
 import { getDisplayProjectName } from '../logging';
-import { buildSettingsButton } from '../settings-button';
 import { loopCreditState } from '../shared-state';
 // ============================================
 // Return type for buildTitleRow
@@ -93,7 +92,8 @@ function _buildTitleElements(deps: PanelBuilderDeps, plCtx: PanelLayoutCtx) {
     };
   });
 
-  const settingsBtn = buildSettingsButton();
+  // v3.4.3 (task 10) — Settings (gear) button removed from workspace section per spec 113.
+  // The Macro Settings modal exposed credits/grace-period fields the user cannot modify.
 
   const panelToggleSpan = document.createElement('span');
   panelToggleSpan.style.cssText = CssFragment.FontSize + tFontTiny + ';color:' + cNeutral500 + ';cursor:pointer;margin-right:4px;white-space:nowrap;flex-shrink:0;';
@@ -109,7 +109,7 @@ function _buildTitleElements(deps: PanelBuilderDeps, plCtx: PanelLayoutCtx) {
   hideBtn.onclick = function(e: Event) { e.stopPropagation(); destroyPanel(); };
 
   return {
-    elements: { title, wsNameEl, versionSpan, remixSplit, settingsBtn, authBadge, panelToggleSpan, hideBtn },
+    elements: { title, wsNameEl, versionSpan, remixSplit, authBadge, panelToggleSpan, hideBtn },
     wsNameEl, authBadge, panelToggleSpan, hideBtn,
   };
 }
@@ -135,7 +135,7 @@ function _assembleTitleRow(titleRow: HTMLElement, els: Record<string, HTMLElemen
   titleRow.appendChild(els.wsNameEl);
   titleRow.appendChild(els.versionSpan);
   titleRow.appendChild(els.remixSplit);
-  titleRow.appendChild(els.settingsBtn);
+  // settingsBtn intentionally not appended — removed per spec 113 (task 10).
   titleRow.appendChild(els.authBadge);
   titleRow.appendChild(els.panelToggleSpan);
   titleRow.appendChild(els.hideBtn);
