@@ -1,24 +1,6 @@
 {
-  "GeneratedAt": "2026-05-19T14:32:58.058Z",
+  "GeneratedAt": "2026-05-19T14:34:17.724Z",
   "Items": [
-    {
-      "Id": "8809e272326d",
-      "Severity": "P1",
-      "File": "src/background/handlers/sdk-selftest-handler.ts",
-      "Line": 182,
-      "Rule": "no-empty-catch",
-      "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
-      "Snippet": "catch {"
-    },
-    {
-      "Id": "2a2900d51f34",
-      "Severity": "P1",
-      "File": "src/background/hot-reload.ts",
-      "Line": 119,
-      "Rule": "no-empty-catch",
-      "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
-      "Snippet": "catch {"
-    },
     {
       "Id": "6fb25361d528",
       "Severity": "P1",
@@ -144,24 +126,6 @@
       "Rule": "no-empty-catch",
       "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
       "Snippet": "catch {"
-    },
-    {
-      "Id": "7c5cff7c358e",
-      "Severity": "P1",
-      "File": "standalone-scripts/macro-controller/src/ui/bulk-rename.ts",
-      "Line": 153,
-      "Rule": "no-empty-catch",
-      "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
-      "Snippet": "catch {"
-    },
-    {
-      "Id": "6700516048ae",
-      "Severity": "P1",
-      "File": "standalone-scripts/macro-controller/src/ui/bulk-rename.ts",
-      "Line": 225,
-      "Rule": "no-empty-catch",
-      "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
-      "Snippet": "catch(function () {"
     },
     {
       "Id": "d197c90c5407",
