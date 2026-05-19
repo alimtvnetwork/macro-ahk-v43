@@ -176,15 +176,45 @@ function headerHtml(wsName: string, state: PanelState): string {
     + '</div>';
 }
 
-// v3.4.3 (task 11) — Footer scaffold. Task 13 wires the +Add member form.
-function footerHtml(): string {
+// v3.4.3 (task 13) — Footer renders either the collapsed +Add button or the invite form.
+function footerCollapsedHtml(): string {
+  return '<button type="button" data-marco-action="add-member-toggle" '
+    + 'style="width:100%;background:rgba(0,122,204,0.18);color:#bae6fd;border:1px dashed ' + cPrimary + ';'
+    + 'border-radius:3px;padding:4px 6px;font-size:11px;cursor:pointer;line-height:1.2;">'
+    + '+ Add member'
+    + '</button>';
+}
+
+function footerFormHtml(): string {
+  return '<form data-marco-action="add-member-submit" '
+    + 'style="display:flex;flex-direction:column;gap:6px;">'
+    +   '<div style="display:flex;gap:4px;">'
+    +     '<input type="email" required name="email" placeholder="user@example.com" '
+    +       'data-marco-field="invite-email" '
+    +       'style="flex:1;min-width:0;padding:3px 6px;border:1px solid ' + cPrimaryLight + ';'
+    +       'border-radius:3px;background:' + cPanelBg + ';color:' + cPanelFg + ';font-size:11px;outline:none;">'
+    +     '<select name="role" data-marco-field="invite-role" '
+    +       'style="padding:3px 4px;border:1px solid ' + cPrimaryLight + ';border-radius:3px;'
+    +       'background:' + cPanelBg + ';color:' + cPanelFg + ';font-size:11px;">'
+    +       '<option value="member">Member</option>'
+    +       '<option value="owner">Owner</option>'
+    +     '</select>'
+    +   '</div>'
+    +   '<div style="display:flex;gap:4px;justify-content:flex-end;">'
+    +     '<button type="button" data-marco-action="add-member-cancel" '
+    +       'style="background:rgba(100,116,139,0.35);color:#e2e8f0;border:1px solid ' + cPanelBorder + ';'
+    +       'border-radius:3px;padding:3px 8px;font-size:11px;cursor:pointer;">Cancel</button>'
+    +     '<button type="submit" data-marco-field="invite-submit" '
+    +       'style="background:rgba(0,122,204,0.4);color:#e0f2fe;border:1px solid ' + cPrimary + ';'
+    +       'border-radius:3px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;">Send invite</button>'
+    +   '</div>'
+    + '</form>';
+}
+
+function footerHtml(expanded = false): string {
   return '<div data-marco-section="members-footer" '
     + 'style="padding:6px 10px;border-top:1px solid ' + cPanelBorder + ';background:rgba(0,0,0,0.2);">'
-    +   '<button type="button" data-marco-action="add-member-toggle" '
-    +     'style="width:100%;background:rgba(0,122,204,0.18);color:#bae6fd;border:1px dashed ' + cPrimary + ';'
-    +     'border-radius:3px;padding:4px 6px;font-size:11px;cursor:pointer;line-height:1.2;">'
-    +     '+ Add member'
-    +   '</button>'
+    + (expanded ? footerFormHtml() : footerCollapsedHtml())
     + '</div>';
 }
 
