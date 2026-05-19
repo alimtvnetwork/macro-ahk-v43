@@ -1,20 +1,20 @@
 {
-  "GeneratedAt": "2026-05-02T15:34:50.273Z",
+  "GeneratedAt": "2026-05-19T08:01:05.603Z",
   "Items": [
     {
-      "Id": "ea4ec7cbb1e9",
+      "Id": "e774b905e36b",
       "Severity": "P1",
       "File": "src/background/bg-logger.ts",
-      "Line": 120,
+      "Line": 121,
       "Rule": "no-noop-promise-catch",
       "Message": "Promise .catch() handler is a no-op — rejection is silently swallowed.",
       "Snippet": ".catch(() => { })"
     },
     {
-      "Id": "90a15c4090f8",
+      "Id": "4bf7818865ff",
       "Severity": "P1",
       "File": "src/background/bg-logger.ts",
-      "Line": 123,
+      "Line": 124,
       "Rule": "no-empty-catch",
       "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
       "Snippet": "catch {"
@@ -87,6 +87,15 @@
       "Severity": "P1",
       "File": "src/background/handlers/updater-handler.ts",
       "Line": 344,
+      "Rule": "no-empty-catch",
+      "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
+      "Snippet": "catch {"
+    },
+    {
+      "Id": "5116f06c97b8",
+      "Severity": "P1",
+      "File": "src/background/handlers/xpath-handler.ts",
+      "Line": 88,
       "Rule": "no-empty-catch",
       "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
       "Snippet": "catch {"
@@ -227,6 +236,15 @@
       "Snippet": "catch {"
     },
     {
+      "Id": "b3bf6757397f",
+      "Severity": "P1",
+      "File": "src/background/url-trigger.ts",
+      "Line": 256,
+      "Rule": "no-empty-catch",
+      "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
+      "Snippet": "catch {"
+    },
+    {
       "Id": "9393910b543f",
       "Severity": "P1",
       "File": "standalone-scripts/macro-controller/src/async-utils.ts",
@@ -234,6 +252,15 @@
       "Rule": "no-empty-catch",
       "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
       "Snippet": "catch {"
+    },
+    {
+      "Id": "4cbe30b56a78",
+      "Severity": "P1",
+      "File": "standalone-scripts/macro-controller/src/spa-route-guard.ts",
+      "Line": 148,
+      "Rule": "no-empty-catch",
+      "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
+      "Snippet": "catch (_e: unknown) {"
     },
     {
       "Id": "af5335889b7b",
@@ -245,10 +272,10 @@
       "Snippet": "catch {"
     },
     {
-      "Id": "881d068150db",
+      "Id": "8091c9d69e2a",
       "Severity": "P1",
       "File": "standalone-scripts/macro-controller/src/startup.ts",
-      "Line": 87,
+      "Line": 88,
       "Rule": "no-empty-catch",
       "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
       "Snippet": "catch (_e: unknown) {"
@@ -335,6 +362,24 @@
       "Snippet": "catch {"
     },
     {
+      "Id": "37f11b3377b2",
+      "Severity": "P2",
+      "File": "src/components/options/options-logger.ts",
+      "Line": 67,
+      "Rule": "no-noop-promise-catch",
+      "Message": "Promise .catch() handler is a no-op — rejection is silently swallowed.",
+      "Snippet": ".catch(() => { })"
+    },
+    {
+      "Id": "7d09144bb2b1",
+      "Severity": "P2",
+      "File": "src/components/options/options-logger.ts",
+      "Line": 70,
+      "Rule": "no-empty-catch",
+      "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
+      "Snippet": "catch {"
+    },
+    {
       "Id": "8118ea1fe906",
       "Severity": "P2",
       "File": "src/components/options/project-database/JsonSchemaTab.tsx",
@@ -353,10 +398,10 @@
       "Snippet": "catch {"
     },
     {
-      "Id": "7f08af5cb46e",
+      "Id": "acdefe475612",
       "Severity": "P2",
       "File": "src/components/options/ProjectDetailView.tsx",
-      "Line": 1106,
+      "Line": 1110,
       "Rule": "no-empty-catch",
       "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
       "Snippet": "catch {"
@@ -378,6 +423,15 @@
       "Rule": "no-empty-catch",
       "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
       "Snippet": "catch {"
+    },
+    {
+      "Id": "35d7ba8c9a24",
+      "Severity": "P2",
+      "File": "src/components/options/recorder/recorder-self-test.ts",
+      "Line": 83,
+      "Rule": "no-noop-promise-catch",
+      "Message": "Promise .catch() handler is a no-op — rejection is silently swallowed.",
+      "Snippet": ".catch(() => undefined)"
     },
     {
       "Id": "484d3da8c631",
@@ -686,19 +740,19 @@
       "Snippet": "catch {"
     },
     {
-      "Id": "bd219e719a4e",
+      "Id": "86fbf1f995b1",
       "Severity": "P2",
       "File": "src/lib/sqlite-bundle-contract.ts",
-      "Line": 267,
+      "Line": 317,
       "Rule": "no-empty-catch",
       "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
       "Snippet": "catch {"
     },
     {
-      "Id": "cd160db370f9",
+      "Id": "5b98857e1ef9",
       "Severity": "P2",
       "File": "src/lib/sqlite-bundle.ts",
-      "Line": 646,
+      "Line": 964,
       "Rule": "no-empty-catch",
       "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
       "Snippet": "catch {"
@@ -713,10 +767,10 @@
       "Snippet": "catch {"
     },
     {
-      "Id": "fab75ba72399",
+      "Id": "5c50a9ea803a",
       "Severity": "P2",
       "File": "src/pages/Options.tsx",
-      "Line": 131,
+      "Line": 134,
       "Rule": "no-noop-promise-catch",
       "Message": "Promise .catch() handler is a no-op — rejection is silently swallowed.",
       "Snippet": ".catch(() => { })"
