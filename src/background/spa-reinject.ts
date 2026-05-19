@@ -122,9 +122,18 @@ async function handleHistoryStateUpdated(
     if (isSameUrl) {
         return;
     }
+    // U-2 in-flight guard: prevent overlapping probes on the same tab
+    // when bursts include a URL change followed quickly by another.
+    if (probeInFlight.has(tabId)) {
+        return;
+    }
     lastProbedFingerprint.set(tabId, fp);
-
-    await scheduleMarkerProbe(tabId);
+    probeInFlight.add(tabId);
+    try {
+        await scheduleMarkerProbe(tabId);
+    } finally {
+        probeInFlight.delete(tabId);
+    }
 }
 
 /* ------------------------------------------------------------------ */
