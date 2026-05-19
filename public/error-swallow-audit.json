@@ -1,20 +1,11 @@
 {
-  "GeneratedAt": "2026-05-19T14:29:43.738Z",
+  "GeneratedAt": "2026-05-19T14:30:31.019Z",
   "Items": [
     {
       "Id": "e429c836984c",
       "Severity": "P1",
       "File": "src/background/db-persistence.ts",
       "Line": 38,
-      "Rule": "no-empty-catch",
-      "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
-      "Snippet": "catch {"
-    },
-    {
-      "Id": "e6ecf10da567",
-      "Severity": "P1",
-      "File": "src/background/handlers/dynamic-require-handler.ts",
-      "Line": 207,
       "Rule": "no-empty-catch",
       "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
       "Snippet": "catch {"
@@ -69,24 +60,6 @@
       "Severity": "P1",
       "File": "src/background/handlers/updater-handler.ts",
       "Line": 344,
-      "Rule": "no-empty-catch",
-      "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
-      "Snippet": "catch {"
-    },
-    {
-      "Id": "5116f06c97b8",
-      "Severity": "P1",
-      "File": "src/background/handlers/xpath-handler.ts",
-      "Line": 88,
-      "Rule": "no-empty-catch",
-      "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
-      "Snippet": "catch {"
-    },
-    {
-      "Id": "e386d6b85673",
-      "Severity": "P1",
-      "File": "src/background/handlers/xpath-validation-handler.ts",
-      "Line": 154,
       "Rule": "no-empty-catch",
       "Message": "Empty catch block — error is silently dropped, no Logger.error() call.",
       "Snippet": "catch {"
