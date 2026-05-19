@@ -47,10 +47,15 @@ tag.
 - `release.yml` now separates:
   - `ref` = source checkout/build ref, and
   - `publish_tag` = GitHub Release tag that receives uploaded assets.
+- Added a post-upload GitHub API verification step after `action-gh-release` so
+  the workflow fails if the live Release page is still missing any required
+  uploaded asset.
 - `release-watcher.yml` now compares the descriptor tag commit with current
   `main` commit. If they differ, it calls `release.yml` with
   `source_ref=<current fixed commit>` while keeping `version=vX.Y.Z` as the
   upload target.
+- Touched `.gitmap/release/v3.4.2.json` with an `assetRecovery` marker to force
+  the watcher path to replay `v3.4.2` after this fix lands.
 - Asset names, `VERSION.txt`, checksums, release notes, and `action-gh-release`
   still use the target tag (`v3.4.2`), so the existing Release page is repaired
   in place instead of requiring another version bump.
@@ -59,6 +64,8 @@ tag.
 
 - Recovery must not require a broken immutable tag to contain its own fix.
 - The workflow must distinguish build source from publish target.
+- Successful workflow completion must be based on the live GitHub Release asset
+  list, not only local `release-assets/` files.
 - Re-running Release Watcher after this change can repair existing source-only
   releases by rebuilding from fixed `main` and uploading to the existing tag.
 
