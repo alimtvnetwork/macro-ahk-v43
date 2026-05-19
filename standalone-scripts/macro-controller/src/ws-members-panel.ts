@@ -63,6 +63,42 @@ function roleBadge(role: string): string {
     + escHtml(role || 'member') + '</span>';
 }
 
+// v3.4.3 (task 12) — Initials avatar from display name / email
+function initialsFor(m: WorkspaceMember): string {
+  const src = (m.display_name || m.username || m.email || m.user_id || '?').trim();
+  const parts = src.split(/[\s@._-]+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+// v3.4.3 (task 12) — Deterministic avatar color from user_id hash
+function avatarBgFor(m: WorkspaceMember): string {
+  const key = m.user_id || m.email || m.username || '';
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  const hue = h % 360;
+  return 'hsl(' + hue + ',45%,32%)';
+}
+
+function avatarHtml(m: WorkspaceMember): string {
+  return '<span aria-hidden="true" style="flex-shrink:0;width:22px;height:22px;border-radius:50%;'
+    + 'background:' + avatarBgFor(m) + ';color:#f1f5f9;font-size:10px;font-weight:700;'
+    + 'display:inline-flex;align-items:center;justify-content:center;letter-spacing:0.3px;">'
+    + escHtml(initialsFor(m)) + '</span>';
+}
+
+// v3.4.3 (task 12) — ⋯ action menu trigger. Tasks 13/14 wire promote/remove handlers.
+function actionMenuHtml(m: WorkspaceMember): string {
+  return '<button type="button" data-marco-action="member-menu" '
+    + 'data-marco-user-id="' + escHtml(m.user_id) + '" '
+    + 'data-marco-user-role="' + escHtml(m.role || 'member') + '" '
+    + 'data-marco-user-label="' + escHtml(m.display_name || m.email || m.user_id) + '" '
+    + 'title="Member actions" '
+    + 'style="flex-shrink:0;background:transparent;color:#94a3b8;border:1px solid transparent;'
+    + 'border-radius:3px;padding:0 6px;height:20px;font-size:14px;line-height:1;cursor:pointer;">⋯</button>';
+}
+
 function memberRowHtml(m: WorkspaceMember, idx: number): string {
   const displayName = m.display_name || m.username || m.email || m.user_id;
   const credits = fmtNumber(m.total_credits_used);
@@ -70,20 +106,25 @@ function memberRowHtml(m: WorkspaceMember, idx: number): string {
   const joined = m.joined_at ? formatDateDDMMMYY(m.joined_at) : '—';
   const invited = m.invited_at ? formatDateDDMMMYY(m.invited_at) : '—';
 
-  return '<div style="display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-bottom:1px solid rgba(148,163,184,0.12);font-size:11px;">'
+  return '<div data-marco-member-row data-marco-user-id="' + escHtml(m.user_id) + '" '
+    + 'style="display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-bottom:1px solid rgba(148,163,184,0.12);font-size:11px;">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
     +   '<div style="display:flex;align-items:center;gap:6px;min-width:0;">'
-    +     '<span style="color:#64748b;font-size:10px;width:18px;text-align:right;flex-shrink:0;">' + (idx + 1) + '.</span>'
+    +     '<span style="color:#64748b;font-size:10px;width:14px;text-align:right;flex-shrink:0;">' + (idx + 1) + '.</span>'
+    +     avatarHtml(m)
     +     '<span style="color:#f1f5f9;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(displayName) + '</span>'
     +     roleBadge(m.role)
     +   '</div>'
-    +   '<span style="color:#34d399;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0;" title="Total credits used (all time)">' + credits + ' cr</span>'
+    +   '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">'
+    +     '<span style="color:#34d399;font-weight:700;font-variant-numeric:tabular-nums;" title="Total credits used (all time)">' + credits + ' cr</span>'
+    +     actionMenuHtml(m)
+    +   '</div>'
     + '</div>'
-    + '<div style="display:flex;justify-content:space-between;gap:8px;font-size:10px;color:#94a3b8;">'
+    + '<div style="display:flex;justify-content:space-between;gap:8px;font-size:10px;color:#94a3b8;padding-left:42px;">'
     +   '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + escHtml(m.email) + '">' + escHtml(m.email || '—') + '</span>'
     +   '<span title="Credits used this billing period">Period: ' + billingCredits + '</span>'
     + '</div>'
-    + '<div style="display:flex;justify-content:space-between;gap:8px;font-size:9px;color:#64748b;">'
+    + '<div style="display:flex;justify-content:space-between;gap:8px;font-size:9px;color:#64748b;padding-left:42px;">'
     +   '<span title="@username · user_id ' + escHtml(m.user_id) + '">@' + escHtml(m.username || '—') + '</span>'
     +   '<span>Joined ' + escHtml(joined) + ' · Invited ' + escHtml(invited) + '</span>'
     + '</div>'
