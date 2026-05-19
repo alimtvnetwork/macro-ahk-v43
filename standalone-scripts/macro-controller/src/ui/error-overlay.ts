@@ -783,7 +783,7 @@ function bridgeErrorToExtension(message: string, stack?: string, source?: string
       scriptCode: source || 'overlay',
     });
   } catch {
-    /* Extension unavailable — silently skip */
+    /* Extension unavailable — silently skip */ // allow-swallow: Overlay is designed to work independently; extension unavailability is normal (e.g., non-target tab).
   }
 }
 
