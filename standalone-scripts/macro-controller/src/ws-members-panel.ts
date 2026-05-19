@@ -608,6 +608,7 @@ export function showWsMembersPanel(wsId: string, wsName: string, x: number, y: n
 /** Hide and detach listeners. Safe to call when panel is not mounted. */
 export function hideWsMembersPanel(): void {
   detachDismissHandlers();
+  closeMemberActionMenu(); // v3.4.3 (task 14) — drop any open action menu
   const el = document.getElementById(PANEL_ID);
   if (el) {
     // v3.4.3 (task 11) — reset animation state so next open re-plays the slide
