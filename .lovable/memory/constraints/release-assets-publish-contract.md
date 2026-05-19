@@ -15,6 +15,10 @@ required built assets to the GitHub Release page:
 - `macro-controller-{VER}.zip`
 - `marco-sdk-{VER}.zip`
 - `xpath-{VER}.zip`
+- `payment-banner-hider-{VER}.zip`
+- `lovable-common-{VER}.zip`
+- `lovable-owner-switch-{VER}.zip`
+- `lovable-user-add-{VER}.zip`
 - `prompts-{VER}.zip` when prompts exist
 - `install.ps1`
 - `install.sh`
@@ -43,6 +47,9 @@ completion. Known causes:
 6. A stale immutable tag cannot contain fixes made after that tag was cut.
    Recovery must separate the build source ref from the publish target tag, or
    it will keep rebuilding the same broken tag source and never reach upload.
+7. Recovery/release workflows that package a non-existent build-output folder
+   such as `chrome-extension/` before `pnpm run build:extension` creates it will
+   fail before upload and leave the Release page source-only.
 
 ## Required CI/CD behavior
 
@@ -52,6 +59,8 @@ completion. Known causes:
   tag from the candidate list.
 - The release workflow must verify every required asset exists and is non-empty
   before calling `softprops/action-gh-release`.
+- The release workflow and recovery workflow must package every standalone
+  plugin ZIP, including support plugins, not only macro-controller/sdk/xpath.
 - The release body must include one-line install commands for Windows
   PowerShell and Linux/macOS Bash, plus direct download/install guidance for
   the Chrome-extension ZIP.

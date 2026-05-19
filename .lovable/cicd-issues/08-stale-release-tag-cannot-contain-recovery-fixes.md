@@ -37,13 +37,19 @@ build from a fixed source ref while uploading assets to the already-published
 tag.
 
 After that was fixed, the live GitHub API still showed `v3.4.2` with **zero**
-uploaded assets. The remaining operational gap was that descriptor/watch-based
-recovery and reusable `release.yml` recovery still run the full release pipeline
-before upload. If any pre-upload lint/test/build gate fails, the already-created
-Release page remains empty again. For an already-broken latest release, recovery
-must be self-contained: build only the assets needed for the Release page,
-upload them directly with `gh release upload --clobber`, edit the release body,
-then verify the live GitHub asset list.
+uploaded assets. The next recovery workflow still failed before upload because
+the direct recovery path packaged `chrome-extension/` without first proving that
+`pnpm run build:extension` had produced `chrome-extension/manifest.json` in this
+checkout. It also only listed the original three standalone ZIPs
+(`macro-controller`, `marco-sdk`, `xpath`) instead of **all** plugin ZIPs. That
+meant the workflow could either die before `gh release upload` or publish an
+incomplete Release page.
+
+For an already-broken latest release, recovery must be self-contained: build the
+exact extension output, build every standalone plugin, fail loudly if the real
+extension output path is missing, upload all assets directly with
+`gh release upload --clobber`, edit the release body, then verify the live GitHub
+asset list.
 
 ## Status
 
@@ -74,6 +80,15 @@ then verify the live GitHub asset list.
   checksums and release notes, uploads all assets with `gh release upload
   --clobber`, edits the existing `v3.4.2` Release body, and verifies the live
   GitHub Release asset list.
+- Fixed the direct recovery workflow to build and package **every** standalone
+  plugin ZIP: `macro-controller`, `marco-sdk`, `xpath`, `payment-banner-hider`,
+  `lovable-common`, `lovable-owner-switch`, and `lovable-user-add`, plus
+  `prompts` when present.
+- Added a hard `chrome-extension/manifest.json` check before packaging so the
+  recovery job reports the exact missing path instead of silently leaving the
+  Release page empty.
+- Updated the canonical release workflow and release audit to enforce those same
+  support-plugin ZIPs, not just the original three plugin assets.
 - Asset names, `VERSION.txt`, checksums, release notes, and `action-gh-release`
   still use the target tag (`v3.4.2`), so the existing Release page is repaired
   in place instead of requiring another version bump.
@@ -89,6 +104,8 @@ then verify the live GitHub asset list.
 - Recovery for an already-published empty Release page must not depend on the
   full release pipeline's unrelated pre-upload gates; upload repair assets first,
   then audit the live page.
+- Recovery must package the actual extension output path and every plugin folder;
+  a partial plugin list is still a broken release page.
 - Re-running Release Watcher after this change can repair existing source-only
   releases by rebuilding from fixed `main` and uploading to the existing tag.
 

@@ -13,6 +13,10 @@
 #   - macro-controller-{VER}.zip   — standalone-scripts/macro-controller/**
 #   - marco-sdk-{VER}.zip          — standalone-scripts/marco-sdk/**
 #   - xpath-{VER}.zip              — standalone-scripts/xpath/**
+#   - payment-banner-hider-{VER}.zip — standalone-scripts/payment-banner-hider/**
+#   - lovable-common-{VER}.zip     — standalone-scripts/lovable-common/**
+#   - lovable-owner-switch-{VER}.zip — standalone-scripts/lovable-owner-switch/**
+#   - lovable-user-add-{VER}.zip   — standalone-scripts/lovable-user-add/**
 #   - install.sh                   — Unified Bash installer (URL-pinned or latest)
 #   - install.ps1                  — Unified PowerShell installer (URL-pinned or latest)
 #   - VERSION.txt                  — Plain-text version identifier
@@ -102,9 +106,15 @@ jobs:
 
       - name: Resolve version and ref
         id: version
+        env:
+          EVENT_REF: ${{ github.event.ref }}
+          EVENT_REF_TYPE: ${{ github.event.ref_type }}
+          INPUT_SOURCE_REF: ${{ inputs.source_ref || github.event.inputs.source_ref }}
+          INPUT_VERSION: ${{ inputs.version || github.event.inputs.version }}
+          RELEASE_TAG_NAME: ${{ github.event.release.tag_name }}
         run: |
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            VERSION="${{ github.event.release.tag_name }}"
+          if [[ "${GITHUB_EVENT_NAME}" == "release" ]]; then
+            VERSION="${RELEASE_TAG_NAME}"
             if [[ -z "$VERSION" ]]; then
               echo "::error::release event fired without a tag_name"
               exit 1
@@ -116,27 +126,28 @@ jobs:
               exit 1
             fi
             REF="refs/tags/${VERSION}"
-          elif [[ "${{ github.event_name }}" == "create" ]]; then
-            EVENT_REF="${{ github.event.ref }}"
-            if [[ "${{ github.event.ref_type }}" == "tag" && "${{ github.event.ref }}" == v* ]]; then
+          elif [[ "${GITHUB_EVENT_NAME}" == "create" ]]; then
+            if [[ "${EVENT_REF_TYPE}" == "tag" && "${EVENT_REF}" == v* ]]; then
               VERSION="${EVENT_REF}"
               REF="refs/tags/${VERSION}"
-            elif [[ "${{ github.event.ref_type }}" == "branch" && "${{ github.event.ref }}" == release/* ]]; then
+            elif [[ "${EVENT_REF_TYPE}" == "branch" && "${EVENT_REF}" == release/* ]]; then
               VERSION="${EVENT_REF#release/}"
               REF="refs/heads/${EVENT_REF}"
             else
-              echo "Create event for ${{ github.event.ref_type }} '${{ github.event.ref }}' is not a release ref; skipping."
-            echo "version=skip" >> "$GITHUB_OUTPUT"
-            echo "ref=${GITHUB_REF}" >> "$GITHUB_OUTPUT"
-            echo "publish_tag=skip" >> "$GITHUB_OUTPUT"
-              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "Create event for ${EVENT_REF_TYPE} '${EVENT_REF}' is not a release ref; skipping."
+              {
+                echo "version=skip"
+                echo "ref=${GITHUB_REF}"
+                echo "publish_tag=skip"
+                echo "skip=true"
+              } >> "$GITHUB_OUTPUT"
               exit 0
             fi
-          elif [[ "${{ github.event_name }}" == "workflow_dispatch" || "${{ github.event_name }}" == "workflow_call" ]]; then
-            VERSION="${{ inputs.version || github.event.inputs.version }}"
-            SOURCE_REF="${{ inputs.source_ref || github.event.inputs.source_ref }}"
+          elif [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" || "${GITHUB_EVENT_NAME}" == "workflow_call" ]]; then
+            VERSION="${INPUT_VERSION}"
+            SOURCE_REF="${INPUT_SOURCE_REF}"
             if [[ -z "$VERSION" ]]; then
-              echo "::error::${{ github.event_name }} invoked without a version input"
+              echo "::error::${GITHUB_EVENT_NAME} invoked without a version input"
               exit 1
             fi
             # Validate the tag exists on the remote
@@ -170,10 +181,12 @@ jobs:
             echo "::error::Unexpected ref: $GITHUB_REF"
             exit 1
           fi
-          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "ref=${REF}" >> "$GITHUB_OUTPUT"
-          echo "publish_tag=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "skip=false" >> "$GITHUB_OUTPUT"
+          {
+            echo "version=${VERSION}"
+            echo "ref=${REF}"
+            echo "publish_tag=${VERSION}"
+            echo "skip=false"
+          } >> "$GITHUB_OUTPUT"
           echo "Resolved version: ${VERSION} (ref=${REF})"
 
       - name: Enforce lowercase .md filenames
@@ -443,6 +456,14 @@ jobs:
           name: prompts-dist
           path: standalone-scripts/prompts/
 
+      - name: Build support plugin outputs
+        run: |
+          set -euo pipefail
+          pnpm run build:payment-banner-hider
+          pnpm run build:lovable-common
+          pnpm run build:lovable-owner-switch
+          pnpm run build:lovable-user-add
+
       - name: Build Chrome extension
         run: pnpm run build:extension
 
@@ -512,17 +533,22 @@ jobs:
             cd ../..
           fi
 
-          cd standalone-scripts/macro-controller
-          zip -r "../../release-assets/macro-controller-${VER}.zip" .
-          cd ../..
-
-          cd standalone-scripts/marco-sdk
-          zip -r "../../release-assets/marco-sdk-${VER}.zip" .
-          cd ../..
-
-          cd standalone-scripts/xpath
-          zip -r "../../release-assets/xpath-${VER}.zip" .
-          cd ../..
+          PLUGINS=(
+            "macro-controller"
+            "marco-sdk"
+            "xpath"
+            "payment-banner-hider"
+            "lovable-common"
+            "lovable-owner-switch"
+            "lovable-user-add"
+          )
+          for plugin in "${PLUGINS[@]}"; do
+            if [ ! -d "standalone-scripts/${plugin}" ]; then
+              echo "::error file=standalone-scripts/${plugin}::Required plugin folder missing; release page must include every plugin ZIP"
+              exit 1
+            fi
+            (cd "standalone-scripts/${plugin}" && zip -r "../../release-assets/${plugin}-${VER}.zip" .)
+          done
 
           # ── Unified installer (URL-pinned when fetched from this release) ──
           # No stamping needed: install.{ps1,sh} parse the version from their
@@ -541,7 +567,7 @@ jobs:
 
           # ── Generate checksums ──
           cd release-assets
-          sha256sum * > checksums.txt
+          sha256sum -- * > checksums.txt
           cat checksums.txt
           cd ..
 
@@ -565,10 +591,10 @@ jobs:
 
           if [ -n "$PREV_TAG" ]; then
             echo "Generating changelog: ${PREV_TAG}..${VER} (HEAD)"
-            RANGE="${PREV_TAG}..HEAD"
+            LOG_RANGE=("${PREV_TAG}..HEAD")
           else
             echo "No previous tag found — using full history"
-            RANGE=""
+            LOG_RANGE=()
           fi
 
           REPO="${GITHUB_REPOSITORY}"
@@ -595,7 +621,7 @@ jobs:
             echo ""
 
             # Features
-            FEATS=$(git log $RANGE --pretty=format:"- %s (%h)" --grep="^feat" -i 2>/dev/null || true)
+            FEATS=$(git log "${LOG_RANGE[@]}" --pretty=format:"- %s (%h)" --grep="^feat" -i 2>/dev/null || true)
             if [ -n "$FEATS" ]; then
               echo "#### Features"
               echo "$FEATS"
@@ -603,7 +629,7 @@ jobs:
             fi
 
             # Fixes
-            FIXES=$(git log $RANGE --pretty=format:"- %s (%h)" --grep="^fix" -i 2>/dev/null || true)
+            FIXES=$(git log "${LOG_RANGE[@]}" --pretty=format:"- %s (%h)" --grep="^fix" -i 2>/dev/null || true)
             if [ -n "$FIXES" ]; then
               echo "#### Bug Fixes"
               echo "$FIXES"
@@ -611,7 +637,7 @@ jobs:
             fi
 
             # Refactors / chores / docs
-            OTHER=$(git log $RANGE --pretty=format:"- %s (%h)" --grep="^refactor\|^chore\|^docs\|^style\|^perf\|^test\|^ci\|^build" -i 2>/dev/null || true)
+            OTHER=$(git log "${LOG_RANGE[@]}" --pretty=format:"- %s (%h)" --grep="^refactor\|^chore\|^docs\|^style\|^perf\|^test\|^ci\|^build" -i 2>/dev/null || true)
             if [ -n "$OTHER" ]; then
               echo "#### Maintenance"
               echo "$OTHER"
@@ -636,6 +662,10 @@ jobs:
             echo "| \`macro-controller-${VER}.zip\` | Standalone macro controller |"
             echo "| \`marco-sdk-${VER}.zip\` | SDK library |"
             echo "| \`xpath-${VER}.zip\` | XPath utility |"
+            echo "| \`payment-banner-hider-${VER}.zip\` | Payment banner hider plugin |"
+            echo "| \`lovable-common-${VER}.zip\` | Lovable common plugin |"
+            echo "| \`lovable-owner-switch-${VER}.zip\` | Lovable owner switch plugin |"
+            echo "| \`lovable-user-add-${VER}.zip\` | Lovable user add plugin |"
             echo "| \`prompts-${VER}.zip\` | Prompt templates |"
             echo "| \`changelog.md\` | Full project changelog |"
             echo "| \`install.ps1\` | Unified PowerShell installer (URL-pinned to this release when fetched here) |"
@@ -696,6 +726,10 @@ jobs:
             "release-assets/macro-controller-${VER}.zip:1024"
             "release-assets/marco-sdk-${VER}.zip:1024"
             "release-assets/xpath-${VER}.zip:1024"
+            "release-assets/payment-banner-hider-${VER}.zip:1024"
+            "release-assets/lovable-common-${VER}.zip:1024"
+            "release-assets/lovable-owner-switch-${VER}.zip:1024"
+            "release-assets/lovable-user-add-${VER}.zip:1024"
             "release-assets/install.ps1:512"
             "release-assets/install.sh:512"
             "release-assets/VERSION.txt:1"
@@ -761,6 +795,10 @@ jobs:
             "macro-controller-${VER}.zip"
             "marco-sdk-${VER}.zip"
             "xpath-${VER}.zip"
+            "payment-banner-hider-${VER}.zip"
+            "lovable-common-${VER}.zip"
+            "lovable-owner-switch-${VER}.zip"
+            "lovable-user-add-${VER}.zip"
             "install.ps1"
             "install.sh"
             "VERSION.txt"
