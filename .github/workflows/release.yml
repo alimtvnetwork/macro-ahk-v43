@@ -13,6 +13,10 @@
 #   - macro-controller-{VER}.zip   — standalone-scripts/macro-controller/**
 #   - marco-sdk-{VER}.zip          — standalone-scripts/marco-sdk/**
 #   - xpath-{VER}.zip              — standalone-scripts/xpath/**
+#   - payment-banner-hider-{VER}.zip — standalone-scripts/payment-banner-hider/**
+#   - lovable-common-{VER}.zip     — standalone-scripts/lovable-common/**
+#   - lovable-owner-switch-{VER}.zip — standalone-scripts/lovable-owner-switch/**
+#   - lovable-user-add-{VER}.zip   — standalone-scripts/lovable-user-add/**
 #   - install.sh                   — Unified Bash installer (URL-pinned or latest)
 #   - install.ps1                  — Unified PowerShell installer (URL-pinned or latest)
 #   - VERSION.txt                  — Plain-text version identifier
