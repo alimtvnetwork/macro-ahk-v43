@@ -91,6 +91,14 @@ jobs:
             CANDIDATES+=(".gitmap/release/latest.json")
           fi
 
+          if [[ "${#CANDIDATES[@]}" -gt 1 ]]; then
+            for file in "${CANDIDATES[@]}"; do
+              if [[ "$file" =~ ^\.gitmap/release/v.+\.json$ ]]; then
+                DESCRIPTOR="$file"
+                break
+              fi
+            done
+          fi
           DESCRIPTOR="${CANDIDATES[0]:-}"
           if [[ ! -f "$DESCRIPTOR" ]]; then
             echo "::warning::No release descriptor present — nothing to dispatch"
