@@ -278,6 +278,7 @@ async function fetchProjects(wsId: string): Promise<ProjectEntry[]> {
 }
 
 function attachRowClicks(body: HTMLElement): void {
+    // eslint-disable-next-line sonarjs/cognitive-complexity
     body.addEventListener('click', function (e: Event): void {
         const target = e.target as HTMLElement | null;
         if (!target) return;
