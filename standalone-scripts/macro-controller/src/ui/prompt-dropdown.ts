@@ -21,7 +21,7 @@ import {
   setRevalidateContext,
   setRenderDropdownFn,
   getPromptCategoryFilter,
-  setPromptCategoryFilter,
+  getPromptCategoryFilterSet,
   clearLoadedPrompts,
   forceLoadFromDb,
   saveHtmlCopy,
@@ -35,6 +35,8 @@ import {
 } from './prompt-cache';
 import type { CachedPromptEntry } from './prompt-cache';
 import { showToast } from '../toast';
+import { renderPlanTaskSubmenu } from './plan-task-ui';
+import { renderFilterMenu } from './prompt-filter-menu';
 
 /** Adapter: getByXPath returns Node|null, pasteIntoEditor needs Element|null */
 function getByXPathAsElement(xpath: string): Element | null {
