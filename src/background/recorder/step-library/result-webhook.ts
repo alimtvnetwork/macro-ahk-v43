@@ -558,7 +558,8 @@ export async function dispatchWebhook(
             Event: event,
             Url: finalUrl,
             Status: res.status,
-            Error: `HTTP ${res.status} ${res.statusText || ""}`.trim(),
+            Error: `HEFF: HTTP ${res.status} on POST ${finalUrl} — ${res.statusText || "non-2xx"}. ` +
+                   `Single-attempt webhook (webhook-fail-fast); no retry. Loop halted.`,
             DurationMs: durationMs,
             EmittedAt: emittedAt,
             Payload: payload,
