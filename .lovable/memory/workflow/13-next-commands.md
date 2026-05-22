@@ -57,7 +57,7 @@ Trigger phrases the user may type to query this file:
 
 ## P3 — Optional Follow-ups (members panel, v2.216.0)
 
-- [ ] A. **"Load more" pagination** if `has_more=true` (raise 20 → 50 → 100)
+- [x] 2026-05-22 A. **"Load more" pagination** — panel now cycles 20 → 50 → 100; cache keyed per (wsId, limit); button renders only when `members.length < total` and a larger step exists; refresh clears every page-size variant.
 - [x] B. **CSV export** — 2026-05-22, header `⬇ CSV` button downloads loaded members as `members-<slug>-YYYY-MM-DD.csv` (RFC4180 escaping, UTF-8 BOM for Excel)
 - [x] C. **Click-to-copy** member email or user_id — 2026-05-22, email row + @username row now copy on click with toast preview
 - [x] D. **Inline credit-share bar** — 2026-05-22, per-row % bar against loaded-members sum with color ramp (slate→cyan→emerald→amber)
