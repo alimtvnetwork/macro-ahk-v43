@@ -11,6 +11,7 @@
  * MAX cooldown window are discarded because every blocked tab will
  * have either retried or been cleared by the background by then.
  */
+import { logError } from "./options-logger";
 
 export interface InaccessibleSeedTargetCacheEntry {
     tabId: number;
