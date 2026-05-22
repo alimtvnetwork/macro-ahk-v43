@@ -497,13 +497,6 @@ function pickString(obj: Record<string, unknown>, keys: ReadonlyArray<string>): 
     return '';
 }
 
-function pickString(obj: Record<string, unknown>, keys: ReadonlyArray<string>): string {
-    for (const k of keys) {
-        const v = obj[k];
-        if (typeof v === 'string' && v.length > 0) return v;
-    }
-    return '';
-}
 
 function buildCsv(rows: ReadonlyArray<ExportRow>): string {
     const lines: string[] = [];
