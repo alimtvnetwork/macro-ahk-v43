@@ -39,6 +39,8 @@ interface ModalState {
   refillInput: string;
   /** pro_0 IndexedDB cache TTL (minutes). Empty string = use default. */
   proZeroTtlInput: string;
+  /** Projects modal SQLite cache TTL (hours). Empty string = use default. */
+  projectsCacheTtlInput: string;
 }
 
 interface ModalHandlerStore {
