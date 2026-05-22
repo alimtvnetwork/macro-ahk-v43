@@ -163,7 +163,7 @@ function _buildSettingsHeader(_fontSystem: string, overlay: HTMLElement): HTMLEl
   return hdr;
 }
 
-function _buildSettingsTabs(deps: SettingsDeps, getPromptsConfig: () => ResolvedPromptsConfig): { tabBtns: HTMLElement[]; panels: HTMLElement[]; tabPanels: { tabBar: HTMLElement; panelsContainer: HTMLElement } } {
+function _buildSettingsTabs(deps: SettingsDeps, getPromptsConfig: () => ResolvedPromptsConfig): { tabBtns: HTMLElement[]; panels: HTMLElement[]; tabPanels: { tabBar: HTMLElement; panelsContainer: HTMLElement }; generalResult: GeneralPanelResult } {
   const tabs = ['XPaths', 'Timing', 'Task Next', 'Logging', 'Config (DB)', 'General'];
   const tabBar = document.createElement('div');
   tabBar.style.cssText = 'display:flex;gap:0;border-bottom:1px solid ' + cPanelBorder + ';padding:0 20px;flex-shrink:0;';
@@ -181,15 +181,16 @@ function _buildSettingsTabs(deps: SettingsDeps, getPromptsConfig: () => Resolved
     tabBtns.push(btn);
   });
 
+  const generalResult = buildGeneralPanel(makeField, getPromptsConfig);
   panels.push(buildXPathsPanel(makeField).panel);
   panels.push(buildTimingPanel(makeField).panel);
   panels.push(buildTaskNextPanel(makeField).panel);
   panels.push(buildLoggingPanel(deps).panel);
   panels.push(buildConfigDbPanel(deps, makeField).panel);
-  panels.push(buildGeneralPanel(makeField, getPromptsConfig).panel);
+  panels.push(generalResult.panel);
   panels.forEach(function(p) { tabPanels.appendChild(p); });
 
-  return { tabBtns, panels, tabPanels: { tabBar, panelsContainer: tabPanels } };
+  return { tabBtns, panels, tabPanels: { tabBar, panelsContainer: tabPanels }, generalResult };
 }
 
 function _buildSettingsFooter(btnStyle: string, deps: SettingsDeps, _panels: HTMLElement[], overlay: HTMLElement): HTMLElement {
