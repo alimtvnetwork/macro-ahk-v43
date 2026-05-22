@@ -384,9 +384,16 @@ function renderBlock(b: WorkspaceBlock, tabIndex: OpenTabIndex): string {
     if (b.loading) {
         body = '<div style="color:#64748b;font-size:10px;padding:3px 4px;font-style:italic;">Fetching projects…</div>';
     } else if (b.error) {
-        body = '<div style="color:#fca5a5;font-size:10px;padding:3px 4px;">⚠ ' + escapeHtml(b.error) + '</div>';
+        body = '<div style="color:#fca5a5;font-size:10px;padding:4px 6px;background:rgba(239,68,68,0.08);'
+            + 'border-left:2px solid #ef4444;border-radius:2px;">'
+            + '<div style="margin-bottom:2px;">⚠ Failed to load projects.</div>'
+            + '<div style="color:#cbd5e1;opacity:0.8;font-family:monospace;word-break:break-word;">'
+            + escapeHtml(b.error) + '</div>'
+            + '<div style="color:#94a3b8;margin-top:3px;font-style:italic;">Click ↻ Refresh to retry.</div>'
+            + '</div>';
     } else if ((b.projects?.length ?? 0) === 0) {
-        body = '<div style="color:#64748b;font-size:10px;padding:3px 4px;font-style:italic;">No projects.</div>';
+        body = '<div style="color:#64748b;font-size:10px;padding:3px 4px;font-style:italic;">'
+            + 'No projects in this workspace yet.</div>';
     } else {
         // Show open ones first.
         const open = (b.projects ?? []).filter(function (p) { return isOpen(p.id, tabIndex); });
