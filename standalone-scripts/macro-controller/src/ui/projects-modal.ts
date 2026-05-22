@@ -281,6 +281,25 @@ function attachRowClicks(body: HTMLElement): void {
         const target = e.target as HTMLElement | null;
         if (!target) return;
 
+        // Clear-all-filters action from the zero-results panel.
+        const clearAll = target.closest('[data-clear-filters]') as HTMLElement | null;
+        if (clearAll) {
+            const panel = body.closest('#' + DIALOG_ID) as HTMLElement | null;
+            state.searchQuery = '';
+            const input = panel?.querySelector('[data-search-input]') as HTMLInputElement | null;
+            if (input) input.value = '';
+            if (state.filterOpenOnly) {
+                const c = panel?.querySelector('[data-chip="open"]') as HTMLButtonElement | null;
+                c?.click();
+            }
+            if (state.filterHasRepo) {
+                const c = panel?.querySelector('[data-chip="repo"]') as HTMLButtonElement | null;
+                c?.click();
+            }
+            renderBody(body);
+            return;
+        }
+
         // Workspace header toggle takes precedence over row click.
         const toggle = target.closest('[data-ws-toggle]') as HTMLElement | null;
         if (toggle) {
