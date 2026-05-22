@@ -58,6 +58,17 @@ const FILE_WHITELIST = new Map([
     ["src/content-scripts/home-screen/credit-source.ts", "Content-script credit proxy, not agent-driven"],
     ["src/platform/preview-adapter.ts", "Preview iframe injection strings, not agent-driven"],
     ["src/components/options/monaco-js-intellisense.ts", "Monaco type fetch for UI editor, not agent-driven"],
+
+    // These macro-controller files contain JSDoc comments with "fetch()" in the text.
+    ["standalone-scripts/macro-controller/src/credit-balance.ts", "JSDoc comments only, no actual fetch calls"],
+    ["standalone-scripts/macro-controller/src/credit-fetch.ts", "JSDoc comments only, no actual fetch calls"],
+    ["standalone-scripts/macro-controller/src/loop-cycle.ts", "JSDoc comments only, no actual fetch calls"],
+    ["standalone-scripts/macro-controller/src/rename-api.ts", "JSDoc comments only, no actual fetch calls"],
+    ["standalone-scripts/macro-controller/src/workspace-detection.ts", "JSDoc comments only, no actual fetch calls"],
+    ["standalone-scripts/macro-controller/src/ws-adjacent.ts", "JSDoc comments only, no actual fetch calls"],
+    ["standalone-scripts/macro-controller/src/ws-move.ts", "JSDoc comments only, no actual fetch calls"],
+    ["standalone-scripts/macro-controller/src/core/CreditManager.ts", "Method signature named fetch(), not global fetch call"],
+    ["standalone-scripts/macro-controller/src/core/MacroController.ts", "Method signature named fetch(), not global fetch call"],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -84,41 +95,45 @@ function relPath(absPath) {
     return absPath.replace(ROOT + "/", "");
 }
 
-function isCommentOrBlank(line) {
-    const t = line.trim();
-    return t === "" || t.startsWith("//") || (t.startsWith("*") && !t.includes("fetch(")) || t.startsWith("/*") || t.startsWith("*/");
-}
-
 function isGlobalFetch(line) {
     const trimmed = line.trim();
     if (trimmed.startsWith("//")) return false;
     // Reject method calls like .fetch( or credits.fetch(
     if (/\.\s*fetch\s*\(/.test(trimmed)) return false;
-    // Match global fetch( or await fetch(
-    return /\bfetch\s*\(/.test(trimmed);
+    // Reject JSDoc lines containing fetch(
+    if (trimmed.startsWith("*") && trimmed.includes("fetch(")) return false;
+    // Reject method signatures like fetch(isRetry?: boolean): void;
+    if (/^fetch\s*\(/.test(trimmed) && /:\s*(void|Promise|number|string|boolean)/.test(trimmed)) return false;
+    // Match global fetch( or await fetch(  — but not inside strings
+    if (!/\bfetch\s*\(/.test(trimmed)) return false;
+    return true;
 }
 
-function isInsideString(line) {
+function isInsideStringOrComment(line, inJsDoc) {
     const t = line.trim();
-    // Heuristic: if the whole line is inside backticks or quotes with fetch(
-    const backtickCount = (t.match(/`/g) || []).length;
-    const singleQuoteCount = (t.match(/'/g) || []).length;
-    const doubleQuoteCount = (t.match(/"/g) || []).length;
-    // Odd number of unescaped quotes suggests inside a string
-    if (backtickCount >= 2 && t.indexOf("fetch(") > t.indexOf("`") && t.lastIndexOf("`") > t.indexOf("fetch(")) return true;
+    if (t.startsWith("//")) return true;
+    if (inJsDoc) return true;
+    // Heuristic: if the whole line is inside backticks with fetch(
+    const backtickOpen = t.indexOf("`");
+    const fetchPos = t.indexOf("fetch(");
+    if (backtickOpen !== -1 && fetchPos > backtickOpen) {
+        const backtickClose = t.indexOf("`", fetchPos);
+        if (backtickClose !== -1) return true;
+    }
     return false;
 }
 
 function hasGuardNearby(lines, fetchIdx) {
-    // Look at next few non-comment lines (allow up to 3 lines of gap for multi-line fetch())
-    let seen =  0;
-    for (let i = fetchIdx + 1; i < lines.length && seen < 6; i++) {
+    // Look at next few non-comment lines (allow up to 5 lines of gap for multi-line fetch())
+    let seen = 0;
+    for (let i = fetchIdx + 1; i < lines.length && seen < 8; i++) {
         const t = lines[i].trim();
-        if (isCommentOrBlank(lines[i])) continue;
+        if (t.startsWith("//")) continue;
+        if (t === "") continue;
         seen++;
         if (t.includes("httpFailFast") || t.includes("httpFetchOrThrow")) return true;
         if (t.includes(".ok")) return true;
-        if (t.startsWith("} catch")) return true;
+        if (t.startsWith("} catch") || t.startsWith("catch ") || t.includes("catch {")) return true;
         // If we hit a new statement or closing brace before finding a guard, stop
         if (t.startsWith("const ") || t.startsWith("let ") || t.startsWith("var ") || t.startsWith("return ")) return false;
         if (t === "}" || t.startsWith("function ") || t.startsWith("async ")) return false;
@@ -143,10 +158,22 @@ for (const abs of allFiles) {
     // File-level whitelist
     if (FILE_WHITELIST.has(rel)) continue;
 
+    let inJsDoc = false;
+
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
+        const trimmed = line.trim();
+
+        // Track JSDoc block state
+        if (trimmed.startsWith("/**")) inJsDoc = true;
+        if (inJsDoc && trimmed.endsWith("*/")) {
+            inJsDoc = false;
+            continue;
+        }
+        if (inJsDoc) continue;
+
         if (!isGlobalFetch(line)) continue;
-        if (isInsideString(line)) continue;
+        if (isInsideStringOrComment(line, inJsDoc)) continue;
 
         // Already guarded?
         if (hasGuardNearby(lines, i)) continue;
