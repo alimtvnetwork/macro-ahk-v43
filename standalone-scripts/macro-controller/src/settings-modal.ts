@@ -231,15 +231,19 @@ export function showSettingsModal(): void {
     refillInput: typeof current.refillWarningThresholdDays === 'number' ? String(current.refillWarningThresholdDays) : '',
     proZeroTtlInput: typeof current.proZeroCreditBalanceCacheTtlMinutes === 'number'
       ? String(current.proZeroCreditBalanceCacheTtlMinutes) : '',
+    projectsCacheTtlInput: typeof current.projectsCacheTtlHours === 'number'
+      ? String(current.projectsCacheTtlHours) : '',
   };
 
   function snapshotInputs(): void {
     const g = el.querySelector<HTMLInputElement>('[data-marco-el="grace"]');
     const r = el.querySelector<HTMLInputElement>('[data-marco-el="refill"]');
     const p = el.querySelector<HTMLInputElement>('[data-marco-el="proZeroTtl"]');
+    const pc = el.querySelector<HTMLInputElement>('[data-marco-el="projectsCacheTtl"]');
     if (g) state.graceInput = g.value;
     if (r) state.refillInput = r.value;
     if (p) state.proZeroTtlInput = p.value;
+    if (pc) state.projectsCacheTtlInput = pc.value;
   }
 
   function rerender(): void {
