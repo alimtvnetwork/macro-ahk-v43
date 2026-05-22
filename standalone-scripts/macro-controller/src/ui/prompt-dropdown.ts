@@ -9,7 +9,7 @@ import { log } from '../logging';
 import { logError } from '../error-utils';
 import type { PromptEntry as LoaderPromptEntry } from '../types';
 
-import { cPanelBg, cPanelFg, cPanelFgDim, cPrimary, cPrimaryLight, cPrimaryHL, cBtnMenuHover, lDropdownRadius, lDropdownShadow } from '../shared-state';
+import { cPanelBg, cPanelFg, cPanelFgDim, cPrimary, cPrimaryLight, cBtnMenuHover, lDropdownRadius, lDropdownShadow } from '../shared-state';
 import { getByXPath } from '../xpath-utils';
 import { pasteIntoEditor, showPasteToast } from './prompt-utils';
 import { runTaskNextLoop, openTaskNextSettingsModal, type TaskNextDeps } from './task-next-ui';
@@ -21,7 +21,7 @@ import {
   setRevalidateContext,
   setRenderDropdownFn,
   getPromptCategoryFilter,
-  setPromptCategoryFilter,
+  getPromptCategoryFilterSet,
   clearLoadedPrompts,
   forceLoadFromDb,
   saveHtmlCopy,
@@ -35,6 +35,8 @@ import {
 } from './prompt-cache';
 import type { CachedPromptEntry } from './prompt-cache';
 import { showToast } from '../toast';
+import { renderPlanTaskSubmenu } from './plan-task-ui';
+import { renderFilterMenu } from './prompt-filter-menu';
 
 /** Adapter: getByXPath returns Node|null, pasteIntoEditor needs Element|null */
 function getByXPathAsElement(xpath: string): Element | null {
@@ -56,25 +58,8 @@ function keepTaskNextSubInView(promptsDropdown: HTMLElement, taskNextSub: HTMLEl
   });
 }
 
-// CQ16: Extracted from renderPromptsDropdown closure
-function makeFilterChip(
-  label: string,
-  value: string,
-  ctx: PromptContext,
-  taskNextDeps: TaskNextDeps,
-): HTMLElement {
-  const chip = document.createElement('span');
-  chip.textContent = label;
-  const isActive = getPromptCategoryFilter() === value;
-  chip.style.cssText = 'padding:2px 8px;border-radius:10px;font-size:9px;cursor:pointer;transition:all .15s;' +
-    (isActive ? 'background:' + cPrimary + ';color:#fff;' : 'background:' + cPrimaryHL + ';color:' + cPrimaryLight + ';');
-  chip.onclick = function(e: Event) {
-    e.stopPropagation();
-    setPromptCategoryFilter(isActive ? null : value);
-    renderPromptsDropdown(ctx, taskNextDeps);
-  };
-  return chip;
-}
+// Legacy single-pick chip helper removed in favor of the new Filter menu.
+// (Multi-select state lives in prompt-loader.ts via getPromptCategoryFilterSet.)
 
 /**
  * Render the prompts dropdown with categories, Task Next submenu, and prompt items.
@@ -89,7 +74,7 @@ export function renderPromptsDropdown(ctx: PromptContext, taskNextDeps: TaskNext
 
   // Compute current data hash for snapshot validation
   const currentHash = computePromptHash(entries as CachedPromptEntry[]);
-  const currentFilter = getPromptCategoryFilter();
+  const currentFilter = _computeFilterKey();
 
   // Try UI snapshot restore (skip full render if HTML is cached and data hasn't changed)
   const snapshotPromise = readUISnapshot();
@@ -114,18 +99,11 @@ export function renderPromptsDropdown(ctx: PromptContext, taskNextDeps: TaskNext
 // Dropdown header with Load button
 // ============================================
 
-/** Build the dropdown header row with hint text and manual Load button. */
+/** Build the dropdown header row with only the manual Load button (hint text removed). */
 function buildDropdownHeader(ctx: PromptContext, taskNextDeps: TaskNextDeps): HTMLElement {
   const header = document.createElement('div');
-  header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:4px 8px;font-size:9px;color:' + cPrimaryLight + ';border-bottom:1px solid #7c3aed;';
-
-  const hint = document.createElement('span');
-  hint.textContent = '📋 Click to paste · 📋 icon to copy';
-  header.appendChild(hint);
-
-  const loadBtn = buildLoadButton(ctx, taskNextDeps);
-  header.appendChild(loadBtn);
-
+  header.style.cssText = 'display:flex;align-items:center;justify-content:flex-end;padding:4px 8px;border-bottom:1px solid #7c3aed;';
+  header.appendChild(buildLoadButton(ctx, taskNextDeps));
   return header;
 }
 
@@ -184,7 +162,7 @@ function _renderFresh(
   _persistSnapshot(promptsDropdown, entries, dataHash, categoryFilter);
 }
 
-/** Append header, Task Next submenu, and category filter bar. */
+/** Append header, Task Next + Plan Task + Filter inline menus. */
 function _appendHeaderAndSubmenu(
   container: HTMLElement,
   entries: LoaderPromptEntry[],
@@ -193,22 +171,9 @@ function _appendHeaderAndSubmenu(
 ): void {
   container.appendChild(buildDropdownHeader(ctx, taskNextDeps));
   renderTaskNextSubmenu(container, ctx, taskNextDeps);
-
+  renderPlanTaskSubmenu(container, ctx);
   const categories = collectUniqueCategories(entries);
-  if (categories.length > 0) {
-    container.appendChild(_buildFilterBar(categories, ctx, taskNextDeps));
-  }
-}
-
-/** Build the category filter chip bar. */
-function _buildFilterBar(categories: string[], ctx: PromptContext, taskNextDeps: TaskNextDeps): HTMLElement {
-  const filterBar = document.createElement('div');
-  filterBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;border-bottom:1px solid rgba(124,58,237,0.2);';
-  filterBar.appendChild(makeFilterChip('All', '', ctx, taskNextDeps));
-  for (const cat of categories) {
-    filterBar.appendChild(makeFilterChip(cat, cat.toLowerCase(), ctx, taskNextDeps));
-  }
-  return filterBar;
+  renderFilterMenu(container, categories, ctx, taskNextDeps, renderPromptsDropdown);
 }
 
 /** Append filtered prompt items or empty-category message. */
@@ -319,22 +284,15 @@ function _cleanupTaskNextSubs(): void {
   subs.forEach(function(el) { el.remove(); });
 }
 
-/** Re-attach category filter chip click handlers. */
+/** Legacy chip rebind retained as a no-op — old flex-wrap chip bar was removed. */
 function _rebindFilterChips(
-  container: HTMLElement,
-  entries: LoaderPromptEntry[],
-  ctx: PromptContext,
-  taskNextDeps: TaskNextDeps,
+  _container: HTMLElement,
+  _entries: LoaderPromptEntry[],
+  _ctx: PromptContext,
+  _taskNextDeps: TaskNextDeps,
 ): void {
-  for (const child of Array.from(container.children)) {
-    const el = child as HTMLElement;
-    if (!el.style.cssText.includes('flex-wrap')) continue;
-    el.textContent = '';
-    el.appendChild(makeFilterChip('All', '', ctx, taskNextDeps));
-    for (const cat of collectUniqueCategories(entries)) {
-      el.appendChild(makeFilterChip(cat, cat.toLowerCase(), ctx, taskNextDeps));
-    }
-  }
+  // Filter UI is now the inline Filter menu rendered via renderFilterMenu().
+  // Snapshot restore replaces innerHTML; the menu is rebuilt as part of the fresh render path.
 }
 
 /** Re-attach prompt item click/hover handlers from snapshot. */
@@ -456,10 +414,21 @@ function collectUniqueCategories(entries: Array<{ category?: string }>): string[
   return categories;
 }
 
+/** Combined filter key for snapshot validation — covers legacy single + new multi set. */
+function _computeFilterKey(): string {
+  const legacy = getPromptCategoryFilter() || '';
+  const multi = Array.from(getPromptCategoryFilterSet()).sort().join(',');
+  return legacy + '|' + multi;
+}
+
 function filterByCategory<T extends { category?: string }>(entries: T[]): T[] {
-  const currentFilter = getPromptCategoryFilter();
-  if (!currentFilter) return entries;
-  return entries.filter(entry => (String(entry.category || '')).trim().toLowerCase() === currentFilter);
+  const set = getPromptCategoryFilterSet();
+  if (set.size > 0) {
+    return entries.filter(entry => set.has(String(entry.category || '').trim().toLowerCase()));
+  }
+  const legacy = getPromptCategoryFilter();
+  if (!legacy) return entries;
+  return entries.filter(entry => (String(entry.category || '')).trim().toLowerCase() === legacy);
 }
 
 function renderTaskNextSubmenu(container: HTMLElement, ctx: PromptContext, taskNextDeps: TaskNextDeps): void {

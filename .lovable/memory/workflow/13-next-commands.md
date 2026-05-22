@@ -86,6 +86,8 @@ Trigger phrases the user may type to query this file:
 
 ## Recently Completed (last 30 days — for context)
 
+- [x] 2026-05-22 — Prompt section overhaul (controller dropdown): added `🧠 Plan Task` inline submenu (Plan-in-N-steps prompt template), `🔎 Filter` inline submenu with multi-select category checkboxes (replaces single-pick chip bar), removed copy/paste hint text from header, fixed prompt CRUD so SAVE now invalidates cache + reloads + re-renders via new `rerenderPromptsDropdown()` shared helper.
+
 - [x] 2026-04-23 — v2.225.0 — TS Migration V2 backlog cleared (Phases 02, 03, 04, 05); test suite stabilized at 445/445 passing (frozen Date.now() in ws-hover-card snapshot tests); home-screen feature (14 modules) wired into content-script entry; MacroController bridge `CreditsApi.getState()` exposed
 - [x] v2.218.0 — Settings cog button + modal (chrome.storage.local override for grace/refill thresholds)
 - [x] v2.217.0 — Project remix dropdown (header split-button + right-click) with auto-V-suffix Remix Next + collision pre-check

@@ -111,6 +111,18 @@ export function setPromptCategoryFilter(value: string | null): void {
   promptLoaderState.promptCategoryFilter = value;
 }
 
+// ── Multi-select category filter (new — used by Filter button menu) ──
+const promptCategoryFilterSet: Set<string> = new Set<string>();
+/** Read current multi-select category filter (lowercased values). */
+export function getPromptCategoryFilterSet(): Set<string> { return promptCategoryFilterSet; }
+/** Toggle one category in the filter set. */
+export function togglePromptCategoryFilter(catLower: string): void {
+  if (promptCategoryFilterSet.has(catLower)) promptCategoryFilterSet.delete(catLower);
+  else promptCategoryFilterSet.add(catLower);
+}
+/** Remove every category from the filter set. */
+export function clearPromptCategoryFilterSet(): void { promptCategoryFilterSet.clear(); }
+
 /** Invalidate prompt cache (e.g. after save/delete) */
 export function invalidatePromptCache(): void {
   promptLoaderState.loadedJsonPrompts = null;
@@ -234,6 +246,19 @@ export function setRevalidateContext(ctx: PromptContext, taskNextDeps: TaskNextD
 /** Register the renderPromptsDropdown function (called from prompt-dropdown to break circular dep) */
 export function setRenderDropdownFn(fn: (ctx: PromptContext, deps: TaskNextDeps) => void): void {
   promptLoaderState.renderDropdownFn = fn;
+}
+
+/**
+ * Trigger a full re-render of the main prompts dropdown using the last-registered
+ * context (from setRevalidateContext) and renderer (from setRenderDropdownFn).
+ * Used by CRUD flows (save / delete / rename) to refresh the list after mutation.
+ */
+export function rerenderPromptsDropdown(): void {
+  const fn = promptLoaderState.renderDropdownFn;
+  const c = promptLoaderState.revalidateCtx;
+  if (!fn || !c) return;
+  try { fn(c.ctx, c.taskNextDeps); }
+  catch (e) { logError('rerenderPromptsDropdown', 'Re-render failed', e); }
 }
 
 // CQ16: Extracted from loadPromptsFromJson legacy path closure
