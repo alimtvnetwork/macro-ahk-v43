@@ -239,6 +239,11 @@ export function ProjectDetailView({ project, allProjects, availableScripts, avai
             </TabsContent>
 
             <TabsContent value="scripts" className="mt-4" forceMount={activeTab === "scripts" ? true : undefined}>
+              <AutoAttachDiagnosticsPanel
+                projectId={project.id}
+                autoStart={project.settings?.autoStart === true}
+                refreshKey={project.updatedAt ? new Date(project.updatedAt).getTime() : 0}
+              />
               <ScriptsTabContent
                 project={project}
                 availableScripts={availableScripts}
