@@ -118,6 +118,20 @@ export async function boot(): Promise<void> {
             logCaughtError(BgLogTag.BOOT, "Manifest seeder failed (non-fatal)", err);
         }
 
+        step = "backfill-url-matches";
+        setBootStep(step);
+        try {
+            const bf = await backfillScriptUrlMatches();
+            if (bf.updated > 0 || bf.skippedNoBindingFound > 0) {
+                console.log(
+                    "[Marco] ✓ urlMatches backfill: scanned=%d updated=%d alreadyPopulated=%d noBinding=%d",
+                    bf.scanned, bf.updated, bf.skippedAlreadyPopulated, bf.skippedNoBindingFound,
+                );
+            }
+        } catch (err) {
+            logCaughtError(BgLogTag.BOOT, "urlMatches backfill failed (non-fatal)", err);
+        }
+
         step = "reseed-prompts";
         setBootStep(step);
         try {
