@@ -32,7 +32,7 @@ Trigger phrases the user may type to query this file:
 - [ ] **Task 1.2** — E2E Chrome verification (manual smoke pass on installer build)
 - [ ] **Dashboard "scripts not available" — Phase 2b** — auto-attach scripts to project by URL condition. Phase 1 (diagnostic log + Unbound badge) and Phase 2a (heal bindings on save in `handleSaveProject`) shipped. Phase 2b needs user-confirmed source for per-script URL matches (seed-manifest `TargetUrls` per source project vs project's own `targetUrls`). See `.lovable/question-and-ambiguity/20-dashboard-scripts-not-available-and-auto-attach.md`.
 - [x] **Error-swallow P1** — all 14 items cleared (2026-05-19)
-- [ ] **Error-swallow P2 (59 left)** — sweep next
+- [x] **Error-swallow P2** — audit shows 0 active findings across src/ as of 2026-05-22
 
 ## P1 — Ready to Implement
 
