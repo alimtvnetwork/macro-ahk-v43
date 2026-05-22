@@ -25,3 +25,4 @@ re-deriving it from chat history.
 | 05 | [05-read-memory.md](./prompts/05-read-memory.md) | Read Memory | `read memory`, `recall memory`, `revise memory`, `revise prompt` | active |
 | 06 | [06-logo-create.md](./prompts/06-logo-create.md) | Logo Create (Projects/ scaffold, SVG + raster + palette + favicon + README) | `create logo`, `make logo`, `logo`, `create icon`, `make icon`, `logo create` | active |
 | 07 | [07-proof-read.md](./prompts/07-proof-read.md) | Proofread / Rewrite (DO NOT ACT — rewrite only) | `proofread`, `proof read`, `rewrite`, `rewrite next`, `next` (in proofread mode) | active |
+| 08 | [08-bump-version.md](./prompts/08-bump-version.md) | Bump Version (minor bump + changelog + README pin) | `bump version`, `bump minor`, `pre-bump`, `version bump`, `release bump` | active |
