@@ -739,13 +739,14 @@ function detachDismissHandlers(): void {
 /* ------------------------------------------------------------------ */
 
 function loadAndRender(el: HTMLElement, wsId: string, wsName: string): void {
+  const store = el as HTMLElement & PanelHandlerStore;
+  const limit = store._marcoMembersLimit ?? DEFAULT_MEMBERS_PAGE_LIMIT;
   render(el, wsName, { kind: 'loading' });
-  fetchWorkspaceMembers(wsId)
+  fetchWorkspaceMembers(wsId, false, limit)
     .then(function (entry) {
       if (!document.getElementById(PANEL_ID)) return; // panel was closed
-      const store = el as HTMLElement & PanelHandlerStore;
-      store._marcoMembersLatest = { wsName: wsName, members: entry.members, total: entry.total };
-      render(el, wsName, { kind: 'success', members: entry.members, total: entry.total });
+      store._marcoMembersLatest = { wsName: wsName, members: entry.members, total: entry.total, limit: limit };
+      render(el, wsName, { kind: 'success', members: entry.members, total: entry.total, limit: limit });
     })
     .catch(function (err: unknown) {
       if (!document.getElementById(PANEL_ID)) return;
