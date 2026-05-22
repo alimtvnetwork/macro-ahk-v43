@@ -61,7 +61,7 @@ Trigger phrases the user may type to query this file:
 - [x] B. **CSV export** — 2026-05-22, header `⬇ CSV` button downloads loaded members as `members-<slug>-YYYY-MM-DD.csv` (RFC4180 escaping, UTF-8 BOM for Excel)
 - [x] C. **Click-to-copy** member email or user_id — 2026-05-22, email row + @username row now copy on click with toast preview
 - [x] D. **Inline credit-share bar** — 2026-05-22, per-row % bar against loaded-members sum with color ramp (slate→cyan→emerald→amber)
-- [ ] E. **Auto-refresh** when the workspace credit poll cycle runs
+- [x] 2026-05-22 E. **Auto-refresh** — new `credit-poll-events.ts` pub-sub; `loop-controls.refreshStatus` emits a tick after each workspace check; members panel subscribes on open, silently refetches at current `limit`, and unsubscribes on hide (with re-entrancy guard).
 
 ## P3 — Optional Follow-ups (canceled-credit override, v2.215.0)
 

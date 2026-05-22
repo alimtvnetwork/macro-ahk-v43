@@ -22,6 +22,7 @@ import { checkSystemBusy, closeProjectDialog, ensureProjectDialogOpen, isOnProje
 import { CONFIG, IDS, TIMING, loopCreditState, state } from './shared-state';
 import { runCycle } from './loop-cycle';
 import { logError } from './error-utils';
+import { emitCreditPollTick } from './credit-poll-events';
 
 
 
@@ -290,9 +291,11 @@ function readDialogCreditStatus(gotNavName: boolean): void {
 export function refreshStatus(): void {
   if (!state.running) {
     refreshStatusStopped();
+    emitCreditPollTick();
     return;
   }
   refreshStatusRunning();
+  emitCreditPollTick();
 }
 
 /**

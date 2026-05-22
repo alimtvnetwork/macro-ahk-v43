@@ -22,6 +22,7 @@ import { logError } from './error-utils';
 import { formatDateDDMMMYY } from './workspace-status';
 import { inviteMember, removeMember, updateMemberRole } from './ws-members-mutations';
 import { showToast } from './toast';
+import { onCreditPollTick } from './credit-poll-events';
 
 const PANEL_ID = 'marco-ws-members-panel';
 const Z_INDEX = 100002;
@@ -378,6 +379,8 @@ interface PanelHandlerStore {
   _marcoMembersSubmit?: (e: Event) => void;
   _marcoMembersLatest?: { wsName: string; members: WorkspaceMember[]; total: number; limit: number };
   _marcoMembersLimit?: number;
+  _marcoMembersPollUnsub?: () => void;
+  _marcoMembersAutoBusy?: boolean;
 }
 
 function ensurePanelEl(): HTMLDivElement {
@@ -756,6 +759,27 @@ function loadAndRender(el: HTMLElement, wsId: string, wsName: string): void {
     });
 }
 
+/** Silent refetch — used by the credit-poll subscription. Skips loading state. */
+function silentRefresh(el: HTMLElement, wsId: string, wsName: string): void {
+  const store = el as HTMLElement & PanelHandlerStore;
+  if (store._marcoMembersAutoBusy) return;
+  if (el.style.display === 'none') return;
+  const limit = store._marcoMembersLimit ?? DEFAULT_MEMBERS_PAGE_LIMIT;
+  store._marcoMembersAutoBusy = true;
+  clearMembersCache(wsId);
+  fetchWorkspaceMembers(wsId, true, limit)
+    .then(function (entry) {
+      if (!document.getElementById(PANEL_ID)) return;
+      store._marcoMembersLatest = { wsName: wsName, members: entry.members, total: entry.total, limit: limit };
+      render(el, wsName, { kind: 'success', members: entry.members, total: entry.total, limit: limit });
+    })
+    .catch(function (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      logError('WsMembersPanel', 'Auto-refresh failed for ' + wsId + ': ' + msg);
+    })
+    .finally(function () { store._marcoMembersAutoBusy = false; });
+}
+
 /* ------------------------------------------------------------------ */
 /*  Public API                                                         */
 /* ------------------------------------------------------------------ */
@@ -766,9 +790,19 @@ export function showWsMembersPanel(wsId: string, wsName: string, x: number, y: n
   const el = ensurePanelEl();
   // Reset attach state + page-size before re-rendering for a different workspace.
   detachDismissHandlers();
-  (el as HTMLElement & PanelHandlerStore)._marcoMembersLimit = DEFAULT_MEMBERS_PAGE_LIMIT;
+  const store = el as HTMLElement & PanelHandlerStore;
+  store._marcoMembersLimit = DEFAULT_MEMBERS_PAGE_LIMIT;
+  // Drop any prior credit-poll subscription before resubscribing for this ws.
+  if (store._marcoMembersPollUnsub) {
+    store._marcoMembersPollUnsub();
+    store._marcoMembersPollUnsub = undefined;
+  }
   attachActionHandlers(el, wsId, wsName);
   loadAndRender(el, wsId, wsName);
+  // Subscribe to credit-poll ticks so the panel stays in sync while open.
+  store._marcoMembersPollUnsub = onCreditPollTick(function () {
+    silentRefresh(el, wsId, wsName);
+  });
   // First render to measure, then position.
   positionPanel(el, x, y);
   attachDismissHandlers(el);
@@ -780,6 +814,11 @@ export function hideWsMembersPanel(): void {
   closeMemberActionMenu(); // v3.4.3 (task 14) — drop any open action menu
   const el = document.getElementById(PANEL_ID);
   if (el) {
+    const store = el as HTMLElement & PanelHandlerStore;
+    if (store._marcoMembersPollUnsub) {
+      store._marcoMembersPollUnsub();
+      store._marcoMembersPollUnsub = undefined;
+    }
     // v3.4.3 (task 11) — reset animation state so next open re-plays the slide
     el.style.display = 'none';
     el.style.opacity = '0';
