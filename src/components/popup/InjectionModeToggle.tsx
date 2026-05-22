@@ -28,8 +28,8 @@ export function InjectionModeToggle() {
           type: "GET_SETTINGS",
         });
         setForceLegacy(res.settings.forceLegacyInjection === true);
-      } catch {
-        // Settings unavailable
+      } catch (caught) {
+        logError("InjectionModeToggle.load", "GET_SETTINGS failed — toggle will remain in default OFF state until settings become available", caught);
       }
       setLoading(false);
     })();

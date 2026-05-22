@@ -108,7 +108,9 @@ function persistSequence(input: SequenceRenameInput): void {
     try {
         if (typeof localStorage === "undefined") return;
         localStorage.setItem(SEQUENCE_STORAGE_KEY, JSON.stringify(input));
-    } catch { /* quota / private mode — silently ignore */ }
+    } catch (caught) {
+        logError("KeywordEventStepContextMenu.persistSequence", `localStorage write failed for key="${SEQUENCE_STORAGE_KEY}" — sequence dialog won't remember last used settings`, caught);
+    }
 }
 
 // eslint-disable-next-line max-lines-per-function -- single component owns menu + dialog

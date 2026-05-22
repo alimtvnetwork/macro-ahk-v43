@@ -21,7 +21,9 @@ function getManifestVersion(): string | null {
     if (typeof runtime?.getManifest === "function") {
       return runtime.getManifest().version ?? null;
     }
-  } catch { /* not in extension context */ }
+  } catch (caught) {
+    logError("PopupHeader.getManifestVersion", "chrome.runtime.getManifest() threw — not running inside an extension context, returning null version", caught);
+  }
   return null;
 }
 
