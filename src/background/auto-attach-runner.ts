@@ -118,3 +118,37 @@ export function runAutoAttach(
         decisions,
     };
 }
+
+/**
+ * Persists the latest decision set for `projectId` under
+ * STORAGE_KEY_AUTO_ATTACH_DECISIONS so the Project Detail UI can render
+ * skip reasons next to each library script. Fire-and-forget — failures
+ * are logged but never thrown.
+ */
+export async function persistAutoAttachDecisions(
+    project: StoredProject,
+    library: StoredScript[],
+    decisions: Array<{ scriptId: string; decision: AttachDecision }>,
+): Promise<void> {
+    try {
+        const libraryById = new Map(library.map((s) => [s.id, s] as const));
+        const record: PersistedAutoAttachRecord = {
+            projectId: project.id,
+            projectName: project.name,
+            evaluatedAt: new Date().toISOString(),
+            decisions: decisions.map(({ scriptId, decision }) => ({
+                scriptId,
+                scriptName: libraryById.get(scriptId)?.name ?? scriptId,
+                ok: decision.ok,
+                reason: decision.reason,
+                detail: decision.detail,
+            })),
+        };
+        const existing = await chrome.storage.local.get(STORAGE_KEY_AUTO_ATTACH_DECISIONS);
+        const map = (existing[STORAGE_KEY_AUTO_ATTACH_DECISIONS] as Record<string, PersistedAutoAttachRecord> | undefined) ?? {};
+        map[project.id] = record;
+        await chrome.storage.local.set({ [STORAGE_KEY_AUTO_ATTACH_DECISIONS]: map });
+    } catch (caught) {
+        logCaughtError(TAG, `persistAutoAttachDecisions failed for project "${project.id}"`, caught);
+    }
+}
