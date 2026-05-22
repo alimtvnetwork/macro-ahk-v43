@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { sendMessage } from "@/lib/message-client";
+import { logError } from "./hook-logger";
 
 interface ScriptInfoResponse {
   isOk: boolean;

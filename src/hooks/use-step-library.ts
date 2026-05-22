@@ -18,6 +18,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { logError } from "./hook-logger";
 import initSqlJs, { type Database, type SqlJsStatic } from "sql.js";
 
 import {

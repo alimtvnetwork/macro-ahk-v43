@@ -10,6 +10,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { logError } from "./hook-logger";
 
 const STORAGE_KEY = "marco-keyword-events-v1";
 
