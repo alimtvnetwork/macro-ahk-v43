@@ -340,28 +340,33 @@ async function precacheStableScripts(): Promise<void> {
 
     const t0 = performance.now();
 
-    const cacheResults = await Promise.all(
-        stableScripts.map(async (path): Promise<string> => {
-            try {
-                const cached = await getCachedScriptCode(path);
-                if (cached !== null) {
-                    return path + " (already cached)";
-                }
-
-                const url = chrome.runtime.getURL(path);
-                const response = await fetch(url);
-                if (!response.ok) {
-                    return path + " (fetch failed: " + response.status + ")";
-                }
-
-                const code = await response.text();
-                await cacheScriptCode(path, code);
-                return path + " (cached " + code.length + " chars)";
-            } catch (err) {
-                return path + " (error: " + (err instanceof Error ? err.message : String(err)) + ")";
+    // HEFF: sequential warm with break on first HTTP failure (was Promise.all
+    // fanout). chrome-extension:// asset fetches cannot rate-limit Lovable,
+    // but the rule is uniform: one failure → stop, report, surface.
+    const cacheResults: string[] = [];
+    for (const path of stableScripts) {
+        try {
+            const cached = await getCachedScriptCode(path);
+            if (cached !== null) {
+                cacheResults.push(path + " (already cached)");
+                continue;
             }
-        }),
-    );
+
+            const url = chrome.runtime.getURL(path);
+            const response = await fetch(url);
+            if (!response.ok) {
+                cacheResults.push(path + " (fetch failed: " + response.status + ") — halting remaining warms");
+                break;
+            }
+
+            const code = await response.text();
+            await cacheScriptCode(path, code);
+            cacheResults.push(path + " (cached " + code.length + " chars)");
+        } catch (err) {
+            cacheResults.push(path + " (error: " + (err instanceof Error ? err.message : String(err)) + ") — halting remaining warms");
+            break;
+        }
+    }
 
     const ms = (performance.now() - t0).toFixed(1);
     console.log("[Marco] Pre-cached %d scripts in %sms: %s", stableScripts.length, ms, cacheResults.join(", "));

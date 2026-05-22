@@ -43,16 +43,16 @@ export async function warmScriptCache(): Promise<{ warmed: number; failed: numbe
 
         console.log("[cache-warmer] Warming %d filePath-backed scripts...", fileBackedScripts.length);
 
-        // Fetch all in parallel for speed
-        const results = await Promise.allSettled(
-            fileBackedScripts.map((script) => warmOneScript(script)),
-        );
-
-        for (const r of results) {
-            if (r.status === "fulfilled" && r.value) {
+        // HEFF: sequential warm with hard stop on first HTTP failure (was
+        // Promise.allSettled fanout). See mem://constraints/http-error-fail-fast.
+        for (const script of fileBackedScripts) {
+            const success = await warmOneScript(script);
+            if (success) {
                 warmed++;
             } else {
                 failed++;
+                console.warn("[cache-warmer] Halting remaining warms after first failure (HEFF). Already warmed: %d", warmed);
+                break;
             }
         }
 
