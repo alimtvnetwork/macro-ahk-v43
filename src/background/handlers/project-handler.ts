@@ -352,6 +352,7 @@ export async function handleGetAutoAttachDecisions(
     const result = await chrome.storage.local.get(STORAGE_KEY_AUTO_ATTACH_DECISIONS);
     const map = (result[STORAGE_KEY_AUTO_ATTACH_DECISIONS] as Record<string, PersistedAutoAttachRecord> | undefined) ?? {};
     return { record: map[projectId] ?? null };
+}
 
 /** Clears active project if the deleted ID was active. */
 async function clearActiveIfDeleted(
