@@ -681,6 +681,25 @@ export function LibraryView() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  // Cross-tab sync: any Options/popup tab that mutates a library row triggers
+  // a LIBRARY_CHANGED broadcast from the background. Re-pull data so this tab
+  // shows the latest groups/assets/links without a manual refresh.
+  // Debounce because import/cascade can fire many markDirty() calls in a burst.
+  useEffect(() => {
+    if (typeof chrome === "undefined" || !chrome.runtime?.onMessage) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const listener = (msg: { type?: string }) => {
+      if (msg?.type !== "LIBRARY_CHANGED") return;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => { void loadData(); }, 150);
+    };
+    chrome.runtime.onMessage.addListener(listener);
+    return () => {
+      if (timer) clearTimeout(timer);
+      chrome.runtime.onMessage.removeListener(listener);
+    };
+  }, [loadData]);
+
   const handleSync = useCallback(async (assetId: number) => {
     try {
       const result = await sendMessage<{ syncedCount: number; pinnedNotified: number }>({
