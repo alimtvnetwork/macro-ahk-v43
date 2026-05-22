@@ -32,12 +32,12 @@ Trigger phrases the user may type to query this file:
 - [ ] **Task 1.2** — E2E Chrome verification (manual smoke pass on installer build)
 - [ ] **Dashboard "scripts not available" — Phase 2b** — auto-attach scripts to project by URL condition. Phase 1 (diagnostic log + Unbound badge) and Phase 2a (heal bindings on save in `handleSaveProject`) shipped. Phase 2b needs user-confirmed source for per-script URL matches (seed-manifest `TargetUrls` per source project vs project's own `targetUrls`). See `.lovable/question-and-ambiguity/20-dashboard-scripts-not-available-and-auto-attach.md`.
 - [x] **Error-swallow P1** — all 14 items cleared (2026-05-19)
-- [ ] **Error-swallow P2 (59 left)** — sweep next
+- [x] **Error-swallow P2** — audit shows 0 active findings across src/ as of 2026-05-22
 
 ## P1 — Ready to Implement
 
-- [ ] **Cross-Project Sync Phase 3** — ProjectGroup UI, drag-assign, sync notifications (deferred — depends on P Store)
-- [ ] **Release installer hardening v0.2** — checksum verification + signing
+- [x] **Cross-Project Sync Phase 3** — ProjectGroup UI, drag-assign, sync notifications — completed 2026-05-22 (v9 migration, picker UI, handler wiring, drag-to-assign, cross-tab broadcast)
+- [ ] **Release installer hardening v0.2** — SLSA provenance attestation via GitHub Attestations added to release workflow; minisign signing conditional on MINISIGN_SECRET_KEY secret — needs operator to add secret for full v0.2 completion
 - [x] **TS Migration V2 Phase 02** — class architecture (S-046) — verified complete 2026-04-23 (v2.225.0)
 - [x] **TS Migration V2 Phase 04** — performance & logging (S-047) — verified complete 2026-04-23 (v2.225.0)
 - [x] **TS Migration V2 Phase 05** — JSON config pipeline (S-048) — verified + activity-log routing + 7 unit tests, 2026-04-23 (v2.225.0)

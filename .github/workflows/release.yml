@@ -81,6 +81,8 @@ concurrency:
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -652,6 +654,17 @@ jobs:
             echo "\`\`\`"
             echo ""
 
+            echo "### Build Provenance"
+            echo ""
+            echo "All release assets are accompanied by a **SLSA build-provenance attestation** generated via GitHub Attestations."
+            echo ""
+            echo "Verify an artifact after downloading:"
+            echo ""
+            echo "\`\`\`bash"
+            echo "gh attestation verify marco-extension-${VER}.zip --repo ${REPO}"
+            echo "\`\`\`"
+            echo ""
+
             echo "### Assets"
             echo ""
             echo "| Asset | Description |"
@@ -670,6 +683,7 @@ jobs:
             echo "| \`install.sh\` | Unified Bash installer (URL-pinned to this release when fetched here) |"
             echo "| \`VERSION.txt\` | Version identifier |"
             echo "| \`checksums.txt\` | SHA256 checksums |"
+            echo "| \`checksums.txt.minisig\` | Minisign signature for checksums.txt (when published) |"
             echo ""
             echo "### Quick Install"
             echo ""
@@ -768,6 +782,34 @@ jobs:
             exit 1
           fi
           echo "✅ All required release assets present"
+
+      # ── Generate minisign signature (conditional on secret availability) ──
+      - name: Sign checksums with minisign
+        env:
+          MINISIGN_SECRET_KEY: ${{ secrets.MINISIGN_SECRET_KEY }}
+        run: |
+          if [ -z "$MINISIGN_SECRET_KEY" ]; then
+            echo "No MINISIGN_SECRET_KEY secret available — skipping signature generation."
+            echo "::notice::To enable minisign signing: add MINISIGN_SECRET_KEY to repository secrets."
+            exit 0
+          fi
+          if ! command -v minisign >/dev/null 2>&1; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq minisign
+          fi
+          mkdir -p /tmp/minisign
+          printf '%s\n' "$MINISIGN_SECRET_KEY" > /tmp/minisign/minisign.key
+          minisign -S -m release-assets/checksums.txt -s /tmp/minisign/minisign.key -x release-assets/checksums.txt.minisig
+          shred -u /tmp/minisign/minisign.key
+          rmdir /tmp/minisign 2>/dev/null || true
+          echo "✅ Signed checksums.txt → checksums.txt.minisig"
+
+      # ── Attest build provenance (SLSA) ─────────────────────
+      - name: Attest release assets
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: |
+            release-assets/checksums.txt
+            release-assets/*.zip
 
       # ── Create GitHub Release ─────────────────────────────
       - name: Create GitHub Release
