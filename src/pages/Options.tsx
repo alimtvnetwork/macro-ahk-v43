@@ -18,6 +18,7 @@ import { useProjects, useScripts, useConfigs, type StoredProject } from "@/hooks
 import { useOnboarding } from "@/hooks/use-onboarding";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { Toaster } from "@/components/ui/sonner";
+import { HttpFailFastBanner } from "@/components/HttpFailFastBanner";
 import { toast } from "sonner";
 import { PanelRightOpen, Loader2 } from "lucide-react";
 
