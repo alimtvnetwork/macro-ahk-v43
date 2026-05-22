@@ -68,10 +68,10 @@ Pick your platform — each section is a self-contained install path with the re
 **Recommended path.** Open **PowerShell** (Win + X → "Windows PowerShell" or "Terminal") and run:
 
 ```powershell
-irm https://github.com/alimtvnetwork/macro-ahk-v36/releases/download/v3.5.0/install.ps1 | iex
+irm https://github.com/alimtvnetwork/macro-ahk-v36/releases/download/v3.6.0/install.ps1 | iex
 ```
 
-- 🔒 Pinned to `v3.5.0` — see [Pinned to a specific release](#-pinned-to-a-specific-release) to change versions
+- 🔒 Pinned to `v3.6.0` — see [Pinned to a specific release](#-pinned-to-a-specific-release) to change versions
 - 🌊 Want auto-update? Use the [latest channel](#-latest-channel-auto-update) one-liner
 - 📁 Custom install folder? See [Custom Directory Install](#custom-directory-install)
 - 🚩 Full flag list, exit codes, checksum behavior → [Installer Options](#installer-options)
@@ -81,10 +81,10 @@ irm https://github.com/alimtvnetwork/macro-ahk-v36/releases/download/v3.5.0/inst
 Open your terminal and run:
 
 ```bash
-curl -fsSL https://github.com/alimtvnetwork/macro-ahk-v36/releases/download/v3.5.0/install.sh | bash
+curl -fsSL https://github.com/alimtvnetwork/macro-ahk-v36/releases/download/v3.6.0/install.sh | bash
 ```
 
-- 🔒 Pinned to `v3.5.0` — see [Pinned to a specific release](#-pinned-to-a-specific-release) for other tags
+- 🔒 Pinned to `v3.6.0` — see [Pinned to a specific release](#-pinned-to-a-specific-release) for other tags
 - 🌊 Auto-update channel → [latest channel](#-latest-channel-auto-update)
 - 📁 Custom install folder? See [Custom Directory Install](#custom-directory-install)
 - 🚩 Full flag list, exit codes, checksum behavior → [Installer Options](#installer-options)
