@@ -286,6 +286,7 @@ const OptionsPage = () => {
       <>
         {stateMarker}
         <Toaster />
+        <HttpFailFastBanner />
         <OnboardingFlow onComplete={completeOnboarding} />
       </>
     );
