@@ -29,6 +29,8 @@ const DB_SEEDED_IDS = [
   'default-read-memory',
   'default-write-memory',
   'default-coding-guidelines',
+  'default-logo-create',
+  'default-proof-read',
 ];
 
 // ── prompt-loader.ts DEFAULT_PROMPTS ids ──
@@ -49,6 +51,8 @@ const LOADER_DEFAULT_IDS = [
   'default-read-memory',
   'default-write-memory',
   'default-coding-guidelines',
+  'default-logo-create',
+  'default-proof-read',
 ];
 
 describe('Prompt parity check — DEFAULT_PROMPTS ↔ DB seed', () => {
