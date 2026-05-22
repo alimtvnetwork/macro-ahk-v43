@@ -29,6 +29,8 @@ const DB_SEEDED_IDS = [
   'default-read-memory',
   'default-write-memory',
   'default-coding-guidelines',
+  'default-logo-create',
+  'default-proof-read',
 ];
 
 // ── prompt-loader.ts DEFAULT_PROMPTS ids ──
