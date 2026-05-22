@@ -27,6 +27,36 @@ const PANEL_ID = 'marco-ws-members-panel';
 const Z_INDEX = 100002;
 const CSS_BG = 'background:';
 
+/** Copy text via Clipboard API with legacy textarea fallback; toast on result. */
+function copyToClipboard(value: string, label: string): void {
+  if (!value) {
+    showToast('⚠️ Nothing to copy', 'info');
+    return;
+  }
+  const preview = value.length > 40 ? value.slice(0, 37) + '…' : value;
+  const onOk = function (): void { showToast('📋 ' + label + ' copied: ' + preview, 'success'); };
+  const onFail = function (msg: string): void { showToast('❌ Copy failed: ' + msg, 'error'); };
+  const nav = navigator as Navigator & { clipboard?: { writeText: (s: string) => Promise<void> } };
+  if (nav.clipboard && typeof nav.clipboard.writeText === 'function') {
+    nav.clipboard.writeText(value).then(onOk).catch(function (err: unknown) {
+      onFail(err instanceof Error ? err.message : String(err));
+    });
+    return;
+  }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = value;
+    ta.style.cssText = 'position:fixed;top:-1000px;left:-1000px;opacity:0;';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) onOk(); else onFail('execCommand returned false');
+  } catch (err: unknown) {
+    onFail(err instanceof Error ? err.message : String(err));
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /*  HTML helpers                                                       */
 /* ------------------------------------------------------------------ */
@@ -124,11 +154,17 @@ function memberRowHtml(m: WorkspaceMember, idx: number): string {
     +   '</div>'
     + '</div>'
     + '<div style="display:flex;justify-content:space-between;gap:8px;font-size:10px;color:#94a3b8;padding-left:42px;">'
-    +   '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + escHtml(m.email) + '">' + escHtml(m.email || '—') + '</span>'
+    +   (m.email
+          ? '<span data-marco-action="copy" data-marco-copy-value="' + escHtml(m.email) + '" data-marco-copy-label="Email" '
+            + 'style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;" '
+            + 'title="Click to copy email: ' + escHtml(m.email) + '">' + escHtml(m.email) + '</span>'
+          : '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">—</span>')
     +   '<span title="Credits used this billing period">Period: ' + billingCredits + '</span>'
     + '</div>'
     + '<div style="display:flex;justify-content:space-between;gap:8px;font-size:9px;color:#64748b;padding-left:42px;">'
-    +   '<span title="@username · user_id ' + escHtml(m.user_id) + '">@' + escHtml(m.username || '—') + '</span>'
+    +   '<span data-marco-action="copy" data-marco-copy-value="' + escHtml(m.user_id) + '" data-marco-copy-label="User ID" '
+    +     'style="cursor:pointer;" '
+    +     'title="Click to copy user_id: ' + escHtml(m.user_id) + '">@' + escHtml(m.username || '—') + '</span>'
     +   '<span>Joined ' + escHtml(joined) + ' · Invited ' + escHtml(invited) + '</span>'
     + '</div>'
     + '</div>';
@@ -505,6 +541,11 @@ function attachActionHandlers(el: HTMLElement, wsId: string, wsName: string): vo
       const role = (target.getAttribute('data-marco-user-role') || 'member').toLowerCase();
       const label = target.getAttribute('data-marco-user-label') || userId;
       openMemberActionMenu(el, target, wsId, wsName, userId, role, label);
+    } else if (action === 'copy') {
+      e.stopPropagation();
+      const value = target.getAttribute('data-marco-copy-value') || '';
+      const lbl = target.getAttribute('data-marco-copy-label') || 'Value';
+      copyToClipboard(value, lbl);
     }
   };
 
