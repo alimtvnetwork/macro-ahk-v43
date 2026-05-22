@@ -19,7 +19,10 @@ import {
   DEFAULT_REMIX_NEXT_SUFFIX_SEPARATOR,
   DEFAULT_REMIX_NEXT_MAX_COLLISION_INCREMENTS,
   DEFAULT_REMIX_OPEN_IN_CURRENT_TAB,
+  DEFAULT_REMIX_NEXT_V_CASING,
 } from './constants';
+
+export type RemixVCasing = 'preserve' | 'upper' | 'lower';
 
 export interface RemixConfig {
   defaultIncludeHistory: boolean;
