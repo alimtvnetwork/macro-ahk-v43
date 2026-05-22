@@ -16,6 +16,8 @@ import { getRemixConfig, openRemixRedirect } from './remix-config';
 import { fetchWorkspaceProjectNames, submitRemix } from './remix-fetch';
 import { resolveNextName } from './remix-name-resolver';
 import { recordRemix, showRemixHistoryPanel } from './remix-history';
+import { actionBulkRemixNext } from './remix-bulk';
+import { getLoopWsCheckedIds } from './shared-state';
 import { showToast } from './toast';
 import { logError } from './error-utils';
 import { log } from './logging';
@@ -135,6 +137,14 @@ export function showHeaderRemixDropdown(anchorEl: HTMLElement, ctx: RemixActionC
   dd.appendChild(buildDropdownItem('⏭️ Remix Next', 'Auto-increment to next V suffix', function () {
     void actionRemixNext(ctx);
   }));
+  const checkedCount = Object.keys(getLoopWsCheckedIds()).length;
+  dd.appendChild(buildDropdownItem(
+    '🚀 Bulk Remix Next',
+    checkedCount > 0
+      ? 'Run Remix Next on ' + checkedCount + ' checked workspace' + (checkedCount === 1 ? '' : 's')
+      : 'Check workspaces in the list first',
+    function () { void actionBulkRemixNext({ sourceProjectName: ctx.currentProjectName }); },
+  ));
   dd.appendChild(buildDropdownItem('📜 Remix history', 'Session log of remixes', function () {
     showRemixHistoryPanel(anchorEl);
   }));
