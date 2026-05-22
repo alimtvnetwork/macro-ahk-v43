@@ -365,7 +365,7 @@ function footerHtml(expanded = false): string {
 
 interface PanelStateLoading { kind: 'loading'; }
 interface PanelStateError { kind: 'error'; error: string; }
-interface PanelStateSuccess { kind: 'success'; members: WorkspaceMember[]; total: number; }
+interface PanelStateSuccess { kind: 'success'; members: WorkspaceMember[]; total: number; limit: number; }
 type PanelState = PanelStateLoading | PanelStateError | PanelStateSuccess;
 
 /* ------------------------------------------------------------------ */
