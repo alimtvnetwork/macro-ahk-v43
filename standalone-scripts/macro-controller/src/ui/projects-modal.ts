@@ -186,8 +186,7 @@ async function loadAndRender(body: HTMLElement, opts?: { bypassCache?: boolean }
         }).then(function () {
             state.blocks = blocks;
             // Re-render after each completes for incremental feedback.
-            body.innerHTML = renderAll(blocks, tabIndex, null);
-            attachRowClicks(body);
+            renderBody(body);
         });
     }));
 }
