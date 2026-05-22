@@ -105,7 +105,7 @@ export function removeProjectsModal(): void {
     existing.remove();
 }
 
-async function loadAndRender(body: HTMLElement): Promise<void> {
+async function loadAndRender(body: HTMLElement, opts?: { bypassCache?: boolean }): Promise<void> {
     body.innerHTML = renderEmpty('Loading workspaces…');
 
     // 1. Snapshot known workspaces.
