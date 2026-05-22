@@ -9,7 +9,7 @@ import { log } from '../logging';
 import { logError } from '../error-utils';
 import type { PromptEntry as LoaderPromptEntry } from '../types';
 
-import { cPanelBg, cPanelFg, cPanelFgDim, cPrimary, cPrimaryLight, cPrimaryHL, cBtnMenuHover, lDropdownRadius, lDropdownShadow } from '../shared-state';
+import { cPanelBg, cPanelFg, cPanelFgDim, cPrimary, cPrimaryLight, cBtnMenuHover, lDropdownRadius, lDropdownShadow } from '../shared-state';
 import { getByXPath } from '../xpath-utils';
 import { pasteIntoEditor, showPasteToast } from './prompt-utils';
 import { runTaskNextLoop, openTaskNextSettingsModal, type TaskNextDeps } from './task-next-ui';
@@ -74,7 +74,7 @@ export function renderPromptsDropdown(ctx: PromptContext, taskNextDeps: TaskNext
 
   // Compute current data hash for snapshot validation
   const currentHash = computePromptHash(entries as CachedPromptEntry[]);
-  const currentFilter = getPromptCategoryFilter();
+  const currentFilter = _computeFilterKey();
 
   // Try UI snapshot restore (skip full render if HTML is cached and data hasn't changed)
   const snapshotPromise = readUISnapshot();
@@ -284,22 +284,15 @@ function _cleanupTaskNextSubs(): void {
   subs.forEach(function(el) { el.remove(); });
 }
 
-/** Re-attach category filter chip click handlers. */
+/** Legacy chip rebind retained as a no-op — old flex-wrap chip bar was removed. */
 function _rebindFilterChips(
-  container: HTMLElement,
-  entries: LoaderPromptEntry[],
-  ctx: PromptContext,
-  taskNextDeps: TaskNextDeps,
+  _container: HTMLElement,
+  _entries: LoaderPromptEntry[],
+  _ctx: PromptContext,
+  _taskNextDeps: TaskNextDeps,
 ): void {
-  for (const child of Array.from(container.children)) {
-    const el = child as HTMLElement;
-    if (!el.style.cssText.includes('flex-wrap')) continue;
-    el.textContent = '';
-    el.appendChild(makeFilterChip('All', '', ctx, taskNextDeps));
-    for (const cat of collectUniqueCategories(entries)) {
-      el.appendChild(makeFilterChip(cat, cat.toLowerCase(), ctx, taskNextDeps));
-    }
-  }
+  // Filter UI is now the inline Filter menu rendered via renderFilterMenu().
+  // Snapshot restore replaces innerHTML; the menu is rebuilt as part of the fresh render path.
 }
 
 /** Re-attach prompt item click/hover handlers from snapshot. */
@@ -421,10 +414,21 @@ function collectUniqueCategories(entries: Array<{ category?: string }>): string[
   return categories;
 }
 
+/** Combined filter key for snapshot validation — covers legacy single + new multi set. */
+function _computeFilterKey(): string {
+  const legacy = getPromptCategoryFilter() || '';
+  const multi = Array.from(getPromptCategoryFilterSet()).sort().join(',');
+  return legacy + '|' + multi;
+}
+
 function filterByCategory<T extends { category?: string }>(entries: T[]): T[] {
-  const currentFilter = getPromptCategoryFilter();
-  if (!currentFilter) return entries;
-  return entries.filter(entry => (String(entry.category || '')).trim().toLowerCase() === currentFilter);
+  const set = getPromptCategoryFilterSet();
+  if (set.size > 0) {
+    return entries.filter(entry => set.has(String(entry.category || '').trim().toLowerCase()));
+  }
+  const legacy = getPromptCategoryFilter();
+  if (!legacy) return entries;
+  return entries.filter(entry => (String(entry.category || '')).trim().toLowerCase() === legacy);
 }
 
 function renderTaskNextSubmenu(container: HTMLElement, ctx: PromptContext, taskNextDeps: TaskNextDeps): void {
