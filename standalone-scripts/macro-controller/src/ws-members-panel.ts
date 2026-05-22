@@ -635,6 +635,14 @@ function attachActionHandlers(el: HTMLElement, wsId: string, wsName: string): vo
       e.stopPropagation();
       clearMembersCache(wsId);
       loadAndRender(el, wsId, wsName);
+    } else if (action === 'load-more') {
+      e.stopPropagation();
+      const store = el as HTMLElement & PanelHandlerStore;
+      const current = store._marcoMembersLimit ?? DEFAULT_MEMBERS_PAGE_LIMIT;
+      const next = nextPageLimit(current);
+      if (next === null) return;
+      store._marcoMembersLimit = next;
+      loadAndRender(el, wsId, wsName);
     } else if (action === 'export-csv') {
       e.stopPropagation();
       const store = el as HTMLElement & PanelHandlerStore;
