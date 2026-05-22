@@ -15,6 +15,7 @@ import { state } from '../shared-state';
 import { taskNextState, saveTaskNextSettings, type TaskNextDeps } from './task-next-ui';
 import type { ExtensionResponse, ResolvedPromptsConfig } from '../types';
 import { updateLogConfig, type LogManagerConfig } from '../log-manager';
+import { saveSettingsOverrides, getSettingsOverrides } from '../settings-store';
 import type { XPathPanelResult, TimingPanelResult, TaskNextPanelResult, LoggingPanelResult, ConfigDbPanelResult, GeneralPanelResult } from './settings-tab-panels';
 
 import {
@@ -122,13 +123,13 @@ export function showSettingsDialog(deps: SettingsDeps) {
   overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
 
   const dialog = _buildSettingsDialogShell(tFontSystem);
-  const { tabBtns, panels, tabPanels } = _buildSettingsTabs(deps, getPromptsConfig);
+  const { tabBtns, panels, tabPanels, generalResult } = _buildSettingsTabs(deps, getPromptsConfig);
 
   dialog.appendChild(_buildSettingsHeader(tFontSystem, overlay));
   dialog.appendChild(tabPanels.tabBar);
   dialog.appendChild(tabPanels.panelsContainer);
 
-  const footer = _buildSettingsFooter(btnStyle, deps, panels, overlay);
+  const footer = _buildSettingsFooter(btnStyle, deps, panels, overlay, generalResult);
   dialog.appendChild(footer);
 
   overlay.appendChild(dialog);
@@ -162,7 +163,7 @@ function _buildSettingsHeader(_fontSystem: string, overlay: HTMLElement): HTMLEl
   return hdr;
 }
 
-function _buildSettingsTabs(deps: SettingsDeps, getPromptsConfig: () => ResolvedPromptsConfig): { tabBtns: HTMLElement[]; panels: HTMLElement[]; tabPanels: { tabBar: HTMLElement; panelsContainer: HTMLElement } } {
+function _buildSettingsTabs(deps: SettingsDeps, getPromptsConfig: () => ResolvedPromptsConfig): { tabBtns: HTMLElement[]; panels: HTMLElement[]; tabPanels: { tabBar: HTMLElement; panelsContainer: HTMLElement }; generalResult: GeneralPanelResult } {
   const tabs = ['XPaths', 'Timing', 'Task Next', 'Logging', 'Config (DB)', 'General'];
   const tabBar = document.createElement('div');
   tabBar.style.cssText = 'display:flex;gap:0;border-bottom:1px solid ' + cPanelBorder + ';padding:0 20px;flex-shrink:0;';
@@ -180,18 +181,19 @@ function _buildSettingsTabs(deps: SettingsDeps, getPromptsConfig: () => Resolved
     tabBtns.push(btn);
   });
 
+  const generalResult = buildGeneralPanel(makeField, getPromptsConfig);
   panels.push(buildXPathsPanel(makeField).panel);
   panels.push(buildTimingPanel(makeField).panel);
   panels.push(buildTaskNextPanel(makeField).panel);
   panels.push(buildLoggingPanel(deps).panel);
   panels.push(buildConfigDbPanel(deps, makeField).panel);
-  panels.push(buildGeneralPanel(makeField, getPromptsConfig).panel);
+  panels.push(generalResult.panel);
   panels.forEach(function(p) { tabPanels.appendChild(p); });
 
-  return { tabBtns, panels, tabPanels: { tabBar, panelsContainer: tabPanels } };
+  return { tabBtns, panels, tabPanels: { tabBar, panelsContainer: tabPanels }, generalResult };
 }
 
-function _buildSettingsFooter(btnStyle: string, deps: SettingsDeps, _panels: HTMLElement[], overlay: HTMLElement): HTMLElement {
+function _buildSettingsFooter(btnStyle: string, deps: SettingsDeps, _panels: HTMLElement[], overlay: HTMLElement, generalResult: GeneralPanelResult): HTMLElement {
   const { showToast, log } = deps;
   const footer = document.createElement('div');
   footer.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;padding:12px 20px;border-top:1px solid ' + cPanelBorder + ';flex-shrink:0;';
@@ -213,15 +215,32 @@ function _buildSettingsFooter(btnStyle: string, deps: SettingsDeps, _panels: HTM
   saveBtn2.textContent = '💾 Save';
   saveBtn2.style.cssText = btnStyle + CssFragment.Background + cSuccess + ';color:#1e1e2e;padding:6px 20px;font-size:12px;font-weight:600;';
   saveBtn2.onclick = function() {
-    log('Settings saved', 'info');
-    showToast('✅ Settings saved', 'info');
-    overlay.remove();
+    _persistOverrideToggles(generalResult).then(function() {
+      log('Settings saved', 'info');
+      showToast('✅ Settings saved', 'info');
+      overlay.remove();
+    }).catch(function(err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      showToast('❌ Save failed: ' + msg, 'error');
+    });
   };
 
   footer.appendChild(cancelBtn2);
   footer.appendChild(resetBtn);
   footer.appendChild(saveBtn2);
   return footer;
+}
+
+async function _persistOverrideToggles(generalResult: GeneralPanelResult): Promise<void> {
+  if (!generalResult.toggles) return;
+  const current = getSettingsOverrides();
+  const next = {
+    ...current,
+    enableCanceledCreditOverride: generalResult.toggles.enableCanceledCreditOverride?.checked ?? true,
+    enableWorkspaceStatusLabels: generalResult.toggles.enableWorkspaceStatusLabels?.checked ?? true,
+    enableWorkspaceHoverDetails: generalResult.toggles.enableWorkspaceHoverDetails?.checked ?? true,
+  };
+  await saveSettingsOverrides(next);
 }
 
 function _applyXPathSettings(xpResult: XPathPanelResult): void {

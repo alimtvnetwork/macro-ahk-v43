@@ -30,6 +30,10 @@ export interface SettingsOverrides {
   proZeroCreditBalanceCacheTtlMinutes?: number;
   /** Master switch for the canceled/expired credit override. Default true. */
   enableCanceledCreditOverride?: boolean;
+  /** Show inline status labels under each workspace row. */
+  enableWorkspaceStatusLabels?: boolean;
+  /** Show the rich hover-card with credit details on workspace rows. */
+  enableWorkspaceHoverDetails?: boolean;
 }
 
 type SettingsListener = (overrides: SettingsOverrides) => void;
@@ -61,6 +65,12 @@ function sanitize(raw: unknown): SettingsOverrides {
   }
   if (typeof r.enableCanceledCreditOverride === 'boolean') {
     out.enableCanceledCreditOverride = r.enableCanceledCreditOverride;
+  }
+  if (typeof r.enableWorkspaceStatusLabels === 'boolean') {
+    out.enableWorkspaceStatusLabels = r.enableWorkspaceStatusLabels;
+  }
+  if (typeof r.enableWorkspaceHoverDetails === 'boolean') {
+    out.enableWorkspaceHoverDetails = r.enableWorkspaceHoverDetails;
   }
   return out;
 }
