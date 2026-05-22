@@ -307,10 +307,51 @@ export function buildGeneralPanel(
     panel.appendChild(field.row);
   });
 
+  const toggles = _buildOverrideToggles(panel);
+
   panel.appendChild(_buildBackdropSlider());
   panel.appendChild(_buildVersionInfo());
 
-  return { panel, inputs };
+  return { panel, inputs, toggles };
+}
+
+function _buildOverrideToggles(panel: HTMLElement): Record<string, HTMLInputElement> {
+  const overrides = getSettingsOverrides();
+  const title = document.createElement('div');
+  title.style.cssText = CssFragment.FontSize11pxFontWeight700Color + cSectionHeader + ';margin-top:14px;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;';
+  title.textContent = 'Workspace Display Overrides';
+  panel.appendChild(title);
+
+  const items = [
+    { key: 'enableCanceledCreditOverride', label: 'Canceled/Expired Credit Override', value: overrides.enableCanceledCreditOverride !== false, hint: 'Force canceled or expired plans to show zero credits.' },
+    { key: 'enableWorkspaceStatusLabels', label: 'Inline Status Labels', value: overrides.enableWorkspaceStatusLabels !== false, hint: 'Show status text under each workspace row.' },
+    { key: 'enableWorkspaceHoverDetails', label: 'Hover-Card Details', value: overrides.enableWorkspaceHoverDetails !== false, hint: 'Show rich credit details on row hover.' },
+  ];
+  const toggles: Record<string, HTMLInputElement> = {};
+
+  items.forEach(function(item) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid ' + cPanelBorder + ';';
+    const labelWrap = document.createElement('div');
+    labelWrap.style.cssText = 'display:flex;flex-direction:column;gap:2px;flex:1;padding-right:8px;';
+    const lbl = document.createElement('span');
+    lbl.style.cssText = 'font-size:11px;color:' + cPanelText + ';';
+    lbl.textContent = item.label;
+    const hint = document.createElement('span');
+    hint.style.cssText = 'font-size:9px;color:#64748b;';
+    hint.textContent = item.hint;
+    labelWrap.appendChild(lbl);
+    labelWrap.appendChild(hint);
+    const sw = document.createElement('input');
+    sw.type = 'checkbox';
+    sw.checked = item.value;
+    sw.style.cssText = 'width:16px;height:16px;cursor:pointer;accent-color:' + cPrimary + ';';
+    row.appendChild(labelWrap);
+    row.appendChild(sw);
+    panel.appendChild(row);
+    toggles[item.key] = sw;
+  });
+  return toggles;
 }
 
 /** Builds the backdrop opacity slider row. */
