@@ -256,7 +256,7 @@ function renderEmpty(text: string): string {
     return '<div style="color:' + cPanelFgDim + ';font-size:11px;padding:6px;">' + escapeHtml(text) + '</div>';
 }
 
-function renderAll(blocks: ReadonlyArray<WorkspaceBlock>, tabIndex: OpenTabIndex, capturedAt: string | null, query: string): void | string {
+function renderAll(blocks: ReadonlyArray<WorkspaceBlock>, tabIndex: OpenTabIndex, capturedAt: string | null, query: string): string {
     const q = (query || '').trim().toLowerCase();
     const filtered: WorkspaceBlock[] = q
         ? blocks.map(function (b) {
