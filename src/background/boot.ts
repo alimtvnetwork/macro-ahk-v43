@@ -29,6 +29,7 @@ import {
     ensureDefaultProjectSingleScript,
 } from "./default-project-seeder";
 import { seedFromManifest } from "./manifest-seeder";
+import { backfillScriptUrlMatches } from "./url-matches-backfill";
 import { runStorageMigrations } from "./storage-migration";
 import { setBootStep, setBootPersistenceMode, finalizeBoot, setBootError, getBootErrorContext, getWasmProbeResult } from "./boot-diagnostics";
 import { configureUserScriptWorld } from "./csp-fallback";
