@@ -106,6 +106,7 @@ Updated: just now
 - [Token readiness gate](mem://auth/token-readiness-gate) — Unified 10s budget, sync fast pre-seed phase
 - [Author identity](mem://branding/author-identity) — Riseup Asia LLC, specific Stack Overflow URL
 - [No-retry policy](mem://constraints/no-retry-policy) — Sequential fail-fast, bans recursive retry and exponential backoff
+- [HTTP error fail-fast](mem://constraints/http-error-fail-fast) — Hard stop on 4xx/5xx; no retry/fanout; mandatory failure report shape
 - [Unified auth contract](mem://auth/unified-auth-contract) — getBearerToken() used exclusively; legacy functions removed
 - [No Supabase](mem://constraints/no-supabase) — Supabase entirely forbidden in codebase
 - [Workspace status pill + hover card](mem://features/macro-controller/workspace-status-pill-and-hovercard) — Lifecycle pill, rich floating panel, canceled-credit override chokepoint (v2.214.0)
