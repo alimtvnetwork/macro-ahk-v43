@@ -74,10 +74,15 @@ interface ModalState {
     searchQuery: string;
     /** Workspace IDs whose section is collapsed. Persisted across opens. */
     collapsed: Set<string>;
+    /** Show only projects whose tab is currently open. */
+    filterOpenOnly: boolean;
+    /** Show only projects that have a GitHub repo configured. */
+    filterHasRepo: boolean;
 }
 const state: ModalState = {
     blocks: [], tabIndex: null, exporting: false,
     searchQuery: '', collapsed: new Set<string>(),
+    filterOpenOnly: false, filterHasRepo: false,
 };
 
 const COLLAPSED_STORAGE_KEY = 'marco_projects_modal_collapsed_v1';
@@ -300,32 +305,41 @@ function renderEmpty(text: string): string {
 
 function renderAll(blocks: ReadonlyArray<WorkspaceBlock>, tabIndex: OpenTabIndex, capturedAt: string | null, query: string): string {
     const q = (query || '').trim().toLowerCase();
-    const filtered: WorkspaceBlock[] = q
+    const onlyOpen = state.filterOpenOnly;
+    const onlyRepo = state.filterHasRepo;
+    const filterActive = q !== '' || onlyOpen || onlyRepo;
+
+    const filtered: WorkspaceBlock[] = filterActive
         ? blocks.map(function (b) {
             if (!b.projects) return b;
             const projects = b.projects.filter(function (p) {
-                return p.name.toLowerCase().includes(q)
+                if (q && !(
+                    p.name.toLowerCase().includes(q)
                     || p.id.toLowerCase().includes(q)
                     || p.githubRepo.toLowerCase().includes(q)
-                    || p.githubBranch.toLowerCase().includes(q);
+                    || p.githubBranch.toLowerCase().includes(q)
+                )) return false;
+                if (onlyOpen && !isOpen(p.id, tabIndex)) return false;
+                if (onlyRepo && !p.githubRepo) return false;
+                return true;
             });
             return { ws: b.ws, projects, error: b.error, loading: b.loading };
         })
         : blocks.slice();
 
     const totalOpen = tabIndex.byProjectId.size + tabIndex.byUrlProjectId.size;
-    const matchCount = q
+    const matchCount = filterActive
         ? filtered.reduce(function (acc, b) { return acc + (b.projects?.length ?? 0); }, 0)
         : 0;
     let html = '<div style="font-size:10px;color:#94a3b8;padding:0 0 6px 0;">'
         + blocks.length + ' workspace' + (blocks.length === 1 ? '' : 's')
         + ' · ' + totalOpen + ' open project tab' + (totalOpen === 1 ? '' : 's')
-        + (q ? ' · <span style="color:#fbbf24;">' + matchCount + ' match' + (matchCount === 1 ? '' : 'es') + '</span>' : '')
+        + (filterActive ? ' · <span style="color:#fbbf24;">' + matchCount + ' match' + (matchCount === 1 ? '' : 'es') + '</span>' : '')
         + (capturedAt ? ' · ' + escapeHtml(capturedAt) : '')
         + '</div>';
     for (const b of filtered) {
         // Hide workspace block entirely when filter is active and yields no projects.
-        if (q && (b.projects?.length ?? 0) === 0 && !b.loading && !b.error) continue;
+        if (filterActive && (b.projects?.length ?? 0) === 0 && !b.loading && !b.error) continue;
         html += renderBlock(b, tabIndex);
     }
     return html;
@@ -446,7 +460,11 @@ function createTitleBar(panel: HTMLElement): HTMLElement {
  */
 function createSearchBar(onChange: () => void): HTMLElement {
     const wrap = document.createElement('div');
-    wrap.style.cssText = 'padding:6px 10px;border-bottom:1px solid rgba(124,58,237,0.20);background:rgba(0,0,0,0.20);display:flex;align-items:center;gap:6px;';
+    wrap.style.cssText = 'padding:6px 10px;border-bottom:1px solid rgba(124,58,237,0.20);background:rgba(0,0,0,0.20);display:flex;flex-direction:column;gap:6px;';
+
+    // Row 1: search input.
+    const row1 = document.createElement('div');
+    row1.style.cssText = 'display:flex;align-items:center;gap:6px;';
 
     const icon = document.createElement('span');
     icon.textContent = '🔍';
@@ -463,7 +481,6 @@ function createSearchBar(onChange: () => void): HTMLElement {
         state.searchQuery = input.value;
         onChange();
     });
-    // Prevent the drag handler / global shortcuts from swallowing keystrokes.
     input.addEventListener('keydown', function (e) { e.stopPropagation(); });
 
     const clear = document.createElement('button');
@@ -478,9 +495,53 @@ function createSearchBar(onChange: () => void): HTMLElement {
         input.focus();
     };
 
-    wrap.appendChild(icon);
-    wrap.appendChild(input);
-    wrap.appendChild(clear);
+    row1.appendChild(icon);
+    row1.appendChild(input);
+    row1.appendChild(clear);
+
+    // Row 2: filter chips.
+    const row2 = document.createElement('div');
+    row2.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:10px;';
+
+    function makeChip(label: string, title: string, getActive: () => boolean, toggle: () => void): HTMLButtonElement {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.title = title;
+        function paint(): void {
+            const active = getActive();
+            btn.textContent = (active ? '● ' : '○ ') + label;
+            btn.style.cssText =
+                'border-radius:10px;padding:2px 10px;font-size:10px;cursor:pointer;font-family:inherit;'
+                + (active
+                    ? 'background:rgba(251,191,36,0.20);color:#fbbf24;border:1px solid rgba(251,191,36,0.50);'
+                    : 'background:rgba(15,23,42,0.40);color:#94a3b8;border:1px solid rgba(124,58,237,0.30);');
+        }
+        btn.onclick = function (): void { toggle(); paint(); onChange(); };
+        paint();
+        return btn;
+    }
+
+    const chipOpen = makeChip(
+        'Open in tab', 'Show only projects whose tab is currently open in Chrome',
+        function () { return state.filterOpenOnly; },
+        function () { state.filterOpenOnly = !state.filterOpenOnly; },
+    );
+    const chipRepo = makeChip(
+        'Has repo', 'Show only projects with a GitHub repo configured',
+        function () { return state.filterHasRepo; },
+        function () { state.filterHasRepo = !state.filterHasRepo; },
+    );
+
+    const chipsLabel = document.createElement('span');
+    chipsLabel.textContent = 'Filter:';
+    chipsLabel.style.cssText = 'color:#64748b;';
+
+    row2.appendChild(chipsLabel);
+    row2.appendChild(chipOpen);
+    row2.appendChild(chipRepo);
+
+    wrap.appendChild(row1);
+    wrap.appendChild(row2);
     return wrap;
 }
 
