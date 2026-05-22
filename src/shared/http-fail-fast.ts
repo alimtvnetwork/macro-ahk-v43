@@ -75,6 +75,10 @@ export class HttpFailFastError extends Error {
         this.url = report.url;
         this.bodySnippet = report.bodySnippet;
         this.reason = report.reason;
+        // Step 7 (HEFF UI): emit a window-level event so any mounted
+        // HttpFailFastBanner can surface this failure without each caller
+        // wiring its own toast/banner. No-op in SW/Node contexts.
+        emitHttpFailFastEvent(this);
     }
 
     /** Mandatory HEFF report shape (spec §5). */
