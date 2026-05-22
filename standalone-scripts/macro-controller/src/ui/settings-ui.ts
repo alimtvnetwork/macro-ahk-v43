@@ -123,13 +123,13 @@ export function showSettingsDialog(deps: SettingsDeps) {
   overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
 
   const dialog = _buildSettingsDialogShell(tFontSystem);
-  const { tabBtns, panels, tabPanels } = _buildSettingsTabs(deps, getPromptsConfig);
+  const { tabBtns, panels, tabPanels, generalResult } = _buildSettingsTabs(deps, getPromptsConfig);
 
   dialog.appendChild(_buildSettingsHeader(tFontSystem, overlay));
   dialog.appendChild(tabPanels.tabBar);
   dialog.appendChild(tabPanels.panelsContainer);
 
-  const footer = _buildSettingsFooter(btnStyle, deps, panels, overlay);
+  const footer = _buildSettingsFooter(btnStyle, deps, panels, overlay, generalResult);
   dialog.appendChild(footer);
 
   overlay.appendChild(dialog);
