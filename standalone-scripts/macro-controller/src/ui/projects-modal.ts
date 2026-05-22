@@ -72,8 +72,37 @@ interface ModalState {
     exporting: boolean;
     /** Free-text filter, lowercased; empty string = no filter. */
     searchQuery: string;
+    /** Workspace IDs whose section is collapsed. Persisted across opens. */
+    collapsed: Set<string>;
 }
-const state: ModalState = { blocks: [], tabIndex: null, exporting: false, searchQuery: '' };
+const state: ModalState = {
+    blocks: [], tabIndex: null, exporting: false,
+    searchQuery: '', collapsed: new Set<string>(),
+};
+
+const COLLAPSED_STORAGE_KEY = 'marco_projects_modal_collapsed_v1';
+
+async function loadCollapsedState(): Promise<void> {
+    try {
+        if (typeof chrome === 'undefined' || !chrome.storage?.local) return;
+        const r = await chrome.storage.local.get(COLLAPSED_STORAGE_KEY);
+        const raw = r[COLLAPSED_STORAGE_KEY];
+        if (Array.isArray(raw)) {
+            state.collapsed = new Set(raw.filter(function (x): x is string { return typeof x === 'string'; }));
+        }
+    } catch (err: unknown) {
+        log('Projects: collapsed-state load failed: ' + String(err), 'warn');
+    }
+}
+
+function saveCollapsedState(): void {
+    try {
+        if (typeof chrome === 'undefined' || !chrome.storage?.local) return;
+        void chrome.storage.local.set({ [COLLAPSED_STORAGE_KEY]: Array.from(state.collapsed) });
+    } catch (err: unknown) {
+        log('Projects: collapsed-state save failed: ' + String(err), 'warn');
+    }
+}
 
 export function showProjectsModal(): void {
     removeProjectsModal();
@@ -101,7 +130,7 @@ export function showProjectsModal(): void {
     panel.appendChild(footer);
 
     document.body.appendChild(panel);
-    void loadAndRender(body);
+    void loadCollapsedState().then(function () { void loadAndRender(body); });
 }
 
 /** Render the current blocks + filter into the body element. */
@@ -241,6 +270,19 @@ function attachRowClicks(body: HTMLElement): void {
     body.addEventListener('click', function (e: Event): void {
         const target = e.target as HTMLElement | null;
         if (!target) return;
+
+        // Workspace header toggle takes precedence over row click.
+        const toggle = target.closest('[data-ws-toggle]') as HTMLElement | null;
+        if (toggle) {
+            const wsId = toggle.getAttribute('data-ws-toggle') ?? '';
+            if (!wsId) return;
+            if (state.collapsed.has(wsId)) state.collapsed.delete(wsId);
+            else state.collapsed.add(wsId);
+            saveCollapsedState();
+            renderBody(body);
+            return;
+        }
+
         const row = target.closest('[data-open-url]') as HTMLElement | null;
         if (!row) return;
         const url = row.getAttribute('data-open-url') ?? '';
@@ -316,11 +358,18 @@ function renderBlock(b: WorkspaceBlock, tabIndex: OpenTabIndex): string {
         for (const p of closed) body += renderProjectRow(p, tabIndex, false);
     }
 
+    const collapsed = state.collapsed.has(b.ws.id);
+    const caret = collapsed ? '▸' : '▾';
     return '<div style="margin-bottom:8px;">'
-        + '<div style="font-size:10px;color:' + cPrimaryLighter + ';font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:2px 0;border-bottom:1px solid rgba(124,58,237,0.3);margin-bottom:2px;">'
-        + escapeHtml(wsName) + headerSuffix
+        + '<div data-ws-toggle="' + escapeHtml(b.ws.id) + '" '
+        +   'style="font-size:10px;color:' + cPrimaryLighter + ';font-weight:700;text-transform:uppercase;'
+        +   'letter-spacing:0.5px;padding:2px 4px;border-bottom:1px solid rgba(124,58,237,0.3);'
+        +   'margin-bottom:2px;cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px;" '
+        +   'title="Click to ' + (collapsed ? 'expand' : 'collapse') + '">'
+        +   '<span style="display:inline-block;width:10px;color:#94a3b8;">' + caret + '</span>'
+        +   '<span style="flex:1;">' + escapeHtml(wsName) + headerSuffix + '</span>'
         + '</div>'
-        + body
+        + (collapsed ? '' : body)
         + '</div>';
 }
 
