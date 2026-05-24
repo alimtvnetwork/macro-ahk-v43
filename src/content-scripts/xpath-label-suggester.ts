@@ -78,11 +78,29 @@ function capitaliseWord(word: string): string {
     return first + rest;
 }
 
-/** End-to-end: element → suggested PascalCase variable name. */
+/**
+ * Per-element memoisation of suggestVariableName.
+ *
+ * Recorder bursts often re-query the same element (click → hover → re-click)
+ * within milliseconds, each time walking the DOM up to the wrapping label,
+ * scanning `aria-label`, `placeholder`, and `id`. The result is deterministic
+ * for a given element, so a WeakMap cache avoids the repeated walks while
+ * letting the garbage collector reclaim entries once nodes detach.
+ *
+ * PERF-R7 — bounded by GC; never grows beyond live element set.
+ */
+const labelCache: WeakMap<Element, string> = new WeakMap();
+
+/** End-to-end: element → suggested PascalCase variable name (cached). */
 export function suggestVariableName(element: Element): string {
+    const cached = labelCache.get(element);
+    if (cached !== undefined) return cached;
+
     const raw = resolveLabelText(element);
     const tagFallback = element.tagName.toLowerCase();
     const source = raw ?? tagFallback;
+    const result = toPascalCase(source);
 
-    return toPascalCase(source);
+    labelCache.set(element, result);
+    return result;
 }
