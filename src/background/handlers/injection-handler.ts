@@ -883,48 +883,7 @@ async function executeInTab(tabId: number, code: string): Promise<{ path: string
     return { path: resolveInjectionPath(result), domTarget: result.domTarget ?? "unknown" };
 }
 
-/** Builds a successful injection result. */
-function buildSuccessResult(
-    scriptId: string,
-    startTime: number,
-    injectionPath?: string,
-    domTarget?: string,
-): InjectionResult {
-    return {
-        scriptId,
-        isSuccess: true,
-        durationMs: Date.now() - startTime,
-        injectionPath,
-        domTarget,
-    };
-}
-
-/** Maps CspInjectionResult world to a human-readable injection path label. */
-function resolveInjectionPath(result: import("../csp-fallback").CspInjectionResult): string {
-    if (result.world === "USER_SCRIPT") return "userScripts";
-    if (result.isFallback && result.world === "ISOLATED") return "isolated-blob";
-    return "main-blob";
-}
-
-/** Builds an error injection result. */
-function buildErrorResult(
-    scriptId: string,
-    startTime: number,
-    error: unknown,
-): InjectionResult {
-    const errorMessage = error instanceof Error
-        ? error.message
-        : String(error);
-
-    logBgWarnError(BgLogTag.INJECTION, `Script ${scriptId} failed: ${errorMessage}`);
-
-    return {
-        scriptId,
-        isSuccess: false,
-        errorMessage,
-        durationMs: Date.now() - startTime,
-    };
-}
+// buildSuccessResult / resolveInjectionPath / buildErrorResult moved to ./injection-result-builder (PERF-R2b step 3).
 
 /** Records the injection in the state manager. */
 function recordInjection(tabId: number, scripts: InjectableScript[], injectionPath?: string, domTarget?: string, pipelineDurationMs?: number, budgetMs?: number): void {
