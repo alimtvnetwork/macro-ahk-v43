@@ -388,14 +388,52 @@ function buildPromptsDropdown(_deps: PanelBuilderDeps, btnStyle: string): Prompt
 }
 
 // ============================================
-// Prompts dropdown positioning (Step 3 lands real flip logic here)
+// Prompts dropdown positioning — viewport-aware flip + clamp
 // ============================================
 
+const DROPDOWN_GAP = 4;
+const DROPDOWN_SAFE_GUTTER = 8;
+const DROPDOWN_MIN_HEIGHT = 160;
+const DROPDOWN_MAX_HEIGHT_CAP = 480;
+
 function positionPromptsDropdown(triggerBtn: HTMLElement, dropdown: HTMLElement): void {
-  const rect = triggerBtn.getBoundingClientRect();
-  const gap = 4;
-  dropdown.style.top = Math.round(rect.bottom + gap) + 'px';
-  dropdown.style.left = Math.round(rect.left) + 'px';
+  const btnRect = triggerBtn.getBoundingClientRect();
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  // Reset height cap so measurement reflects natural size.
+  dropdown.style.maxHeight = DROPDOWN_MAX_HEIGHT_CAP + 'px';
+  const dropRect = dropdown.getBoundingClientRect();
+  const dropWidth = dropRect.width > 0 ? dropRect.width : 280;
+  const dropHeight = dropRect.height > 0 ? dropRect.height : DROPDOWN_MIN_HEIGHT;
+
+  const spaceBelow = vh - btnRect.bottom - DROPDOWN_GAP - DROPDOWN_SAFE_GUTTER;
+  const spaceAbove = btnRect.top - DROPDOWN_GAP - DROPDOWN_SAFE_GUTTER;
+  const openUp = spaceBelow < Math.min(dropHeight, DROPDOWN_MIN_HEIGHT) && spaceAbove > spaceBelow;
+
+  const availableHeight = openUp ? spaceAbove : spaceBelow;
+  const finalHeight = Math.max(DROPDOWN_MIN_HEIGHT, Math.min(dropHeight, availableHeight, DROPDOWN_MAX_HEIGHT_CAP));
+  dropdown.style.maxHeight = Math.round(finalHeight) + 'px';
+
+  const top = openUp
+    ? Math.max(DROPDOWN_SAFE_GUTTER, btnRect.top - DROPDOWN_GAP - finalHeight)
+    : Math.round(btnRect.bottom + DROPDOWN_GAP);
+
+  // Horizontal: prefer left-align to trigger; flip to right-align if it would overflow right edge;
+  // finally clamp into viewport with safe gutter.
+  let left = Math.round(btnRect.left);
+  const overflowsRight = left + dropWidth + DROPDOWN_SAFE_GUTTER > vw;
+  if (overflowsRight) {
+    left = Math.round(btnRect.right - dropWidth);
+  }
+  const minLeft = DROPDOWN_SAFE_GUTTER;
+  const maxLeft = Math.max(minLeft, vw - dropWidth - DROPDOWN_SAFE_GUTTER);
+  if (left < minLeft) { left = minLeft; }
+  if (left > maxLeft) { left = maxLeft; }
+
+  dropdown.style.top = Math.round(top) + 'px';
+  dropdown.style.left = left + 'px';
+  dropdown.setAttribute('data-open-direction', openUp ? 'up' : 'down');
 }
 
 // ============================================
