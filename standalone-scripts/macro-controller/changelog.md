@@ -1,5 +1,12 @@
 # Macro Controller — Changelog
 
+## v3.8.0 (2026-05-24)
+
+### Fixed
+- Prompts dropdown portals to `document.body` to escape `overflow: hidden` clipping.
+- Viewport-aware flip (up/down) + clamp (left/right) with dynamic `max-height`.
+- `Task Next` submenu scrolls into view when parent dropdown opens upward.
+
 ## v3.5.1 (2026-05-22)
 
 ### Projects Modal — 15-Step Improvement (Steps 1–14)

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.1
 
 ---
 
+## [v3.8.0] — 2026-05-24 Prompts Dropdown Viewport Fix
+
+### Fixed
+- Prompts dropdown now portals to `document.body` so it is no longer clipped by the panel's `overflow: hidden`.
+- Viewport-aware positioning flips up/down based on available space and clamps left/right to an 8 px safe gutter.
+- `Task Next` submenu scrolls into view when the dropdown opens upward.
+
+---
+
 ## [v3.7.0] — 2026-05-23 Workspace Hover Card UX Fix
 
 ### Fixed
