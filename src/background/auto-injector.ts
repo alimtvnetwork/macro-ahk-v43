@@ -30,6 +30,10 @@ import {
 } from "./state-manager";
 import { urlFingerprint } from "./url-fingerprint";
 import { injectWithCspFallback } from "./csp-fallback";
+import {
+    isOriginDismissedForTab,
+    clearDismissedOriginsForTab,
+} from "./dismissed-origins";
 import { STORAGE_KEY_ALL_SCRIPTS } from "../shared/constants";
 import { ensureBuiltinScriptsExist } from "./builtin-script-guard";
 import { persistInjectionError, persistInjectionWarn } from "./injection-diagnostics";
@@ -134,6 +138,7 @@ export function registerAutoInjector(): void {
     try {
         chrome.tabs.onRemoved.addListener((tabId) => {
             clearTabDecision(tabId);
+            clearDismissedOriginsForTab(tabId);
         });
     } catch (err) {
         logCaughtError(BgLogTag.MARCO, "tabs.onRemoved cache-clear registration failed", err);
@@ -161,6 +166,12 @@ export async function handleTabActivated(tabId: number): Promise<void> {
     const url = tab.url ?? "";
     if (!url || isNewTabOrBlankUrl(url)) return;
     if (!isProjectPageUrl(url)) return;
+    if (isOriginDismissedForTab(tabId, url)) {
+        console.log(
+            `[auto-injector] AUTOATTACH_SKIPPED_USER_DISMISSED tab=${tabId} url=${url} trigger=activate`,
+        );
+        return;
+    }
 
     const fp = urlFingerprint(url);
     if (isSameDecisionFingerprint(tabId, fp)) return; // T3 dedup — no work needed
@@ -197,6 +208,17 @@ export async function handleNavigationCompleted(
         logUrlGuardSkip(details.tabId, details.url);
         return;
     }
+
+    // Per-tab dismissed-origin short-circuit (Step B). User explicitly
+    // dismissed the first-attach toast for this (tab, origin); skip everything
+    // until tab close or origin change. See mem://features/auto-attach-policy.md.
+    if (isOriginDismissedForTab(details.tabId, details.url)) {
+        console.log(
+            `[auto-injector] AUTOATTACH_SKIPPED_USER_DISMISSED tab=${details.tabId} url=${details.url} trigger=load`,
+        );
+        return;
+    }
+
 
     // TTL-based dedup: absorb listener double-fires (audit U-1 recommendation).
     // Reloads >5s apart still re-inject; bursts within 5s are squashed.
