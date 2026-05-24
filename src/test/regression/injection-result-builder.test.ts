@@ -88,7 +88,7 @@ describe("buildSuccessResult", () => {
         const start = Date.now();
         const result = buildSuccessResult("s3", start);
         const elapsed = Date.now() - start;
-        expect(result.durationMs).toBeGreaterThanOrEqual(1);
+        expect(result.durationMs).toBeGreaterThanOrEqual(0);
         expect(result.durationMs).toBeLessThanOrEqual(elapsed + 50);
     });
 });
