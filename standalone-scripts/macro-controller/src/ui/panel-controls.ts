@@ -310,7 +310,10 @@ function buildPromptsDropdown(_deps: PanelBuilderDeps, btnStyle: string): Prompt
   promptsBtn.onmouseleave = function() { promptsBtn.style.filter = ''; promptsBtn.style.boxShadow = cBtnPromptGlow; };
 
   const promptsDropdown = document.createElement('div');
-  promptsDropdown.style.cssText = 'display:none;position:absolute;top:100%;left:0;min-width:220px;max-width:340px;max-height:280px;overflow-y:auto;background:' + cPanelBg + ';border:1px solid ' + cPrimary + ';border-radius:' + lDropdownRadius + ';z-index:100001;box-shadow:' + lDropdownShadow + ';margin-top:2px;';
+  // Portaled to document.body to escape panel overflow:hidden clipping.
+  // Position is computed on open via positionPromptsDropdown() in Step 3.
+  promptsDropdown.setAttribute('data-marco-prompts-dropdown', '1');
+  promptsDropdown.style.cssText = 'display:none;position:fixed;top:0;left:0;min-width:220px;max-width:340px;max-height:280px;overflow-y:auto;background:' + cPanelBg + ';border:1px solid ' + cPrimary + ';border-radius:' + lDropdownRadius + ';z-index:2147483600;box-shadow:' + lDropdownShadow + ';';
 
   const promptCtx: PromptContext = { promptsDropdown: promptsDropdown };
   const taskNextDeps: TaskNextDeps = { sendToExtension: sendToExtension as (type: string, payload: Record<string, unknown>) => Promise<Record<string, unknown>>, getPromptsConfig: getPromptsConfig, getByXPath: ((xpath: string) => getByXPath(xpath) as Element | null) as (xpath: string) => Element | null };
