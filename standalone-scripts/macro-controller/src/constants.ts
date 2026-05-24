@@ -64,6 +64,8 @@ export const DEFAULT_REFILL_WARNING_THRESHOLD_DAYS = 7;
 export const DEFAULT_PROJECTS_CACHE_TTL_HOURS = 48;
 export const DEFAULT_ENABLE_WORKSPACE_STATUS_LABELS = true;
 export const DEFAULT_ENABLE_WORKSPACE_HOVER_DETAILS = true;
+/** Delay before the workspace hover card disappears after mouseleave (ms). */
+export const DEFAULT_HOVERCARD_HIDE_GRACE_PERIOD_MS = 220;
 
 // Startup / retry
 export const MAX_SDK_ATTEMPTS = 3;
