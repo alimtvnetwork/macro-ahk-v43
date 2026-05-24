@@ -387,6 +387,34 @@ function buildStatusPillHtml(status: WorkspaceStatus): string {
     + ' data-marco-tip="' + tip + '">' + status.label + '</span>';
 }
 
+/**
+ * Build the inline `R Nd` refill badge for a workspace row. Returns empty
+ * string when no usable refill date or refill is beyond the priority
+ * window. Colors follow the about-to-refill warning palette:
+ *   - 0 days  → sky-400 (today)
+ *   - 1–3d    → amber-400 (urgent)
+ *   - 4–10d   → slate-400 (heads-up)
+ *
+ * v3.10.0 — spec/22-app-issues/refill-priority-filter/01-overview.md §4.
+ */
+function buildRefillBadgeHtml(ws: WorkspaceCredit): string {
+  const days = daysToRefillForWs(ws);
+  if (days === null) return '';
+  if (days > REFILL_PRIORITY_WINDOW_DAYS) return '';
+  let fg = '#cbd5e1';
+  let bg = 'rgba(71,85,105,0.35)';
+  let border = 'rgba(148,163,184,0.5)';
+  if (days === 0) {
+    fg = '#bae6fd'; bg = 'rgba(2,132,199,0.45)'; border = '#38bdf8';
+  } else if (days <= 3) {
+    fg = '#fde68a'; bg = 'rgba(180,83,9,0.45)'; border = '#f59e0b';
+  }
+  return '<span class="loop-ws-refill-badge" style="font-size:9px;color:' + fg
+    + ';background:' + bg + ';border:1px solid ' + border
+    + ';padding:1px 5px;border-radius:3px;font-weight:700;margin-left:5px;vertical-align:middle;letter-spacing:0.3px;">R '
+    + days + 'd</span>';
+}
+
 /** Build the inner HTML for a workspace row. */
 function buildWsRowInnerHtml(
   ws: WorkspaceCredit, isCurrent: boolean, isChecked: boolean,
