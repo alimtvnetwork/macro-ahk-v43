@@ -21,7 +21,7 @@ const instruction: ProjectInstruction<MacroControllerSettings> = {
     SchemaVersion: "1.0",
     Name: "macro-controller",
     DisplayName: "Macro Controller",
-    Version: "3.9.1",
+    Version: "3.9.2",
     Description: "Macro Controller for workspace and credit management",
     World: "MAIN",
     Dependencies: ["marco-sdk", "xpath"],
@@ -30,7 +30,7 @@ const instruction: ProjectInstruction<MacroControllerSettings> = {
         Id: "default-macro-looping",
         SeedOnInstall: true,
         IsRemovable: false,
-        AutoInject: false,
+        AutoInject: true,
         RunAt: "document_idle",
         CookieBinding: "lovable-session-id.id",
         TargetUrls: [
