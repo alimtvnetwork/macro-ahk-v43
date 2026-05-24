@@ -64,7 +64,7 @@ async function hydratePersistent(): Promise<void> {
         logCaughtError(
             BgLogTag.MARCO,
             "[dismissed-origins] hydrate failed; falling back to in-memory only",
-            err,
+            err as Error,
         );
         // Mark hydrated anyway — we don't retry. Next persist call will
         // overwrite with whatever we currently know.
@@ -118,7 +118,7 @@ export async function persistDismissOrigin(url: string): Promise<void> {
         logCaughtError(
             BgLogTag.MARCO,
             `[dismissed-origins] persist failed for origin=${origin}`,
-            err,
+            err as Error,
         );
     }
 }
@@ -138,7 +138,7 @@ export async function unpersistDismissOrigin(url: string): Promise<void> {
         logCaughtError(
             BgLogTag.MARCO,
             `[dismissed-origins] unpersist failed for origin=${origin}`,
-            err,
+            err as Error,
         );
     }
 }

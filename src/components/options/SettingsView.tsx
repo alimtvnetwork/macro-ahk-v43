@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useEditorTheme, EDITOR_THEME_OPTIONS, type EditorThemeName } from "@/hooks/use-editor-theme";
 import { PromptVariablesCard } from "./PromptVariablesCard";
+import { DismissedSitesCard } from "./DismissedSitesCard";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -372,6 +373,17 @@ export function SettingsView() {
       >
         <PromptVariablesCard />
       </SettingsGroup>
+
+      {/* Dismissed Sites (C9 auto-attach gate) */}
+      <SettingsGroup
+        icon={Shield}
+        title="Dismissed Sites"
+        description="Origins where you opted out of the auto-attach prompt"
+      >
+        <DismissedSitesCard />
+      </SettingsGroup>
+
+
 
       {/* Debugging */}
       <SettingsGroup
