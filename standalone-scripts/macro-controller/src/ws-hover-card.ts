@@ -483,7 +483,8 @@ function cancelHideTimer(): void {
 
 function scheduleHide(): void {
   cancelHideTimer();
-  hideTimer = window.setTimeout(hideCard, 220);
+  const cfg = getWorkspaceLifecycleConfig();
+  hideTimer = window.setTimeout(hideCard, cfg.hoverCardHideGracePeriodMs);
 }
 
 function ensureCardElement(): HTMLDivElement {
