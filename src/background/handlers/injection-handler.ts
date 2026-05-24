@@ -25,6 +25,14 @@ import {
     collectInlineSyntaxFailures,
     type InjectionRequestScript,
 } from "./injection-syntax-preflight";
+import {
+    buildSuccessResult,
+    buildErrorResult,
+    resolveInjectionPath,
+    buildSkipMessage,
+    extractMacroVersion,
+    buildSyntaxFailureResult,
+} from "./injection-result-builder";
 import { handleLogEntry, handleLogError } from "./logging-handler";
 import {
     getTabInjections,
