@@ -22,6 +22,8 @@ import {
   Download,
   BookOpen,
   FileCode,
+  Save,
+  Settings,
 } from "lucide-react";
 import type { StoredProject } from "@/hooks/use-projects-scripts";
 import { DEFAULT_CHATBOX_XPATH } from "@/shared/defaults";
