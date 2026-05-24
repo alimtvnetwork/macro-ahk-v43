@@ -902,19 +902,7 @@ function recordInjection(tabId: number, scripts: InjectableScript[], injectionPa
     });
 }
 
-/** Builds a human-readable skip message for a given reason. */
-function buildSkipMessage(reason: SkipReason, scriptName: string): string {
-    switch (reason) {
-        case "disabled":
-            return `Script "${scriptName}" is disabled — enable it in the Scripts panel to inject.`;
-        case "missing":
-            return `Script "${scriptName}" not found in storage — it may have been deleted or not yet seeded.`;
-        case "resolver_mismatch":
-            return `Script "${scriptName}" could not be resolved — the format doesn't match any known script type.`;
-        default:
-            return `Script "${scriptName}" was skipped (unknown reason).`;
-    }
-}
+// buildSkipMessage moved to ./injection-result-builder (PERF-R2b step 3).
 
 
 
