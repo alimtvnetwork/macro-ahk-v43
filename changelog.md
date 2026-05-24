@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.1
 
 ---
 
+## [v3.9.3] — 2026-05-24 Button Row Spacing Hardening
+
+- **Fixed** controller button row visually flush with no gap after minimize → expand cycle. Bumped `btnRow` flex `gap` 8px → 10px and added defensive `margin:2px 3px` to each button via `btnStyle` so spacing survives any layout state.
+
 ## [v3.9.2] — 2026-05-24 Auto-Attach Default True for Built-Ins
 
 - **Changed** `AutoInject` from `false` → `true` in built-in script seed manifests: `macro-controller`, `lovable-owner-switch`, `lovable-user-add`. Scripts now auto-attach to projects by default (C1..C8 gate permitting) instead of requiring manual binding.
