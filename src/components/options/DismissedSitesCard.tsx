@@ -49,7 +49,7 @@ export function DismissedSitesCard() {
                 setOrigins((prev) => prev.filter((o) => o !== origin));
                 toast.success(`Re-enabled auto-attach for ${origin}`);
             } catch (err) {
-                logError(`DismissedSitesCard.unpersist ${origin}`, err);
+                logError("DismissedSitesCard", `unpersist ${origin} failed`, err);
                 toast.error(`Failed to forget ${origin}`);
             } finally {
                 setPending(null);
