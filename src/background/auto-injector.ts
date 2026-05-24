@@ -166,6 +166,12 @@ export async function handleTabActivated(tabId: number): Promise<void> {
     const url = tab.url ?? "";
     if (!url || isNewTabOrBlankUrl(url)) return;
     if (!isProjectPageUrl(url)) return;
+    if (isOriginDismissedForTab(tabId, url)) {
+        console.log(
+            `[auto-injector] AUTOATTACH_SKIPPED_USER_DISMISSED tab=${tabId} url=${url} trigger=activate`,
+        );
+        return;
+    }
 
     const fp = urlFingerprint(url);
     if (isSameDecisionFingerprint(tabId, fp)) return; // T3 dedup — no work needed
