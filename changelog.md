@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.1
 
 ---
 
+## [v3.11.1] — 2026-05-25
+
+### Added
+
+### Fixed
+
+### Changed
+- Version bump: 3.10.0 → 3.11.1 (all version files synced)
+
+---
+
 ## [v3.10.0] — 2026-05-24 Refill Priority Filter + GitHub Repo Open
 
 - **Fixed** button row overflow: added `min-width:0;max-width:100%` and `overflow:visible` to `btnRow`, plus `min-width:0` on the start/stop, prompts, and menu containers, so the row wraps cleanly instead of clipping the rightmost buttons inside narrow Lovable sidebars.
