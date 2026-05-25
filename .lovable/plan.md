@@ -17,14 +17,10 @@ Specs:
   - Plan: `.lovable/plans/release-installer.md`
   - Needs: `MINISIGN_SECRET_KEY` added to GitHub secrets so the release workflow can sign the installer.
 
-### Blocked on user policy
-- **P0 — Task 1.2** — E2E Chrome verification (manual smoke pass on installer build). *Blocked: manual Chrome testing avoided per user policy (`mem://preferences/deferred-workstreams`).*
-
 ### Deferred
 - **P2 — P Store spec** — *Discuss-later mode per user instruction.*
-- **Macro recorder phases / React component tests** — *Deferred per user policy.*
-- **Prompt Click E2E (52/53)** — *Deferred.*
 - **Cross-Project Sync & Shared Library** — *Depends on P Store.*
+- **Prompt Click E2E (52/53)** — *Deferred.*
 
 ### In-memory audit not yet on active backlog
 - **Idle loop perf audit (2026-04-25)** — ✅ All actionable items fixed (PERF-1..13). PERF-14/15 are Low/no-action. See `mem://performance/idle-loop-audit-2026-04-25`.
