@@ -20,7 +20,41 @@ import {
     writeFileSync,
     readdirSync,
 } from "fs";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
+
+/**
+ * Windows-safe replacement for `execSync(cmd, { stdio: "inherit" })` inside
+ * Rollup's PARALLEL writeBundle hook. Multiple child Node processes sharing
+ * the parent's inherited stdout handle on Windows (especially when the
+ * caller is piping through PowerShell `Tee-Object`) can crash one child
+ * with NTSTATUS 0xC0000409 (STATUS_STACK_BUFFER_OVERRUN, decimal
+ * 3221226505). Piped stdio gives each child a private OS pipe; we surface
+ * captured output only on failure so successful runs stay quiet.
+ *
+ * See .lovable/question-and-ambiguity/56-windows-vite-build-failed-opaque.md
+ */
+function runNodeScriptSafe(label: string, nodeArgs: string[], cwd: string): void {
+    try {
+        execFileSync(process.execPath, nodeArgs, {
+            cwd,
+            stdio: ["ignore", "pipe", "pipe"],
+            encoding: "utf8",
+            maxBuffer: 32 * 1024 * 1024,
+        });
+    } catch (e: unknown) {
+        const err = e as { stdout?: string; stderr?: string; status?: number; message?: string };
+        const out = (err.stdout ?? "").trim();
+        const errOut = (err.stderr ?? "").trim();
+        const status = typeof err.status === "number" ? err.status : "n/a";
+        const msg = [
+            `[${label}] node script failed (exit ${status})`,
+            `  cmd: node ${nodeArgs.join(" ")}`,
+            out ? `  stdout (tail):\n${out.split(/\r?\n/).slice(-20).map((l) => "    " + l).join("\n")}` : "",
+            errOut ? `  stderr (tail):\n${errOut.split(/\r?\n/).slice(-20).map((l) => "    " + l).join("\n")}` : "",
+        ].filter(Boolean).join("\n");
+        throw new Error(msg);
+    }
+}
 
 const EXT_DIR = __dirname;
 // NOTE: The unpacked Chrome extension is written DIRECTLY into ./chrome-extension/
@@ -345,10 +379,7 @@ function copyPrompts(): Plugin {
         name: "copy-prompts",
         writeBundle() {
             try {
-                execSync(
-                    `node scripts/aggregate-prompts.mjs`,
-                    { cwd: __dirname, stdio: "inherit" },
-                );
+                runNodeScriptSafe("copy-prompts", ["scripts/aggregate-prompts.mjs"], __dirname);
                 // aggregate-prompts.mjs writes into chrome-extension/prompts/ directly,
                 // so this copy step is a no-op when src===dest, but we keep the explicit
                 // copy as a safety net for the case where a future contributor changes
@@ -362,7 +393,9 @@ function copyPrompts(): Plugin {
                     }
                 }
             } catch (e) {
-                console.warn("[copy-prompts] failed:", e);
+                // HARD fail — missing prompts blocks the extension at runtime.
+                console.error("[copy-prompts] FATAL:", e);
+                throw e;
             }
         },
     };
@@ -401,9 +434,10 @@ function copyProjectScripts(): Plugin {
 
                 if (!existsSync(instructionPath) && existsSync(sourceInstructionPath)) {
                     try {
-                        execSync(
-                            `node scripts/compile-instruction.mjs "standalone-scripts/${folder.name}"`,
-                            { cwd: __dirname, stdio: "inherit" },
+                        runNodeScriptSafe(
+                            `compile-instruction:${folder.name}`,
+                            ["scripts/compile-instruction.mjs", `standalone-scripts/${folder.name}`],
+                            __dirname,
                         );
                     } catch (e) {
                         console.warn(`[copy-project-scripts] Failed to compile instruction for ${folder.name}: ${e}`);
@@ -489,12 +523,19 @@ function copyProjectScripts(): Plugin {
             // Regenerate seed-manifest.json AFTER emptyOutDir cleanup + project copy.
             // This is the runtime source the background seeder reads.
             try {
-                execSync(
-                    `node scripts/generate-seed-manifest.mjs --out "${resolve(DIST_DIR, "projects", "seed-manifest.json")}"`,
-                    { cwd: __dirname, stdio: "inherit" },
+                runNodeScriptSafe(
+                    "generate-seed-manifest",
+                    [
+                        "scripts/generate-seed-manifest.mjs",
+                        "--out",
+                        resolve(DIST_DIR, "projects", "seed-manifest.json"),
+                    ],
+                    __dirname,
                 );
             } catch (e) {
-                console.warn("[copy-project-scripts] seed-manifest.json generation failed:", e);
+                // HARD fail — missing seed-manifest blocks the background seeder.
+                console.error("[copy-project-scripts] seed-manifest.json FATAL:", e);
+                throw e;
             }
         },
     };
