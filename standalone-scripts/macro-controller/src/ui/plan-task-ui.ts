@@ -145,10 +145,10 @@ function appendCustomStepRow(sub: HTMLElement, dropdown: HTMLElement): void {
   go.style.cssText = 'cursor:pointer;font-size:11px;color:' + cPrimary + ';';
   go.onclick = function(e: Event) {
     e.stopPropagation();
-    const n = parseInt(inp.value);
+    const n = parseInt(inp.value, 10);
     if (!n || n < 1 || n > 999) { showPasteToast('⚠️ Enter 1–999', true); return; }
-    dropdown.style.display = 'none';
     injectPlanPrompt(n);
+    dropdown.style.display = 'none';
   };
   inp.onkeydown = function(e: KeyboardEvent) { if (e.key === 'Enter') { e.stopPropagation(); go.click(); } };
   row.appendChild(go);
