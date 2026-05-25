@@ -436,25 +436,16 @@ function buildRefillBadgeHtml(ws: WorkspaceCredit): string {
 }
 
 /** Build the inner HTML for a workspace row. */
-function buildWsRowInnerHtml(
-  ws: WorkspaceCredit, isCurrent: boolean, isChecked: boolean,
-  emoji: string, creditBarHtml: string,
-): string {
+function buildTierBadgeHtml(ws: WorkspaceCredit): string {
   const wsTier = ws.tier || 'FREE';
   const tierMeta = WS_TIER_LABELS[wsTier] || WS_TIER_LABELS['FREE'];
-  // v2.195.0: Bumped from 7px → 10px text + 2px/5px padding for readability.
-  // Cleanup workflows scan many rows quickly, so the badge needs to register
-  // at a glance without dominating the row.
   let tierBadge = '<span style="font-size:10px;color:' + tierMeta.fg + CSS_BG + tierMeta.bg + ';padding:2px 5px;border-radius:3px;font-weight:700;margin-left:6px;vertical-align:middle;letter-spacing:0.3px;">' + tierMeta.label + '</span>';
 
-  // Phase 3 (workspace-status-tooltip v2.211.0): unified lifecycle status pill.
-  // Replaces the legacy "·Nd" chip — `daysSince` and dates now live in the pill tooltip.
   const cfg = getWorkspaceLifecycleConfig();
   if (cfg.enableWorkspaceStatusLabels) {
     const status = getEffectiveStatus(ws, cfg);
     tierBadge += buildStatusPillHtml(status, ws);
   } else if (wsTier === 'EXPIRED') {
-    // Legacy fallback when pills disabled — preserve the old chip.
     const days = expiredDays(ws);
     if (days !== null) {
       const startDate = formatExpiryStartDate(ws);
@@ -463,17 +454,20 @@ function buildWsRowInnerHtml(
       if (startDate) tipParts.push('since ' + startDate);
       if (duration) tipParts.push('(' + duration + ')');
       const tip = tipParts.join(' ').replace(/"/g, '&quot;');
-      // Native title= omitted — see spec/22-app-issues/113.
       tierBadge += '<span style="font-size:10px;color:#fca5a5;background:rgba(127,29,29,0.55);padding:2px 5px;border-radius:3px;font-weight:600;margin-left:3px;vertical-align:middle;" data-marco-tip="' + tip + '">·' + days + 'd</span>';
     }
   }
-  // v3.10.0: Inline `R Nd` refill badge — only when refill is within window.
-  // Issue 115 (v3.12.0): suppressed when the unified status pill is enabled,
-  // because that pill already emits `Refill Nd` for refill-soon workspaces
-  // (single-badge-per-row contract).
   if (!cfg.enableWorkspaceStatusLabels) {
     tierBadge += buildRefillBadgeHtml(ws);
   }
+  return tierBadge;
+}
+
+function buildWsRowInnerHtml(
+  ws: WorkspaceCredit, isCurrent: boolean, isChecked: boolean,
+  emoji: string, creditBarHtml: string,
+): string {
+  const tierBadge = buildTierBadgeHtml(ws);
   const nameColor = isCurrent ? '#67e8f9' : '#e2e8f0';
   const nameBold = isCurrent ? 'font-weight:800;' : 'font-weight:500;';
 
