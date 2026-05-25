@@ -1,5 +1,12 @@
 # Macro Controller — Changelog
 
+## v3.17.0 (2026-05-25)
+
+### Fixed
+- Refill-soon filter now sorts highest-credit workspaces first. Previously, enabling the "Refill-soon" chip showed all rows with `Refill 1d` in raw API order — so workspaces with `available=0` sat above ones with hundreds of credits. `ws-list-renderer.ts::filterAndSortWorkspaces` now applies `sortByRefillPriority` whenever the refill-soon filter is active (in addition to when the refill-priority sort toggle is on). Added `__tests__/ws-refill-soon-sort.test.ts` (source-invariant + 7-row behavioural test mirroring the reported screenshot).
+
+---
+
 ## v3.16.0 (2026-05-25)
 
 ### Added
