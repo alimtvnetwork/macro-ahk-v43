@@ -177,7 +177,10 @@ function scheduleTimersAfterCheck(checkPromise: Promise<void> | undefined): void
 // startLoop
 // ============================================
 export function startLoop(direction: LoopDirection | string): boolean {
+  // No-autorun guard: refuse any startLoop() that isn't backed by a recent user gesture.
+  if (!requireUserGesture('startLoop')) return false;
   if (!validateLoopPreconditions()) return false;
+
 
   initLoopState(direction);
   logLoopStartInfo();
