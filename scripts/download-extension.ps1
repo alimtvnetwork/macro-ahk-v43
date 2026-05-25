@@ -54,9 +54,9 @@
 
 [CmdletBinding()]
 param(
-    [string]$Version    = 'latest',
-    [string]$Repo       = 'alimtvnetwork/macro-ahk-v38',
-    [string]$FolderName = 'marco-extension'
+    [string]$Version    = $(if ($env:MARCO_DL_VERSION) { $env:MARCO_DL_VERSION } else { 'latest' }),
+    [string]$Repo       = $(if ($env:MARCO_DL_REPO)    { $env:MARCO_DL_REPO }    else { 'alimtvnetwork/macro-ahk-v38' }),
+    [string]$FolderName = $(if ($env:MARCO_DL_FOLDER)  { $env:MARCO_DL_FOLDER }  else { 'marco-extension' })
 )
 
 $ErrorActionPreference = 'Stop'
