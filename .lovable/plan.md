@@ -1,8 +1,8 @@
 # Plan
 
-**Active workstream:** Workspace Label Refinement (v3.12.0, in progress — steps 7–10 remaining).
+**Active workstream:** P1 — Release installer hardening v0.2 (blocked on `MINISIGN_SECRET_KEY`).
 
-**Recently shipped:** **v3.11.1 — pro_0 Credit Balance Calculation Fix** (2026-05-25).
+**Recently shipped:** **v3.12.0 — Workspace Label Refinement** (2026-05-25).
 
 ---
 
