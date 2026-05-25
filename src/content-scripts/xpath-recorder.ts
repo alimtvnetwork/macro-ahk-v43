@@ -23,6 +23,7 @@ import {
     buildRelativeXPath,
 } from "./xpath-anchor-strategies";
 import { suggestVariableName } from "./xpath-label-suggester";
+import { enqueueCapture, flushNow } from "./xpath-capture-coalescer";
 
 /* ------------------------------------------------------------------ */
 /*  State                                                              */
@@ -117,7 +118,8 @@ function onElementClick(event: MouseEvent): void {
     event.stopPropagation();
 
     const payload = buildCapturePayload(target);
-    void chrome.runtime.sendMessage(payload);
+    // PERF-R6: batch/coalesce captures instead of one sendMessage per click.
+    enqueueCapture(payload);
 
     highlightElement(target);
 }
@@ -188,6 +190,8 @@ function stopRecorder(): void {
     document.removeEventListener("click", onElementClick, true);
     clearAllHighlights();
     window.removeEventListener("pagehide", onPageHide);
+    // PERF-R6: drain any queued captures before teardown.
+    void flushNow();
     console.log("[Marco] XPath recorder stopped");
 }
 
