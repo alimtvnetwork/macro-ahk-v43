@@ -1,8 +1,9 @@
 # Plan
 
-**Active workstream:** P1 — Release installer hardening v0.2 (blocked on `MINISIGN_SECRET_KEY`).
+**Active workstream:** Release Page CI/CD Hardening Plan — Step 2/8.
 
-**Recently shipped:** **Issue 111 — Open Lovable Tabs / Per-Tab Workspace Mapping** (2026-05-25).
+**Recently shipped:** **Issue 116 — Credit Totals Modal** (2026-05-25, v3.14.1).
+**Recently shipped:** **Issue 113 — Workspace tooltip + Members popup** (2026-05-25).
 **Recently shipped:** **v3.12.0 — Workspace Label Refinement** (2026-05-25).
 
 ---
