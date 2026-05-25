@@ -65,25 +65,26 @@ describe('buildBreakdownTable — integration', () => {
     expect(rowNames(table)).toEqual(['Alpha', 'Bravo', 'Charlie', 'Delta']);
   });
 
-  it('header click sorts ascending then descending, then clears', () => {
+  it('numeric header click cycles desc → asc → none (manual order)', () => {
     const table = buildBreakdownTable(SAMPLE);
     const remHeader = table.querySelector<HTMLElement>('[data-sort-key="rem"]')!;
     remHeader.click();
-    // asc by remaining: 0, 20, 50, 900
-    expect(rowNames(table)).toEqual(['Delta', 'Charlie', 'Bravo', 'Alpha']);
-    remHeader.click();
+    // desc by remaining: 900, 50, 20, 0
     expect(rowNames(table)).toEqual(['Alpha', 'Bravo', 'Charlie', 'Delta']);
+    remHeader.click();
+    // asc: 0, 20, 50, 900
+    expect(rowNames(table)).toEqual(['Delta', 'Charlie', 'Bravo', 'Alpha']);
     remHeader.click();
     // cleared -> manual order
     expect(rowNames(table)).toEqual(['Alpha', 'Bravo', 'Charlie', 'Delta']);
   });
 
-  it('Low filter chip narrows rows to remaining < 100', () => {
+  it('Low filter chip narrows rows to 0 < remaining < 100', () => {
     const table = buildBreakdownTable(SAMPLE);
     const lowChip = table.querySelector<HTMLElement>('[data-chip="low"]')!;
     lowChip.click();
-    // Bravo(50), Charlie(20), Delta(0) all qualify
-    expect(rowNames(table).sort()).toEqual(['Bravo', 'Charlie', 'Delta']);
+    // Bravo(50), Charlie(20) qualify; Delta(0) is "empty", not "low"
+    expect(rowNames(table).sort()).toEqual(['Bravo', 'Charlie']);
   });
 
   it('Empty + Free filters combine with OR logic', () => {
