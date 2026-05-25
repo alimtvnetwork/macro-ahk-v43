@@ -19,6 +19,7 @@ import {
 import { readAllProjects } from "./handlers/project-helpers";
 import { logCaughtError, logBgWarnError, BgLogTag } from "./bg-logger";
 import { urlFingerprint } from "./url-fingerprint";
+import { handleNavigationCompleted } from "./auto-injector";
 import type { ResolvedScript } from "./script-resolver";
 
 /* ------------------------------------------------------------------ */
