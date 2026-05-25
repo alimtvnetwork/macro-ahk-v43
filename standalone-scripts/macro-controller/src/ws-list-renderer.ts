@@ -446,7 +446,12 @@ function buildWsRowInnerHtml(
     }
   }
   // v3.10.0: Inline `R Nd` refill badge — only when refill is within window.
-  tierBadge += buildRefillBadgeHtml(ws);
+  // Issue 115 (v3.12.0): suppressed when the unified status pill is enabled,
+  // because that pill already emits `Refill Nd` for refill-soon workspaces
+  // (single-badge-per-row contract).
+  if (!cfg.enableWorkspaceStatusLabels) {
+    tierBadge += buildRefillBadgeHtml(ws);
+  }
   const nameColor = isCurrent ? '#67e8f9' : '#e2e8f0';
   const nameBold = isCurrent ? 'font-weight:800;' : 'font-weight:500;';
 
