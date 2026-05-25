@@ -113,8 +113,7 @@ describe('renderPlanTaskSubmenu — toast surface', () => {
 });
 
 describe('renderPlanTaskSubmenu — RC-3 no auto-collapse', () => {
-  it('sub stays open after mouseleave + 200ms (no setTimeout collapse)', async () => {
-    vi.useFakeTimers();
+  it('sub stays open after mouseleave + 500ms (no setTimeout collapse)', async () => {
     const ctx = makeCtx();
     const container = document.createElement('div');
     // @ts-expect-error
@@ -127,7 +126,7 @@ describe('renderPlanTaskSubmenu — RC-3 no auto-collapse', () => {
     expect(sub.style.display).toBe('block');
 
     item.dispatchEvent(new Event('mouseleave'));
-    vi.advanceTimersByTime(500); // far longer than the legacy 120ms timer
+    await new Promise((r) => setTimeout(r, 500)); // far longer than the legacy 120ms timer
 
     expect(sub.style.display).toBe('block'); // STILL open — auto-collapse removed
   });
