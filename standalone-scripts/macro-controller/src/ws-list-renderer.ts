@@ -56,11 +56,12 @@ import { resolveBadgeStyle } from './workspace-badge-styles';
 // CQ11/CQ17: Encapsulated view-filter state
 // ============================================
 
-/** Manages workspace list view state (compact mode, free-only filter, expired-with-credits filter, refill-priority sort). */
+/** Manages workspace list view state (compact mode, free-only filter, expired-with-credits filter, refill-soon filter, refill-priority sort). */
 class WsListViewState {
   private static instance: WsListViewState | null = null;
   private isFreeOnly = false;
   private isExpiredWithCredits = false;
+  private isRefillSoon = false;
   private isCompactMode: boolean;
   private isRefillPriority: boolean;
 
@@ -90,37 +91,19 @@ class WsListViewState {
     }
   }
 
-  getCompactMode(): boolean {
+  getCompactMode(): boolean { return this.isCompactMode; }
+  setCompactMode(val: boolean): void { this.isCompactMode = val; }
 
-    return this.isCompactMode;
-  }
+  getFreeOnly(): boolean { return this.isFreeOnly; }
+  setFreeOnly(val: boolean): void { this.isFreeOnly = val; }
 
-  setCompactMode(val: boolean): void {
-    this.isCompactMode = val;
-  }
+  getExpiredWithCredits(): boolean { return this.isExpiredWithCredits; }
+  setExpiredWithCredits(val: boolean): void { this.isExpiredWithCredits = val; }
 
-  getFreeOnly(): boolean {
+  getRefillSoon(): boolean { return this.isRefillSoon; }
+  setRefillSoon(val: boolean): void { this.isRefillSoon = val; }
 
-    return this.isFreeOnly;
-  }
-
-  setFreeOnly(val: boolean): void {
-    this.isFreeOnly = val;
-  }
-
-  getExpiredWithCredits(): boolean {
-
-    return this.isExpiredWithCredits;
-  }
-
-  setExpiredWithCredits(val: boolean): void {
-    this.isExpiredWithCredits = val;
-  }
-
-  getRefillPriority(): boolean {
-
-    return this.isRefillPriority;
-  }
+  getRefillPriority(): boolean { return this.isRefillPriority; }
 
   setRefillPriority(val: boolean): void {
     this.isRefillPriority = val;
@@ -131,6 +114,7 @@ class WsListViewState {
     }
   }
 }
+
 
 /** Shorthand for singleton access. */
 function viewState(): WsListViewState {
@@ -161,6 +145,17 @@ export const EXPIRED_WITH_CREDITS_MIN = 5;
 export function getLoopWsExpiredWithCredits(): boolean {
   return viewState().getExpiredWithCredits();
 }
+
+/** Get refill-soon filter state (only show workspaces with display kind = refill-soon). */
+export function getLoopWsRefillSoon(): boolean {
+  return viewState().getRefillSoon();
+}
+
+/** Set refill-soon filter state. */
+export function setLoopWsRefillSoon(val: boolean): void {
+  viewState().setRefillSoon(val);
+}
+
 
 /** Set expired-with-credits filter state. */
 export function setLoopWsExpiredWithCredits(val: boolean): void {
@@ -270,6 +265,7 @@ interface WsFilterState {
   billingOnly: boolean;
   minCredits: number;
   expiredWithCredits: boolean;
+  refillSoon: boolean;
 }
 
 /** Read filter state from DOM elements once, outside the loop. */
@@ -284,6 +280,7 @@ function readFilterState(filter: string): WsFilterState {
     billingOnly: billingEl?.getAttribute(DataAttr.Active) === 'true',
     minCredits: minEl ? parseInt((minEl as HTMLInputElement).value, 10) || 0 : 0,
     expiredWithCredits: viewState().getExpiredWithCredits(),
+    refillSoon: viewState().getRefillSoon(),
   };
 }
 
@@ -294,6 +291,19 @@ function isCurrentWorkspace(ws: WorkspaceCredit, currentName: string): boolean {
   const lcn = currentName.toLowerCase();
   return (ws.fullName || '').toLowerCase().indexOf(lcn) !== -1 ||
          lcn.indexOf((ws.fullName || '').toLowerCase()) !== -1;
+}
+
+/** Check if a workspace currently classifies as "refill-soon" (about-to-refill). */
+function isRefillSoonWs(ws: WorkspaceCredit): boolean {
+  try {
+    const cfg = getWorkspaceLifecycleConfig();
+    const source = getEffectiveStatus(ws, cfg);
+    const display = classifyFromStatus(source, ws);
+    return display.kind === 'refill-soon';
+  } catch (e: unknown) {
+    logError('passesFilters.refillSoon', 'Failed to classify workspace for refill-soon filter', e);
+    return false;
+  }
 }
 
 /** Check if a workspace passes all active filters. */
@@ -310,8 +320,10 @@ function passesFilters(ws: WorkspaceCredit, fs: WsFilterState): boolean {
     if (!isExpiredWs(ws)) return false;
     if ((ws.available || 0) <= EXPIRED_WITH_CREDITS_MIN) return false;
   }
+  if (fs.refillSoon && !isRefillSoonWs(ws)) return false;
   return true;
 }
+
 
 /**
  * Recovery score for the "expired with credits" sort.
@@ -581,7 +593,7 @@ export function renderLoopWorkspaceList(
   const countLabel = document.getElementById('loop-ws-count-label');
   if (countLabel) {
     const total = workspaces.length;
-    countLabel.textContent = (filter || getLoopWsFreeOnly() || getLoopWsExpiredWithCredits() || count !== total)
+    countLabel.textContent = (filter || getLoopWsFreeOnly() || getLoopWsExpiredWithCredits() || getLoopWsRefillSoon() || count !== total)
       ? 'Workspaces (' + count + '/' + total + ')'
       : 'Workspaces (' + total + ')';
   }

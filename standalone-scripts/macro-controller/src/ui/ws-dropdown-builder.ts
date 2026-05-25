@@ -36,6 +36,8 @@ export interface WsDropdownDeps {
   setLoopWsCompactMode: (v: boolean) => void;
   getLoopWsExpiredWithCredits: () => boolean;
   setLoopWsExpiredWithCredits: (v: boolean) => void;
+  getLoopWsRefillSoon: () => boolean;
+  setLoopWsRefillSoon: (v: boolean) => void;
   getLoopWsRefillPriority: () => boolean;
   setLoopWsRefillPriority: (v: boolean) => void;
   getLoopWsNavIndex: () => number;
@@ -148,6 +150,8 @@ function _buildWsDropdownHeader(deps: WsDropdownDeps): HTMLElement {
     setLoopWsCompactMode: deps.setLoopWsCompactMode,
     getLoopWsExpiredWithCredits: deps.getLoopWsExpiredWithCredits,
     setLoopWsExpiredWithCredits: deps.setLoopWsExpiredWithCredits,
+    getLoopWsRefillSoon: deps.getLoopWsRefillSoon,
+    setLoopWsRefillSoon: deps.setLoopWsRefillSoon,
     getLoopWsRefillPriority: deps.getLoopWsRefillPriority,
     setLoopWsRefillPriority: deps.setLoopWsRefillPriority,
   }));
