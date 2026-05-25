@@ -630,7 +630,7 @@ await RiseupAsiaMacroExt.require("Project.Script");
 
 ---
 
-## CI/CD Release Pipeline
+ ## CI/CD Release Pipeline
 
 Creating or pushing a `release/*` branch (e.g., `release/v3.14.1`) or creating a
 `v*` tag automatically enters release mode and:
@@ -651,6 +651,8 @@ in-process. The watcher only passes after the actual asset build/upload passes,
 so a release page with only GitHub source archives is still a failed release.
 
 **No email or notification is sent** — check the [Releases page](https://github.com/alimtvnetwork/macro-ahk-v37/releases) for status.
+
+**For maintainers:** the canonical release procedure (tag-push ritual, recovery via `workflow_dispatch`, forbidden paths) is documented in [`spec/21-app/02-features/chrome-extension/release-procedure.md`](spec/21-app/02-features/chrome-extension/release-procedure.md).
 
 ### Re-running CI lint
 
