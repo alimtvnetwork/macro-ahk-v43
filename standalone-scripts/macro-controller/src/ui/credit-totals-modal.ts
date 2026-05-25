@@ -99,11 +99,11 @@ function ensureRowStyles(): void {
 }
 
 /** Sort key + direction for the breakdown table (Step 9). */
-export type SortKey = 'name' | 'plan' | 'used' | 'rem' | 'total';
+export type SortKey = 'name' | 'plan' | 'projects' | 'used' | 'rem' | 'total';
 export type SortDir = 'asc' | 'desc' | 'none';
 export interface SortState { key: SortKey; dir: SortDir; }
 
-const NUMERIC_KEYS: ReadonlySet<SortKey> = new Set(['used', 'rem', 'total']);
+const NUMERIC_KEYS: ReadonlySet<SortKey> = new Set(['projects', 'used', 'rem', 'total']);
 
 /** Pure: returns a new array sorted by the given state. `none` returns input order. */
 export function sortWorkspaces(
@@ -127,6 +127,7 @@ export function sortWorkspaces(
 function pickSortValue(ws: WorkspaceCredit, key: SortKey): number | string {
   if (key === 'name') return (ws.fullName || ws.name || ws.id || '').toString();
   if (key === 'plan') return (ws.plan || '').toString();
+  if (key === 'projects') return Number(ws.numProjects) || 0;
   if (key === 'used') return Number(ws.totalCreditsUsed) || 0;
   if (key === 'rem') return Number(ws.available) || 0;
   return Number(ws.totalCredits) || 0;
@@ -146,6 +147,7 @@ export function nextSortDir(key: SortKey, current: SortState): SortState {
 const COLUMNS: ReadonlyArray<{ key: SortKey; label: string; align: 'left' | 'right' }> = [
   { key: 'name', label: 'Workspace', align: 'left' },
   { key: 'plan', label: 'Plan', align: 'left' },
+  { key: 'projects', label: 'Prj', align: 'right' },
   { key: 'used', label: 'Used', align: 'right' },
   { key: 'rem', label: 'Rem', align: 'right' },
   { key: 'total', label: 'Total', align: 'right' },
@@ -260,7 +262,7 @@ export function buildBreakdownTable(workspaces: ReadonlyArray<WorkspaceCredit>):
 
   const header = document.createElement('div');
   header.setAttribute('data-credit-totals-header', '1');
-  header.style.cssText = 'display:grid;grid-template-columns:1.6fr 0.7fr 0.7fr 0.7fr 0.7fr;gap:6px;padding:5px 8px;font-size:9px;color:' + cPrimaryLighter + ';text-transform:uppercase;letter-spacing:0.5px;font-weight:700;background:rgba(124,58,237,0.10);border-bottom:1px solid rgba(124,58,237,0.20);';
+  header.style.cssText = 'display:grid;grid-template-columns:1.6fr 0.7fr 0.5fr 0.7fr 0.7fr 0.7fr;gap:6px;padding:5px 8px;font-size:9px;color:' + cPrimaryLighter + ';text-transform:uppercase;letter-spacing:0.5px;font-weight:700;background:rgba(124,58,237,0.10);border-bottom:1px solid rgba(124,58,237,0.20);';
 
   const body = document.createElement('div');
   body.style.cssText = 'max-height:260px;overflow-y:auto;';
@@ -366,7 +368,12 @@ function buildRow(ws: WorkspaceCredit, index: number = 0): HTMLElement {
   const row = document.createElement('div');
   row.setAttribute('data-credit-totals-row', '1');
   if (index % 2 === 1) row.setAttribute('data-zebra', '1');
-  row.style.cssText = 'display:grid;grid-template-columns:1.6fr 0.7fr 0.7fr 0.7fr 0.7fr;gap:6px;padding:5px 8px;font-size:10px;color:#cbd5e1;border-bottom:1px solid rgba(124,58,237,0.08);font-variant-numeric:tabular-nums;';
+  row.style.cssText = 'display:grid;grid-template-columns:1.6fr 0.7fr 0.5fr 0.7fr 0.7fr 0.7fr;gap:6px;padding:5px 8px;font-size:10px;color:#cbd5e1;border-bottom:1px solid rgba(124,58,237,0.08);font-variant-numeric:tabular-nums;';
+  row.title = 'Double-click to open workspace projects';
+  row.ondblclick = function (): void {
+    try { window.open('https://lovable.dev/projects', '_blank', 'noopener'); }
+    catch (err) { /* ignore */ }
+  };
 
   const name = document.createElement('span');
   name.setAttribute('data-cell', 'name');
@@ -377,6 +384,11 @@ function buildRow(ws: WorkspaceCredit, index: number = 0): HTMLElement {
   const plan = document.createElement('span');
   plan.style.cssText = 'color:#67e8f9;font-weight:600;font-size:10px;';
   plan.textContent = ws.plan || '—';
+
+  const projectsN = Number(ws.numProjects) || 0;
+  const projects = document.createElement('span');
+  projects.style.cssText = 'text-align:right;color:#94a3b8;font-weight:600;font-size:10px;';
+  projects.textContent = projectsN > 0 ? String(projectsN) : '—';
 
   const usedN = Number(ws.totalCreditsUsed);
   const used = document.createElement('span');
@@ -395,6 +407,7 @@ function buildRow(ws: WorkspaceCredit, index: number = 0): HTMLElement {
 
   row.appendChild(name);
   row.appendChild(plan);
+  row.appendChild(projects);
   row.appendChild(used);
   row.appendChild(rem);
   row.appendChild(total);

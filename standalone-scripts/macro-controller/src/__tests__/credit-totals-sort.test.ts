@@ -125,7 +125,7 @@ describe('buildBreakdownTable — header click sorting', () => {
 
   it('renders all sortable headers with click handlers', () => {
     const keys = Array.from(table.querySelectorAll('[data-sort-key]')).map((c) => c.getAttribute('data-sort-key'));
-    expect(keys).toEqual(['name', 'plan', 'used', 'rem', 'total']);
+    expect(keys).toEqual(['name', 'plan', 'projects', 'used', 'rem', 'total']);
   });
 
   it('clicking Used header sorts desc then asc then none', () => {
