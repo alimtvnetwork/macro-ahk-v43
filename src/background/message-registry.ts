@@ -111,7 +111,7 @@ import {
     handleRecorderStepLinkSet,
 } from "./handlers/recorder-step-handler";
 
-import { handleRecorderCapturePersist } from "./handlers/recorder-capture-handler";
+import { handleRecorderCapturePersist, handleRecorderCapturePersistBatch } from "./handlers/recorder-capture-handler";
 
 import {
     handleRecorderJsSnippetUpsert,
