@@ -383,7 +383,8 @@ function _bindSinglePromptItem(
   item.onmouseout = function() { (this as HTMLElement).style.background = 'transparent'; };
   if (!p.text) return;
 
-  const actionsSpan = item.querySelector('span:last-child') as HTMLElement;
+  const actionsSpan = (item.querySelector('[data-prompt-actions]') as HTMLElement)
+    || (item.querySelector('span:last-child') as HTMLElement);
   item.onclick = function(e: Event) {
     if (actionsSpan && actionsSpan.contains(e.target as Node)) return;
     pasteIntoEditor(p.text, promptsCfg, getByXPathAsElement);
