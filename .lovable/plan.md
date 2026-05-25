@@ -2,6 +2,7 @@
 
 **Active workstream:** P1 — Release installer hardening v0.2 (blocked on `MINISIGN_SECRET_KEY`).
 
+**Recently shipped:** **Issue 111 — Open Lovable Tabs / Per-Tab Workspace Mapping** (2026-05-25).
 **Recently shipped:** **v3.12.0 — Workspace Label Refinement** (2026-05-25).
 
 ---
@@ -42,6 +43,13 @@ Spec: `spec/22-app-issues/114-pro-zero-credit-balance-calculation.md`
 ---
 
 ## Completed workstreams (recent)
+
+### Issue 111 — Open Lovable Tabs / Per-Tab Workspace Mapping (2026-05-25)
+- Background handler (`open-tabs-handler.ts`) queries `chrome.tabs` for Lovable URLs, probes each tab via `chrome.tabs.sendMessage` with `PROBE_DETECTED_WORKSPACE`.
+- Content-script relay (`message-relay.ts`) forwards probe to MAIN-world responder and returns async reply.
+- Page-side responder (`page-workspace-responder.ts`) snapshots `state.workspaceName` + cached workspace ID + project ID + source (api/cache/dom/none).
+- UI panel (`section-open-tabs.ts`) renders focus badge, active badge, project name (green), probed workspace (amber), or error fallback (gray italic). Copy-URL and refresh buttons included.
+- 11 Vitest tests (6 probe-responder + 5 section rendering). Typechecks clean. No new permissions.
 
 ### Issue 113 — Workspace tooltip + Members popup + Settings removal (2026-05-25)
 - Native `title=` tooltips stripped from `ws-list-renderer.ts` (3 call sites); single shared `<div>` hover card via `ws-hover-card.ts`.

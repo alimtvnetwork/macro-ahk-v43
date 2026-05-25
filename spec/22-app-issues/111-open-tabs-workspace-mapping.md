@@ -1,10 +1,10 @@
 # Open Lovable Tabs — Per-Tab Workspace Mapping
 
 **Spec ID:** `spec/22-app-issues/111-open-tabs-workspace-mapping.md`
-**Status:** Draft (awaiting `next` to harden)
+**Status:** ✅ Complete (hardened 2026-05-25)
 **Owner:** Macro Controller + Extension Background
 **Created:** 2026-04-27 (Asia/Kuala_Lumpur)
-**Related memory:** `mem://features/macro-controller/open-tabs-workspace-mapping` (TO-DO)
+**Related memory:** `mem://features/macro-controller/open-tabs-workspace-mapping`
 **Related code:**
 - `src/background/handlers/open-tabs-handler.ts`
 - `src/content-scripts/message-relay.ts`
@@ -207,14 +207,14 @@ The background handler relies on the existing handler-error wrapper.
 
 ## 10. Acceptance checklist
 
-- [ ] Open the panel with ≥ 2 Lovable tabs from different workspaces — each
+- [x] Open the panel with ≥ 2 Lovable tabs from different workspaces — each
       row shows the correct workspace name (green or amber).
-- [ ] Open one Lovable tab where the controller has not yet booted — the
+- [x] Open one Lovable tab where the controller has not yet booted — the
       row shows the gray fallback with the connection-error reason.
-- [ ] Open a non-Lovable tab — it MUST NOT appear in the list.
-- [ ] Force the page responder to throw — the row shows
+- [x] Open a non-Lovable tab — it MUST NOT appear in the list.
+- [x] Force the page responder to throw — the row shows
       `probeError` truncated, full error visible in the row's `title`.
-- [ ] `npx tsc -p tsconfig.app.json --noEmit` and
+- [x] `npx tsc -p tsconfig.app.json --noEmit` and
       `npx tsc -p tsconfig.macro.json --noEmit` both exit 0.
-- [ ] No new `chrome.*` permission requested in `manifest.json`.
-- [ ] Refresh latency for 5 tabs ≤ 1× `PROBE_TIMEOUT_MS` (parallel).
+- [x] No new `chrome.*` permission requested in `manifest.json`.
+- [x] Refresh latency for 5 tabs ≤ 1× `PROBE_TIMEOUT_MS` (parallel).
