@@ -66,13 +66,22 @@ declare global {
                 excludeMatches?: string[];
                 js?: Array<{ code?: string; file?: string }>;
                 world?: "USER_SCRIPT" | "MAIN";
+                worldId?: string;
                 runAt?: "document_start" | "document_end" | "document_idle";
+            }
+            interface Injection {
+                target: { tabId: number; frameIds?: number[]; allFrames?: boolean };
+                js?: Array<{ code?: string; file?: string }>;
+                world?: "USER_SCRIPT" | "MAIN";
+                worldId?: string;
+                injectImmediately?: boolean;
             }
             function register(scripts: RegisteredUserScript[]): Promise<void>;
             function update(scripts: RegisteredUserScript[]): Promise<void>;
             function unregister(filter?: { ids?: string[] }): Promise<void>;
             function getScripts(filter?: { ids?: string[] }): Promise<RegisteredUserScript[]>;
-            function configureWorld(props: { csp?: string; messaging?: boolean }): Promise<void>;
+            function configureWorld(props: { worldId?: string; csp?: string; messaging?: boolean }): Promise<void>;
+            function execute(injection: Injection): Promise<Array<{ frameId: number; result: any }>>;
         }
     }
 }
