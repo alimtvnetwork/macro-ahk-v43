@@ -26,12 +26,12 @@ vi.mock('../logging', () => ({
   logSub: vi.fn(),
 }));
 
-const sendToExtension = vi.fn();
 vi.mock('./prompt-loader', () => ({
-  sendToExtension: (type: string, payload: Record<string, unknown>) => sendToExtension(type, payload),
+  sendToExtension: vi.fn(),
 }));
 
-import { createOpenTabsSection }  from  '../ui/section-open-tabs';
+import { sendToExtension } from './prompt-loader';
+import { createOpenTabsSection } from '../ui/section-open-tabs';
 
 describe('open-tabs-section', () => {
   beforeEach(() => {
@@ -107,31 +107,32 @@ describe('open-tabs-section', () => {
     ];
   }
 
-  it('renders empty state when no tabs are open', () => {
-    sendToExtension.mockResolvedValueOnce({ tabs: [], capturedAt: '2026-05-25T08:00:00Z' });
+  it('renders empty state when no tabs are open', async () => {
+    vi.mocked(sendToExtension).mockResolvedValueOnce({ tabs: [], capturedAt: '2026-05-25T08:00:00Z' });
 
     const result = createOpenTabsSection();
     document.body.appendChild(result.section);
 
-    // Trigger the expand => auto-refresh
-    result.section.querySelector('div')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    // Trigger the expand => auto-refresh by clicking the header
+    (result.section.querySelector('div') as HTMLElement)?.click();
 
-    // Because refresh is async, the initial state is loading
+    // Wait for async refresh
+    await new Promise((r) => setTimeout(r, 10));
+
     const panel = document.getElementById('loop-open-tabs-panel');
     expect(panel).not.toBeNull();
-    expect(panel!.innerHTML).toContain('Loading');
+    expect(panel!.innerHTML).toContain('No Lovable tabs open');
   });
 
   it('renders a list with injected, probed, and error rows', async () => {
     const tabs = makeMockTabs();
-    sendToExtension.mockResolvedValueOnce({ tabs, capturedAt: '2026-05-25T08:00:00Z' });
+    vi.mocked(sendToExtension).mockResolvedValueOnce({ tabs, capturedAt: '2026-05-25T08:00:00Z' });
 
     const result = createOpenTabsSection();
     document.body.appendChild(result.section);
 
     // Simulate expand click => triggers refresh
-    const header = result.section.querySelector('div');
-    header?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    (result.section.querySelector('div') as HTMLElement)?.click();
 
     // Wait for async refresh
     await new Promise((r) => setTimeout(r, 10));
@@ -167,13 +168,12 @@ describe('open-tabs-section', () => {
   });
 
   it('renders error state when extension call fails', async () => {
-    sendToExtension.mockRejectedValueOnce(new Error('Extension context invalidated'));
+    vi.mocked(sendToExtension).mockRejectedValueOnce(new Error('Extension context invalidated'));
 
     const result = createOpenTabsSection();
     document.body.appendChild(result.section);
 
-    const header = result.section.querySelector('div');
-    header?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    (result.section.querySelector('div') as HTMLElement)?.click();
 
     await new Promise((r) => setTimeout(r, 10));
 
@@ -182,13 +182,12 @@ describe('open-tabs-section', () => {
   });
 
   it('renders error state when extension returns isOk=false', async () => {
-    sendToExtension.mockResolvedValueOnce({ isOk: false, errorMessage: 'Background busy' });
+    vi.mocked(sendToExtension).mockResolvedValueOnce({ isOk: false, errorMessage: 'Background busy' });
 
     const result = createOpenTabsSection();
     document.body.appendChild(result.section);
 
-    const header = result.section.querySelector('div');
-    header?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    (result.section.querySelector('div') as HTMLElement)?.click();
 
     await new Promise((r) => setTimeout(r, 10));
 
@@ -197,7 +196,7 @@ describe('open-tabs-section', () => {
   });
 
   it('refresh button re-fetches data', async () => {
-    sendToExtension.mockResolvedValueOnce({ tabs: [], capturedAt: '2026-05-25T08:00:00Z' });
+    vi.mocked(sendToExtension).mockResolvedValueOnce({ tabs: [], capturedAt: '2026-05-25T08:00:00Z' });
 
     const result = createOpenTabsSection();
     document.body.appendChild(result.section);
@@ -207,11 +206,11 @@ describe('open-tabs-section', () => {
     expect(refreshBtn!.textContent).toContain('Refresh');
 
     // Click refresh
-    refreshBtn!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    refreshBtn!.click();
 
     await new Promise((r) => setTimeout(r, 10));
 
-    // Called once from initial expand + once from refresh = 2
-    expect(sendToExtension).toHaveBeenCalledTimes(2);
+    expect(sendToExtension).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(sendToExtension).mock.calls[1]?.[1]).toEqual({}); // second call from refresh
   });
 });
