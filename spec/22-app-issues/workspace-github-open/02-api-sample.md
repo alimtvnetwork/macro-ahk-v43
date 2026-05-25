@@ -50,8 +50,8 @@ upstream API ignores.
   "config": {
     "provider_type": "github",
     "connection_id": "13c494e6-c141-4f99-9938-9f733f2d2857",
-    "repo_name": "macro-ahk-v37",
-    "repo_url": "https://github.com/alimtvnetwork/macro-ahk-v37",
+    "repo_name": "macro-ahk-v38",
+    "repo_url": "https://github.com/alimtvnetwork/macro-ahk-v38",
     "owner_name": "alimtvnetwork"
   }
 }
