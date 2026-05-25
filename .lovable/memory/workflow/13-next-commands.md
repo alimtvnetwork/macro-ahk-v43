@@ -49,6 +49,10 @@ Trigger phrases the user may type to query this file:
 - [ ] **P Store** — owner spec pending (deferred — discuss-later mode per user)
 - [x] **TS Migration V2 Phase 03** — React feasibility (S-051) — re-evaluated 2026-04-23, **NOT PROCEEDING** (UIManager 58 lines, UI total 15,223 lines under 20K threshold)
 
+## Policy — Test With Features (active since 2026-05-25)
+
+Every new feature or fix ships with matching tests: unit (Vitest) for pure logic, `@testing-library/react` for React components, Playwright E2E for cross-module flows. This is a standing policy, not a backlog item.
+
 ## Deferred — Do NOT auto-recommend (per user)
 
 - [ ] **P Store** — owner spec pending (discuss-later mode per user)
