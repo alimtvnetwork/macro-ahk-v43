@@ -565,13 +565,23 @@ function buildTitleBar(): HTMLElement {
   return bar;
 }
 
-function buildFooter(totals: CreditTotals): HTMLElement {
+function buildFooter(totals: CreditTotals, workspaces: ReadonlyArray<WorkspaceCredit>): HTMLElement {
   const footer = document.createElement('div');
   footer.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:rgba(0,0,0,0.20);border-top:1px solid rgba(124,58,237,0.20);font-size:10px;color:' + cPanelFgDim + ';';
   const left = document.createElement('span');
   left.textContent = 'Snapshot age: ' + formatSnapshotAge(loopCreditState.lastCheckedAt) + '  ·  ' + totals.totalCount + ' workspace' + (totals.totalCount === 1 ? '' : 's');
   const right = document.createElement('span');
   right.style.cssText = 'display:flex;gap:6px;';
+  const csvBtn = document.createElement('button');
+  csvBtn.textContent = '⬇ CSV';
+  csvBtn.setAttribute(ATTR_ARIA_LABEL, 'Export CSV');
+  csvBtn.setAttribute('data-credit-totals-csv', '1');
+  csvBtn.style.cssText = 'background:transparent;border:1px solid ' + cPrimary + ';color:' + cPrimaryLighter + ';padding:3px 10px;border-radius:4px;font-size:10px;cursor:pointer;';
+  csvBtn.onclick = function (): void {
+    const csv = generateCsv(workspaces);
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    downloadCsv('credit-totals-' + timestamp + '.csv', csv);
+  };
   const refresh = document.createElement('button');
   refresh.textContent = '↻ Refresh';
   refresh.setAttribute(ATTR_ARIA_LABEL, 'Refresh credit snapshot');
@@ -582,6 +592,7 @@ function buildFooter(totals: CreditTotals): HTMLElement {
   close.setAttribute(ATTR_ARIA_LABEL, 'Close dialog');
   close.style.cssText = 'background:rgba(124,58,237,0.20);border:1px solid ' + cPrimary + ';color:' + cPrimaryLighter + ';padding:3px 10px;border-radius:4px;font-size:10px;cursor:pointer;';
   close.onclick = function (): void { removeCreditTotalsModal(); };
+  right.appendChild(csvBtn);
   right.appendChild(refresh);
   right.appendChild(close);
   footer.appendChild(left);
