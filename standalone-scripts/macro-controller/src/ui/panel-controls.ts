@@ -29,6 +29,7 @@ import {
   loopCreditState,
 } from '../shared-state';
 import { log } from '../logging';
+import { markUserGesture } from '../user-gesture-guard';
 import { getByXPath } from '../xpath-utils';
 import { pollUntil } from '../async-utils';
 import { getBearerToken, updateAuthBadge } from '../auth';
