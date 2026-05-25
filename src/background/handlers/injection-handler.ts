@@ -59,58 +59,7 @@ import {
 } from "./injection-pipeline";
 
 
-/* ------------------------------------------------------------------ */
-/*  Module-level caches                                                */
-/* ------------------------------------------------------------------ */
-
-/** Cache key for the combined wrapped payload in IndexedDB */
-const PIPELINE_CACHE_KEY = "pipeline_payload" as const;
-const PIPELINE_CACHE_CATEGORY: CacheCategory = "scripts";
-
-type PipelineCacheMeta = {
-    id: string;
-    name: string;
-    order: number;
-    codeHash: string;
-};
-
-type PipelineCachePayload = {
-    code: string;
-    scriptMeta: PipelineCacheMeta[];
-    requestFingerprint: string;
-};
-
-function hashScriptCode(code: string): string {
-    let hash = 0;
-    for (let i = 0; i < code.length; i += 1) {
-        hash = (hash * 31 + code.charCodeAt(i)) >>> 0;
-    }
-    return hash.toString(16).padStart(8, "0");
-}
-
-function buildRequestFingerprint(
-    scripts: Array<Partial<InjectableScript> & { path?: string }>,
-): string {
-    return [...scripts]
-        .sort((a, b) => {
-            const orderDiff = (a.order ?? 0) - (b.order ?? 0);
-            if (orderDiff !== 0) return orderDiff;
-            const aKey = getScriptIdentity(a) ?? "";
-            const bKey = getScriptIdentity(b) ?? "";
-            return aKey.localeCompare(bKey);
-        })
-        .map((script) => {
-            const scriptKey = getScriptIdentity(script) ?? "unknown";
-            return [
-            scriptKey,
-            script.name ?? scriptKey,
-            String(script.order ?? 0),
-            typeof script.code === "string" ? hashScriptCode(script.code) : "store",
-        ].join(":");
-        })
-        .join("|");
-}
-
+// Pipeline cache types/helpers + Stage 3/4 machinery moved to ./injection-pipeline (PERF-R2b step 5).
 // Syntax preflight helpers moved to ./injection-syntax-preflight (PERF-R2b step 1).
 
 /* ------------------------------------------------------------------ */
