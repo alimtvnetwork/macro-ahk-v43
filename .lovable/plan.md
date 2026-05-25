@@ -1,9 +1,18 @@
 # Plan
 
-**Active workstream:** None — Issue 114 complete. Awaiting next instruction.
+**Active workstream:** Workspace Label Refinement (v3.12.0, in progress — steps 7–10 remaining).
 
 **Recently shipped:** **v3.11.1 — pro_0 Credit Balance Calculation Fix** (2026-05-25).
-Spec: `spec/22-app-issues/114-pro-zero-credit-balance-calculation.md`.
+
+---
+
+## `next` command convention (MANDATORY)
+
+When the user says `next`:
+1. Actually DO the next task this turn — never just announce or delegate it. No "say next for step X" stubs.
+2. After completing it, list remaining tasks as a flat numbered list `1. 2. 3. 4.` — simple sequential integers, no `Step 7`, no decimals, no roman numerals.
+3. Keep the sequence stable: when item 1 finishes, old item 2 becomes new item 1. Don't renumber arbitrarily.
+4. If all tasks appear done, search prior chat/memory for leftover work and propose it as new numbered items.
 
 ---
 
