@@ -434,9 +434,10 @@ function copyProjectScripts(): Plugin {
 
                 if (!existsSync(instructionPath) && existsSync(sourceInstructionPath)) {
                     try {
-                        execSync(
-                            `node scripts/compile-instruction.mjs "standalone-scripts/${folder.name}"`,
-                            { cwd: __dirname, stdio: "inherit" },
+                        runNodeScriptSafe(
+                            `compile-instruction:${folder.name}`,
+                            ["scripts/compile-instruction.mjs", `standalone-scripts/${folder.name}`],
+                            __dirname,
                         );
                     } catch (e) {
                         console.warn(`[copy-project-scripts] Failed to compile instruction for ${folder.name}: ${e}`);
