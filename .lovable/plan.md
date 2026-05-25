@@ -18,7 +18,15 @@ When the user says `next`:
 
 ---
 
-## Remaining tasks (blocked or deferred)
+## Remaining tasks
+
+### Completed — Issue 116 (5 steps, v3.14.1) ✅
+Spec: `spec/22-app-issues/116-credit-totals-modal.md`
+- [x] Step 1 — Spec + pure logic module + 14 unit tests (`credit-totals.ts`)
+- [x] Step 2 — UI module `credit-totals-modal.ts` + 11 modal tests
+- [x] Step 3 — Wire menu item in `menu-builder.ts` + Refresh button
+- [x] Step 4 — A11y: ESC-to-close, focus trap
+- [x] Step 5 — Version bump 3.13.1 → 3.14.1, both changelogs, README pin
 
 ### Completed — Issue 114 (5 steps, v3.11.1) ✅
 Spec: `spec/22-app-issues/114-pro-zero-credit-balance-calculation.md`
@@ -28,10 +36,19 @@ Spec: `spec/22-app-issues/114-pro-zero-credit-balance-calculation.md`
 - [x] Step 4 — E2E harness + 6 fixtures
 - [x] Step 5 — v3.11.1 bump, changelog, README, memory
 
+### Active — Release Page CI/CD Hardening Plan (8 steps)
+Spec: `plan.md` ("Release Page CI/CD Hardening Plan — 8 Steps")
+- [x] Step 1 — Fix release checkout/ref resolution in `setup` job (added `git checkout` of resolved ref after version step).
+- [ ] Step 2 — Fix release-notes changelog range (already implemented in release.yml; verify & mark done).
+- [ ] Step 3 — Add required release-asset verification before publish.
+- [ ] Step 4 — Make Release page install/download instructions complete.
+- [ ] Step 5 — Add release-audit workflow for existing tags.
+- [ ] Step 6 — Update release documentation and RCA references.
+- [ ] Step 7 — Validate without publishing a real release.
+- [ ] Step 8 — Final major version bump to `v3.0.2` (macro controller) / align extension version, plus changelog/readme updates.
+
 ### Blocked on user input / secrets
-- **P1 — Release installer hardening v0.2** — SLSA + minisign signing. *Blocked on `MINISIGN_SECRET_KEY` GitHub secret.*
-  - Plan: `.lovable/plans/release-installer.md`
-  - Needs: `MINISIGN_SECRET_KEY` added to GitHub secrets so the release workflow can sign the installer.
+- **P1 — Release installer hardening v0.2 (SLSA + minisign signing)** — *Still blocked on `MINISIGN_SECRET_KEY` GitHub secret.* Independent of the CI/CD hardening plan above.
 
 ### Deferred
 - **P2 — P Store spec** — *Discuss-later mode per user instruction.*
