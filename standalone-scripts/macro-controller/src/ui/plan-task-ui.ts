@@ -49,9 +49,10 @@ function adapterGetByXPath(xpath: string): Element | null {
 
 function injectPlanPrompt(n: number): void {
   const text = buildPlanTaskPrompt(n);
-  const ok = pasteIntoEditor(text, getPromptsConfig(), adapterGetByXPath);
-  if (ok) showPasteToast('🧠 Plan prompt injected (' + n + ' steps)', false);
-  else showPasteToast('❌ Plan prompt: editor not found', true);
+  const outcome = pasteIntoEditor(text, getPromptsConfig(), adapterGetByXPath);
+  // Success ('injected') and clipboard-fallback ('clipboard') already toast from prompt-utils.
+  // Only show a caller-side toast on hard failure.
+  if (outcome === 'failed') showPasteToast('❌ Plan prompt: injection failed', true);
 }
 
 /** Render the Plan Task inline accordion into the container. */
