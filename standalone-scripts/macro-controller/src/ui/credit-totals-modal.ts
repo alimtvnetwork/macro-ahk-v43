@@ -171,7 +171,7 @@ export function buildBreakdownTable(workspaces: ReadonlyArray<WorkspaceCredit>):
   let sortState: SortState = { key: 'rem', dir: 'none' };
   // Mutable manual order (Step 10). Drag-drop edits this; sort uses it as input.
   let order: ReadonlyArray<WorkspaceCredit> = workspaces.slice();
-  let dragFromIndex = -1;
+  
 
   const header = document.createElement('div');
   header.setAttribute('data-credit-totals-header', '1');
