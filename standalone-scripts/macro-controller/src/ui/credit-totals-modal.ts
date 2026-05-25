@@ -369,6 +369,11 @@ function buildRow(ws: WorkspaceCredit, index: number = 0): HTMLElement {
   row.setAttribute('data-credit-totals-row', '1');
   if (index % 2 === 1) row.setAttribute('data-zebra', '1');
   row.style.cssText = 'display:grid;grid-template-columns:1.6fr 0.7fr 0.5fr 0.7fr 0.7fr 0.7fr;gap:6px;padding:5px 8px;font-size:10px;color:#cbd5e1;border-bottom:1px solid rgba(124,58,237,0.08);font-variant-numeric:tabular-nums;';
+  row.title = 'Double-click to open workspace projects';
+  row.ondblclick = function (): void {
+    try { window.open('https://lovable.dev/projects', '_blank', 'noopener'); }
+    catch (err) { /* ignore */ }
+  };
 
   const name = document.createElement('span');
   name.setAttribute('data-cell', 'name');
@@ -379,6 +384,11 @@ function buildRow(ws: WorkspaceCredit, index: number = 0): HTMLElement {
   const plan = document.createElement('span');
   plan.style.cssText = 'color:#67e8f9;font-weight:600;font-size:10px;';
   plan.textContent = ws.plan || '—';
+
+  const projectsN = Number(ws.numProjects) || 0;
+  const projects = document.createElement('span');
+  projects.style.cssText = 'text-align:right;color:#94a3b8;font-weight:600;font-size:10px;';
+  projects.textContent = projectsN > 0 ? String(projectsN) : '—';
 
   const usedN = Number(ws.totalCreditsUsed);
   const used = document.createElement('span');
@@ -397,6 +407,7 @@ function buildRow(ws: WorkspaceCredit, index: number = 0): HTMLElement {
 
   row.appendChild(name);
   row.appendChild(plan);
+  row.appendChild(projects);
   row.appendChild(used);
   row.appendChild(rem);
   row.appendChild(total);
