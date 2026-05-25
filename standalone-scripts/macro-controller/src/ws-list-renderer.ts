@@ -212,7 +212,7 @@ function buildTooltipCalculatedLines(ws: WorkspaceCredit): string[] {
   lines.push('  🔄 Rollover: ' + (ws.rollover || 0) + ' (' + ws.rolloverLimit + ' - ' + ws.rolloverUsed + ')');
   lines.push('  💰 Available: ' + (ws.available || 0) + ' (total:' + (ws.totalCredits || 0) + ' - rUsed:' + (ws.rolloverUsed || 0) + ' - dUsed:' + (ws.dailyUsed || 0) + ' - bUsed:' + (ws.used || 0) + ')');
   lines.push('  📦 Billing Only: ' + (ws.billingAvailable || 0) + ' (' + ws.limit + ' - ' + ws.used + ')');
-  const _tc = ws.totalCredits || calcTotalCredits(ws.freeGranted, ws.dailyLimit, ws.limit, ws.topupLimit, ws.rolloverLimit);
+  const _tc = ws.totalCredits || calcTotalCredits(ws.freeGranted, ws.dailyLimit, ws.limit, ws.topupLimit, ws.rolloverLimit, ws.plan);
   lines.push('  ⚡ Total Credits: ' + _tc + ' (granted:' + (ws.freeGranted || 0) + ' + daily:' + (ws.dailyLimit || 0) + ' + billing:' + (ws.limit || 0) + ' + topup:' + (ws.topupLimit || 0) + ' + rollover:' + (ws.rolloverLimit || 0) + ')');
   return lines;
 }
@@ -498,7 +498,7 @@ function buildWsRow(
   const dailyFree = Math.round(ws.dailyFree || 0);
   const rollover = Math.round(ws.rollover || 0);
   const billingAvail = Math.round(ws.billingAvailable || 0);
-  const totalCap = Math.round(ws.totalCredits || calcTotalCredits(ws.freeGranted, ws.dailyLimit, ws.limit, ws.topupLimit, ws.rolloverLimit));
+  const totalCap = Math.round(ws.totalCredits || calcTotalCredits(ws.freeGranted, ws.dailyLimit, ws.limit, ws.topupLimit, ws.rolloverLimit, ws.plan));
   const creditBarHtml = renderCreditBar({
     totalCredits: totalCap, available: Math.round(ws.available || 0), totalUsed: ws.totalCreditsUsed || 0,
     freeRemaining: Math.round(ws.freeRemaining || 0), billingAvail, rollover, dailyFree,
@@ -525,7 +525,7 @@ export function renderLoopWorkspaceList(
   let maxTotalCredits = 0;
 
   for (const ws of workspaces) {
-    const mtc = Math.round(ws.totalCredits || calcTotalCredits(ws.freeGranted, ws.dailyLimit, ws.limit, ws.topupLimit, ws.rolloverLimit));
+    const mtc = Math.round(ws.totalCredits || calcTotalCredits(ws.freeGranted, ws.dailyLimit, ws.limit, ws.topupLimit, ws.rolloverLimit, ws.plan));
     if (mtc > maxTotalCredits) maxTotalCredits = mtc;
   }
 
