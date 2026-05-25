@@ -627,6 +627,7 @@ function renderPromptItem(
   item.appendChild(nameSpan);
 
   const actions = document.createElement('span');
+  actions.setAttribute('data-prompt-actions', '');
   actions.style.cssText = 'display:flex;align-items:center;gap:2px;margin-left:4px;flex-shrink:0;';
 
   if (hasText) {
