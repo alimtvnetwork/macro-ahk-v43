@@ -52,6 +52,8 @@ import { sortByRefillPriority, daysToRefillForWs } from './workspace-refill-prio
 import { classifyFromStatus, type WorkspaceDisplayStatus } from './workspace-display-status';
 import { resolveBadgeStyle } from './workspace-badge-styles';
 
+const CSS_BG = ';background:';
+
 // ============================================
 // CQ11/CQ17: Encapsulated view-filter state
 // ============================================
@@ -306,20 +308,28 @@ function isRefillSoonWs(ws: WorkspaceCredit): boolean {
   }
 }
 
+/** Check text match against workspace name / fullName. */
+function matchesTextFilter(ws: WorkspaceCredit, filter: string): boolean {
+  if (!filter) return true;
+  return ws.fullName.toLowerCase().indexOf(filter.toLowerCase()) !== -1 ||
+    ws.name.toLowerCase().indexOf(filter.toLowerCase()) !== -1;
+}
+
+/** Check expired-with-credits filter sub-conditions. */
+function matchesExpiredWithCreditsFilter(ws: WorkspaceCredit): boolean {
+  if (!isExpiredWs(ws)) return false;
+  if ((ws.available || 0) <= EXPIRED_WITH_CREDITS_MIN) return false;
+  return true;
+}
+
 /** Check if a workspace passes all active filters. */
 function passesFilters(ws: WorkspaceCredit, fs: WsFilterState): boolean {
-  const matchesText = !fs.filter ||
-    ws.fullName.toLowerCase().indexOf(fs.filter.toLowerCase()) !== -1 ||
-    ws.name.toLowerCase().indexOf(fs.filter.toLowerCase()) !== -1;
-  if (!matchesText) return false;
+  if (!matchesTextFilter(ws, fs.filter || '')) return false;
   if (fs.freeOnly && (ws.dailyFree || 0) <= 0) return false;
   if (fs.rolloverOnly && (ws.rollover || 0) <= 0) return false;
   if (fs.billingOnly && (ws.billingAvailable || 0) <= 0) return false;
   if (fs.minCredits > 0 && (ws.available || 0) < fs.minCredits) return false;
-  if (fs.expiredWithCredits) {
-    if (!isExpiredWs(ws)) return false;
-    if ((ws.available || 0) <= EXPIRED_WITH_CREDITS_MIN) return false;
-  }
+  if (fs.expiredWithCredits && !matchesExpiredWithCreditsFilter(ws)) return false;
   if (fs.refillSoon && !isRefillSoonWs(ws)) return false;
   return true;
 }
@@ -391,7 +401,7 @@ function buildStatusPillHtml(status: WorkspaceStatus, ws: WorkspaceCredit): stri
 
   return '<span class="marco-ws-status-pill marco-ws-status-' + display.kind
     + '" style="font-size:9px;color:' + style.fg
-    + ';background:' + style.bg
+    + CSS_BG + style.bg
     + ';border:1px solid ' + style.border
     + ';padding:1px 5px;border-radius:3px;font-weight:700;margin-left:5px;vertical-align:middle;letter-spacing:0.3px;text-transform:none;"'
     + ' data-marco-tip="' + tip + '">' + display.label + '</span>';
@@ -420,31 +430,22 @@ function buildRefillBadgeHtml(ws: WorkspaceCredit): string {
     fg = '#fde68a'; bg = 'rgba(180,83,9,0.45)'; border = '#f59e0b';
   }
   return '<span class="loop-ws-refill-badge" style="font-size:9px;color:' + fg
-    + ';background:' + bg + ';border:1px solid ' + border
+    + CSS_BG + bg + ';border:1px solid ' + border
     + ';padding:1px 5px;border-radius:3px;font-weight:700;margin-left:5px;vertical-align:middle;letter-spacing:0.3px;">R '
     + days + 'd</span>';
 }
 
 /** Build the inner HTML for a workspace row. */
-function buildWsRowInnerHtml(
-  ws: WorkspaceCredit, isCurrent: boolean, isChecked: boolean,
-  emoji: string, creditBarHtml: string,
-): string {
+function buildTierBadgeHtml(ws: WorkspaceCredit): string {
   const wsTier = ws.tier || 'FREE';
   const tierMeta = WS_TIER_LABELS[wsTier] || WS_TIER_LABELS['FREE'];
-  // v2.195.0: Bumped from 7px → 10px text + 2px/5px padding for readability.
-  // Cleanup workflows scan many rows quickly, so the badge needs to register
-  // at a glance without dominating the row.
-  let tierBadge = '<span style="font-size:10px;color:' + tierMeta.fg + ';background:' + tierMeta.bg + ';padding:2px 5px;border-radius:3px;font-weight:700;margin-left:6px;vertical-align:middle;letter-spacing:0.3px;">' + tierMeta.label + '</span>';
+  let tierBadge = '<span style="font-size:10px;color:' + tierMeta.fg + CSS_BG + tierMeta.bg + ';padding:2px 5px;border-radius:3px;font-weight:700;margin-left:6px;vertical-align:middle;letter-spacing:0.3px;">' + tierMeta.label + '</span>';
 
-  // Phase 3 (workspace-status-tooltip v2.211.0): unified lifecycle status pill.
-  // Replaces the legacy "·Nd" chip — `daysSince` and dates now live in the pill tooltip.
   const cfg = getWorkspaceLifecycleConfig();
   if (cfg.enableWorkspaceStatusLabels) {
     const status = getEffectiveStatus(ws, cfg);
     tierBadge += buildStatusPillHtml(status, ws);
   } else if (wsTier === 'EXPIRED') {
-    // Legacy fallback when pills disabled — preserve the old chip.
     const days = expiredDays(ws);
     if (days !== null) {
       const startDate = formatExpiryStartDate(ws);
@@ -453,17 +454,20 @@ function buildWsRowInnerHtml(
       if (startDate) tipParts.push('since ' + startDate);
       if (duration) tipParts.push('(' + duration + ')');
       const tip = tipParts.join(' ').replace(/"/g, '&quot;');
-      // Native title= omitted — see spec/22-app-issues/113.
       tierBadge += '<span style="font-size:10px;color:#fca5a5;background:rgba(127,29,29,0.55);padding:2px 5px;border-radius:3px;font-weight:600;margin-left:3px;vertical-align:middle;" data-marco-tip="' + tip + '">·' + days + 'd</span>';
     }
   }
-  // v3.10.0: Inline `R Nd` refill badge — only when refill is within window.
-  // Issue 115 (v3.12.0): suppressed when the unified status pill is enabled,
-  // because that pill already emits `Refill Nd` for refill-soon workspaces
-  // (single-badge-per-row contract).
   if (!cfg.enableWorkspaceStatusLabels) {
     tierBadge += buildRefillBadgeHtml(ws);
   }
+  return tierBadge;
+}
+
+function buildWsRowInnerHtml(
+  ws: WorkspaceCredit, isCurrent: boolean, isChecked: boolean,
+  emoji: string, creditBarHtml: string,
+): string {
+  const tierBadge = buildTierBadgeHtml(ws);
   const nameColor = isCurrent ? '#67e8f9' : '#e2e8f0';
   const nameBold = isCurrent ? 'font-weight:800;' : 'font-weight:500;';
 
@@ -474,7 +478,7 @@ function buildWsRowInnerHtml(
     + '<div style="display:flex;align-items:center;gap:4px;margin-top:2px;">' + creditBarHtml + '</div>'
     + '</div>';
   if (isCurrent) {
-    html += '<span style="font-size:8px;color:' + cPrimaryLight + ';background:' + cPrimaryBgAL + ';padding:1px 4px;border-radius:3px;font-weight:700;">NOW</span>';
+    html += '<span style="font-size:8px;color:' + cPrimaryLight + CSS_BG + cPrimaryBgAL + ';padding:1px 4px;border-radius:3px;font-weight:700;">NOW</span>';
   }
   return html;
 }
@@ -527,6 +531,47 @@ function buildWsRow(
 /**
  * Render the workspace list with filtering, credit bars, and event delegation.
  */
+function computeMaxTotalCredits(workspaces: WorkspaceCredit[]): number {
+  let maxTotalCredits = 1;
+  for (const ws of workspaces) {
+    const mtc = Math.round(ws.totalCredits || calcTotalCredits(ws.freeGranted, ws.dailyLimit, ws.limit, ws.topupLimit, ws.rolloverLimit, ws.plan));
+    if (mtc > maxTotalCredits) maxTotalCredits = mtc;
+  }
+  return maxTotalCredits;
+}
+
+function filterAndSortWorkspaces(
+  workspaces: WorkspaceCredit[],
+  filter: string,
+): Array<{ ws: WorkspaceCredit; wsIndex: number }> {
+  const fs = readFilterState(filter);
+  const survivors: Array<{ ws: WorkspaceCredit; wsIndex: number }> = [];
+  for (const [wsIndex, ws] of workspaces.entries()) {
+    if (!passesFilters(ws, fs)) continue;
+    survivors.push({ ws, wsIndex });
+  }
+
+  if (fs.expiredWithCredits) {
+    survivors.sort(function (a, b) {
+      return _expiredRecoveryScore(b.ws) - _expiredRecoveryScore(a.ws);
+    });
+  } else if (viewState().getRefillPriority()) {
+    const sorted = sortByRefillPriority(survivors, REFILL_PRIORITY_WINDOW_DAYS);
+    survivors.length = 0;
+    for (const r of sorted) survivors.push(r);
+  }
+
+  return survivors;
+}
+
+function updateWsCountLabel(count: number, total: number, filter: string): void {
+  const countLabel = document.getElementById('loop-ws-count-label');
+  if (!countLabel) return;
+  countLabel.textContent = (filter || getLoopWsFreeOnly() || getLoopWsExpiredWithCredits() || getLoopWsRefillSoon() || count !== total)
+    ? 'Workspaces (' + count + '/' + total + ')'
+    : 'Workspaces (' + total + ')';
+}
+
 export function renderLoopWorkspaceList(
   workspaces: WorkspaceCredit[],
   currentName: string,
@@ -537,42 +582,10 @@ export function renderLoopWorkspaceList(
 
   let count = 0;
   let currentIdx = -1;
-  let maxTotalCredits = 0;
-
-  for (const ws of workspaces) {
-    const mtc = Math.round(ws.totalCredits || calcTotalCredits(ws.freeGranted, ws.dailyLimit, ws.limit, ws.topupLimit, ws.rolloverLimit, ws.plan));
-    if (mtc > maxTotalCredits) maxTotalCredits = mtc;
-  }
+  const maxTotalCredits = computeMaxTotalCredits(workspaces);
+  const survivors = filterAndSortWorkspaces(workspaces, filter);
 
   const frag = document.createDocumentFragment();
-  const fs = readFilterState(filter);
-
-  // Collect surviving rows first so we can optionally re-order them.
-  // (We keep the original wsIndex so checkbox state / nav indices stay stable.)
-  const survivors: Array<{ ws: WorkspaceCredit; wsIndex: number }> = [];
-  for (const [wsIndex, ws] of workspaces.entries()) {
-    if (!passesFilters(ws, fs)) continue;
-    survivors.push({ ws, wsIndex });
-  }
-
-  // v2.195.0: When the "expired with credits" filter is active, rank rows by
-  // recovery score = credits × days-expired (multiplicative). This surfaces
-  // workspaces that are BOTH high-credit AND long-expired at the top, which
-  // matches the cleanup intent ("biggest waste, longest sitting"). Single
-  // dimensions (high credits but just expired, or long expired but few
-  // credits) naturally fall below combined high-value targets.
-  if (fs.expiredWithCredits) {
-    survivors.sort(function (a, b) {
-      return _expiredRecoveryScore(b.ws) - _expiredRecoveryScore(a.ws);
-    });
-  } else if (viewState().getRefillPriority()) {
-    // v3.10.0: Refill-priority sort. score = max(0, K - daysToRefill) * available.
-    // Workspaces with no refill date or beyond the window score 0 and sink.
-    const sorted = sortByRefillPriority(survivors, REFILL_PRIORITY_WINDOW_DAYS);
-    survivors.length = 0;
-    for (const r of sorted) survivors.push(r);
-  }
-
   for (const { ws, wsIndex } of survivors) {
     const isCurrent = isCurrentWorkspace(ws, currentName);
     if (isCurrent) currentIdx = count;
@@ -590,14 +603,7 @@ export function renderLoopWorkspaceList(
   listEl.innerHTML = '';
   listEl.appendChild(frag);
 
-  const countLabel = document.getElementById('loop-ws-count-label');
-  if (countLabel) {
-    const total = workspaces.length;
-    countLabel.textContent = (filter || getLoopWsFreeOnly() || getLoopWsExpiredWithCredits() || getLoopWsRefillSoon() || count !== total)
-      ? 'Workspaces (' + count + '/' + total + ')'
-      : 'Workspaces (' + total + ')';
-  }
-
+  updateWsCountLabel(count, workspaces.length, filter);
   attachWsListEventDelegation(listEl, currentIdx, filter);
   attachHoverCardForList(listEl);
 }
