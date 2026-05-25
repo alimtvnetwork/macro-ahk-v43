@@ -44,8 +44,8 @@ Spec: `plan.md` ("Release Page CI/CD Hardening Plan — 8 Steps")
 - [x] Step 4 — Make Release page install/download instructions complete. (Implemented in `release.yml` RELEASE_NOTES.md generation: pinned + latest one-liners, manual Chrome install steps, checksums, SLSA attestation.)
 - [x] Step 5 — Add release-audit workflow for existing tags. (Implemented as `.github/workflows/audit-releases.yml`; scheduled weekly + manual dispatch.)
 - [ ] Step 6 — Update release documentation and RCA references.
-- [ ] Step 7 — Validate without publishing a real release.
-- [ ] Step 8 — Final version bump + changelog/readme updates.
+- [x] Step 7 — Validate without publishing a real release. (All workflow YAMLs pass YAML syntax validation; `scripts/release-publish.mjs` dry-run + syntax check passed.)
+- [x] Step 8 — Final version bump + changelog/readme updates. (Bumped to v3.14.2 via `bump-version.mjs`; updated root + macro-controller changelogs; updated readme.md pinned version references.)
 
 ### Blocked on user input / secrets
 - **P1 — Release installer hardening v0.2 (SLSA + minisign signing)** — *Still blocked on `MINISIGN_SECRET_KEY` GitHub secret.* Independent of the CI/CD hardening plan above.
