@@ -19,7 +19,7 @@ declare global {
             const id: string | undefined;
             function sendMessage(message: any): Promise<any>;
             function getURL(path: string): string;
-            function getManifest(): Record<string, any>;
+            function getManifest(): { version: string; name: string; [key: string]: any };
         }
         namespace storage {
             interface StorageArea {
