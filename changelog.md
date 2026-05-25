@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.1
 
 ---
 
+## [v3.15.3] — 2026-05-25
+
+### Fixed
+- GitHub repo right-click: HTTP 401/403 from `/workspaces/{ws}/projects/{pid}/gitsync` (caller lacks access to that project) is now treated as `not_linked` instead of surfacing `❌ Failed to fetch GitHub repo: http_403`. Result is cached so repeated right-clicks stay offline.
+
+---
+
 ## [v3.15.2] — 2026-05-25
 
 ### Fixed
