@@ -15,41 +15,28 @@
  * @see src/background/dependency-resolver.ts — Topological dependency sort
  */
 
-import type { MessageRequest, OkResponse } from "../../shared/messages";
-import { logBgWarnError, logCaughtError, BgLogTag } from "../bg-logger";
-import type { InjectableScript, InjectionResult, InjectScriptsResponse, SkipReason } from "../../shared/injection-types";
+import type { MessageRequest } from "../../shared/messages";
+import { logBgWarnError, BgLogTag } from "../bg-logger";
+import type { InjectableScript, InjectionResult, InjectScriptsResponse } from "../../shared/injection-types";
 import type { StoredProject, ScriptEntry } from "../../shared/project-types";
 import {
-    detectSyntaxError,
     requestHasInlineSyntaxError,
     collectInlineSyntaxFailures,
     type InjectionRequestScript,
 } from "./injection-syntax-preflight";
-import {
-    buildSuccessResult,
-    buildErrorResult,
-    resolveInjectionPath,
-    buildSkipMessage,
-    extractMacroVersion,
-    buildSyntaxFailureResult,
-} from "./injection-result-builder";
-import { handleLogEntry, handleLogError } from "./logging-handler";
+import { buildSkipMessage } from "./injection-result-builder";
 import {
     getTabInjections,
     setTabInjection,
     getActiveProjectId,
 } from "../state-manager";
-import { wrapWithIsolation } from "./injection-wrapper";
-import { injectWithCspFallback } from "../csp-fallback";
 import { seedTokensIntoTab } from "./token-seeder";
 import { resolveInjectionRequestScripts } from "./injection-request-resolver";
 import { readAllProjects } from "./project-helpers";
-import { EXTENSION_VERSION } from "../../shared/constants";
 import { recordInjectionTiming } from "../injection-timing-history";
 import { ensureBuiltinScriptsExist } from "../builtin-script-guard";
 import { mirrorDiagnosticToTab, mirrorPipelineLogsToTab } from "../injection-diagnostics";
-import { cacheGet, cacheSet, cacheDelete } from "../injection-cache";
-import type { CacheCategory } from "../injection-cache";
+import { cacheGet, cacheDelete } from "../injection-cache";
 import {
     isInjectionToastEnabled,
     showInjectionToastInTab,
@@ -61,10 +48,15 @@ import {
     injectSettingsNamespace,
     injectProjectNamespaces,
 } from "./injection-namespace-bootstrap";
+import { prependDependencyScripts } from "./injection-dependency-builder";
 import {
-    prependDependencyScripts,
-    getScriptIdentity,
-} from "./injection-dependency-builder";
+    PIPELINE_CACHE_KEY,
+    PIPELINE_CACHE_CATEGORY,
+    type PipelineCachePayload,
+    buildRequestFingerprint,
+    injectAllScripts,
+    executeInTab,
+} from "./injection-pipeline";
 
 
 /* ------------------------------------------------------------------ */
