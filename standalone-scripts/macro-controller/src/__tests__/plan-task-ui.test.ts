@@ -75,7 +75,7 @@ describe('renderPlanTaskSubmenu — toast surface', () => {
     const ctx = makeCtx();
     const container = document.createElement('div');
     document.body.appendChild(container);
-    // @ts-expect-error — ctx narrowed for test
+    // @ts-expect-error ctx narrowed for test
     renderPlanTaskSubmenu(container, ctx);
 
     const header = container.querySelector('div') as HTMLElement;
