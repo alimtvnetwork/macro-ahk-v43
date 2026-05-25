@@ -119,12 +119,12 @@ function buildCreditBarsHtml(): string {
   const ro = Math.round(cws.rollover || 0);
   const ba = Math.round(cws.billingAvailable || 0);
   const fr = Math.round(cws.freeRemaining || 0);
-  const _totalCapacity = Math.round(cws.totalCredits || calcTotalCredits(cws.freeGranted, cws.dailyLimit, cws.limit, cws.topupLimit, cws.rolloverLimit, cws.plan));
-  const _availTotal = Math.round(cws.available || calcAvailableCredits(_totalCapacity, cws.rolloverUsed, cws.dailyUsed, cws.used, (cws.freeGranted || 0) - (cws.freeRemaining || 0), cws.plan));
+  const _totalCapacity = Math.round(cws.totalCredits ?? calcTotalCredits(cws.freeGranted, cws.dailyLimit, cws.limit, cws.topupLimit, cws.rolloverLimit, cws.plan));
+  const _availTotal = Math.round(cws.available ?? calcAvailableCredits(_totalCapacity, cws.rolloverUsed, cws.dailyUsed, cws.used, (cws.freeGranted || 0) - (cws.freeRemaining || 0), cws.plan));
   const _perWs = loopCreditState.perWorkspace || [];
   let _maxTc = 0;
   for (const _ws of _perWs) {
-    const _mtc = Math.round(_ws.totalCredits || calcTotalCredits(_ws.freeGranted, _ws.dailyLimit, _ws.limit, _ws.topupLimit, _ws.rolloverLimit, _ws.plan));
+    const _mtc = Math.round(_ws.totalCredits ?? calcTotalCredits(_ws.freeGranted, _ws.dailyLimit, _ws.limit, _ws.topupLimit, _ws.rolloverLimit, _ws.plan));
     if (_mtc > _maxTc) _maxTc = _mtc;
   }
 
