@@ -235,7 +235,8 @@ function buildExpirySection(ws: WorkspaceCredit, status: WorkspaceStatus): strin
   if (status.sinceIso) {
     const date = formatDateDDMMMYY(status.sinceIso);
     const dur = formatDayCount(status.daysSince);
-    const color = status.kind === 'about-to-expire' ? '#fde68a' : '#fca5a5';
+    let color = '#fca5a5';
+    if (status.kind === 'about-to-expire' || status.kind === 'past-due-expiring') color = '#fde68a';
     out.push(rowHtml(expiryLabelFor(status.kind), date + ' (' + dur + ')', color));
   } else {
     out.push(rowHtml('Status', escHtml(status.label), '#fca5a5'));
