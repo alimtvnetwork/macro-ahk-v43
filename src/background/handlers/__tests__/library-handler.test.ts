@@ -251,6 +251,66 @@ describe("Sync Engine", () => {
   });
 });
 
+/* ------------------------------------------------------------------ */
+/*  Cross-Project Sync Phase 3 — full flow                             */
+/* ------------------------------------------------------------------ */
+
+describe("Cross-Project Sync — Phase 3 flow", () => {
+  it("promote → link two projects → sync → all see latest content; broadcast fires once", async () => {
+    const sendMessageSpy = vi.fn().mockResolvedValue(undefined);
+    (globalThis as { chrome?: unknown }).chrome = {
+      runtime: { sendMessage: sendMessageSpy },
+    };
+
+    // 1. Promote a brand-new asset to the shared library.
+    const promoted = await handlePromoteAsset({
+      slug: "phase3-prompt",
+      name: "Phase3",
+      type: "prompt",
+      contentJson: '{"v":1}',
+    });
+    expect(promoted.action).toBe("created");
+    const assetId = promoted.assetId!;
+
+    // 2. Link two projects in 'synced' state.
+    await handleSaveAssetLink({ link: { SharedAssetId: assetId, ProjectId: 10, LinkState: "synced" } });
+    await handleSaveAssetLink({ link: { SharedAssetId: assetId, ProjectId: 11, LinkState: "synced" } });
+
+    // 3. Update the shared asset content (simulate edit in Library).
+    await handleSaveSharedAsset({
+      asset: {
+        Id: assetId, Type: "prompt", Name: "Phase3", Slug: "phase3-prompt",
+        ContentJson: '{"v":2}', Version: "1.1.0",
+      },
+    });
+
+    // 4. Sync — both links should be updated, broadcast emitted once.
+    sendMessageSpy.mockClear();
+    const result = await handleSyncLibraryAsset({ assetId });
+    expect(result.syncedCount).toBe(2);
+    expect(result.pinnedNotified).toBe(0);
+
+    const syncBroadcasts = sendMessageSpy.mock.calls.filter(
+      (call) => (call[0] as { type?: string })?.type === "LIBRARY_SYNC_BROADCAST",
+    );
+    expect(syncBroadcasts).toHaveLength(1);
+    expect(syncBroadcasts[0][0]).toMatchObject({
+      assetId, syncedCount: 2, pinnedNotified: 0,
+    });
+
+    // 5. Verify SyncedAt populated and LocalOverrideJson cleared.
+    const { links } = await handleGetAssetLinks({ assetId });
+    expect(links).toHaveLength(2);
+    for (const link of links) {
+      expect(link.LinkState).toBe("synced");
+      expect(link.LocalOverrideJson).toBeNull();
+      expect(link.SyncedAt).toBeTruthy();
+    }
+
+    delete (globalThis as { chrome?: unknown }).chrome;
+  });
+});
+
 describe("Promote Asset", () => {
   it("creates new asset when slug does not exist", async () => {
     const result = await handlePromoteAsset({

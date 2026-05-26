@@ -419,9 +419,9 @@ A marketplace for discovering, searching, and importing projects/scripts from a 
 
 Spec folder: `spec/05-chrome-extension/82-pstore-project-store/`
 
-### Priority 4: Cross-Project Sync — Phase 3 (In Progress)
+### Priority 4: Cross-Project Sync — Phase 3 (Complete)
 
-Phase 1 (data layer) and Phase 2 (Library UI) complete. Remaining: ProjectGroup management UI, drag-to-assign projects, sync notifications, and E2E testing.
+Phase 1 (data layer), Phase 2 (Library UI), and Phase 3 (ProjectGroup management UI, drag-to-assign projects, cross-tab sync notifications via `LIBRARY_SYNC_BROADCAST`, integration tests) all complete. Remaining: manual Chrome E2E pass when convenient.
 
 Spec: `spec/21-app/02-features/misc-features/cross-project-sync.md`
 
