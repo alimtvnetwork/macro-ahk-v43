@@ -28,10 +28,15 @@
 
 import { log } from './logging';
 import { logError } from './error-utils';
-import { extractProjectIdFromUrl, invalidateProjectIdCache } from './workspace-detection';
-import { state } from './shared-state';
+import {
+  extractProjectIdFromUrl,
+  invalidateProjectIdCache,
+  autoDetectLoopCurrentWorkspace,
+} from './workspace-detection';
+import { state, loopCreditState } from './shared-state';
 import { stopLoop } from './loop-engine';
 import { showToast } from './toast';
+import { resolveToken } from './auth';
 
 declare global {
   interface Window {
