@@ -101,8 +101,35 @@ const extraInputs = flagAll("--extra-input=");
 const projectDir = path.join(REPO_ROOT, "standalone-scripts", scriptName);
 const distDir = path.join(projectDir, "dist");
 
+const REQUIRED_PRIMARY_BUNDLE = {
+    "lovable-common": "lovable-common.js",
+    "lovable-owner-switch": "lovable-owner-switch.js",
+    "lovable-user-add": "lovable-user-add.js",
+    "lovable-dashboard": "lovable-dashboard.js",
+    "macro-controller": "macro-looping.js",
+    "marco-sdk": "marco-sdk.js",
+    "payment-banner-hider": "payment-banner-hider.js",
+    xpath: "xpath.js",
+};
+
 if (!fs.existsSync(projectDir)) {
     fail(`Project folder does not exist: ${projectDir}`);
+}
+
+function validateRequiredPrimaryBundle(reasonPrefix) {
+    const bundleName = REQUIRED_PRIMARY_BUNDLE[scriptName];
+    if (!bundleName) return true;
+    const bundlePath = path.join(distDir, bundleName);
+    if (!fs.existsSync(bundlePath)) {
+        console.error(`[cache] ${reasonPrefix}: ${scriptName}/dist/${bundleName} is missing at ${bundlePath}; Reason=PrimaryBundleMissing; ReasonDetail=standalone cache/build output is incomplete`);
+        return false;
+    }
+    const stat = fs.statSync(bundlePath);
+    if (stat.size < 100) {
+        console.error(`[cache] ${reasonPrefix}: ${scriptName}/dist/${bundleName} is suspiciously small (${stat.size} bytes) at ${bundlePath}; Reason=PrimaryBundleEmpty; ReasonDetail=standalone cache/build output is incomplete`);
+        return false;
+    }
+    return true;
 }
 
 /* ------------------------------------------------------------------ */
