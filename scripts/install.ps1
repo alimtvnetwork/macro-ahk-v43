@@ -1187,11 +1187,79 @@ function Main {
 # (Remove-PathSafely, Invoke-DelayedDelete, Test-IsMarcoMarker, etc.)
 # without performing a real install. Skips Main + the final summary.
 if ($env:MARCO_INSTALLER_TEST_MODE -ne '1') {
-    $installResult = Main
-    if ($null -ne $installResult -and -not $installResult.DryRun) {
-        Write-InstallSummary $installResult.Version $installResult.InstallDir $installResult.UrlPinned
+    # ── Top-level fail-safe ──────────────────────────────────────────
+    # When the script is run via `irm <url> | iex`, an uncaught exception
+    # tears down the pipeline and the host often closes the window before
+    # the user can read the error. Wrap Main so we ALWAYS:
+    #   1. Print the full exception + stack trace in red (copyable).
+    #   2. Write a transcript-style log file to $env:TEMP\marco-install-<ts>.log
+    #      with everything needed to triage the failure.
+    #   3. Print the log path so the user can paste it back.
+    #   4. Exit non-zero with a stable code (9 = unhandled installer error).
+    $script:CrashLogPath = Join-Path ([System.IO.Path]::GetTempPath()) ("marco-install-{0:yyyyMMdd-HHmmss}-{1}.log" -f (Get-Date), [System.Guid]::NewGuid().ToString('N').Substring(0,8))
+    try {
+        $installResult = Main
+        if ($null -ne $installResult -and -not $installResult.DryRun) {
+            Write-InstallSummary $installResult.Version $installResult.InstallDir $installResult.UrlPinned
+            Write-Host ""
+            Write-OK "Done!"
+            Write-Host ""
+        }
+    }
+    catch {
+        $err = $_
+        $lines = New-Object System.Collections.Generic.List[string]
+        $lines.Add("=== Marco Installer Crash ===")
+        $lines.Add("Timestamp:  $(Get-Date -Format o)")
+        $lines.Add("Script:     install.ps1")
+        $lines.Add("Repo:       $Repo")
+        $lines.Add("Version:    $Version")
+        $lines.Add("InstallDir: $InstallDir")
+        $lines.Add("DryRun:     $DryRun")
+        $lines.Add("PSVersion:  $($PSVersionTable.PSVersion)")
+        $lines.Add("OS:         $([System.Environment]::OSVersion.VersionString)")
+        $lines.Add("PWD:        $((Get-Location).Path)")
+        $lines.Add("")
+        $lines.Add("--- Exception ---")
+        $lines.Add("Type:    $($err.Exception.GetType().FullName)")
+        $lines.Add("Message: $($err.Exception.Message)")
+        if ($err.Exception.InnerException) {
+            $lines.Add("Inner:   $($err.Exception.InnerException.GetType().FullName): $($err.Exception.InnerException.Message)")
+        }
+        $lines.Add("")
+        $lines.Add("--- Invocation ---")
+        $lines.Add("$($err.InvocationInfo.PositionMessage)")
+        $lines.Add("")
+        $lines.Add("--- ScriptStackTrace ---")
+        $lines.Add("$($err.ScriptStackTrace)")
+        $lines.Add("")
+        $lines.Add("--- .NET StackTrace ---")
+        $lines.Add("$($err.Exception.StackTrace)")
+        $logText = ($lines -join [Environment]::NewLine)
+
+        try { Set-Content -LiteralPath $script:CrashLogPath -Value $logText -Encoding UTF8 -ErrorAction Stop } catch { }
+
         Write-Host ""
-        Write-OK "Done!"
+        Write-Host "============================================================" -ForegroundColor Red
+        Write-Host " Marco installer crashed — full details below (copy & share)" -ForegroundColor Red
+        Write-Host "============================================================" -ForegroundColor Red
+        Write-Host $logText -ForegroundColor Red
+        Write-Host "============================================================" -ForegroundColor Red
+        if (Test-Path -LiteralPath $script:CrashLogPath) {
+            Write-Host " Log file: $script:CrashLogPath" -ForegroundColor Yellow
+        } else {
+            Write-Host " (Could not write log file to $script:CrashLogPath)" -ForegroundColor Yellow
+        }
         Write-Host ""
+        # Pause only when running interactively in a window the user opened
+        # themselves (not when piped via irm | iex inside an existing prompt).
+        try {
+            if ([Environment]::UserInteractive -and $Host.Name -eq 'ConsoleHost' -and -not $env:CI -and -not $env:MARCO_INSTALLER_NO_PAUSE) {
+                Write-Host "Press any key to close..." -ForegroundColor DarkGray
+                [void]$Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+            }
+        } catch { }
+        exit 9
     }
 }
+
