@@ -454,6 +454,7 @@ function buildPriorityDetailsHtml(
     + buildSubscriptionSection(ws)
     + buildRefillSection(ws, status, cfg)
     + buildExpirySection(ws, status)
+    + buildPastDueSection(ws, status)
     + buildMetaSection(ws)
     + buildThresholdsSection(cfg)
     + buildStatusTraceSection(explanation);
