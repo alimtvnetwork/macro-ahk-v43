@@ -51,15 +51,17 @@ jobs:
           SINGLE_TAG: ${{ github.event.inputs.tag }}
         run: |
           set -e
+          # NOTE: placeholder is __VER__ (not bare "VER") so substitution
+          # cannot mangle literal filenames like "VERSION.txt".
           REQUIRED_PATTERNS=(
-            "marco-extension-VER.zip"
-            "macro-controller-VER.zip"
-            "marco-sdk-VER.zip"
-            "xpath-VER.zip"
-            "payment-banner-hider-VER.zip"
-            "lovable-common-VER.zip"
-            "lovable-owner-switch-VER.zip"
-            "lovable-user-add-VER.zip"
+            "marco-extension-__VER__.zip"
+            "macro-controller-__VER__.zip"
+            "marco-sdk-__VER__.zip"
+            "xpath-__VER__.zip"
+            "payment-banner-hider-__VER__.zip"
+            "lovable-common-__VER__.zip"
+            "lovable-owner-switch-__VER__.zip"
+            "lovable-user-add-__VER__.zip"
             "install.ps1"
             "install.sh"
             "VERSION.txt"
