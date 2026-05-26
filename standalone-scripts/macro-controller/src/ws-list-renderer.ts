@@ -103,6 +103,9 @@ class WsListViewState {
   getExpiredWithCredits(): boolean { return this.isExpiredWithCredits; }
   setExpiredWithCredits(val: boolean): void { this.isExpiredWithCredits = val; }
 
+  getExpiring(): boolean { return this.isExpiring; }
+  setExpiring(val: boolean): void { this.isExpiring = val; }
+
   getRefillSoon(): boolean { return this.isRefillSoon; }
   setRefillSoon(val: boolean): void { this.isRefillSoon = val; }
 
