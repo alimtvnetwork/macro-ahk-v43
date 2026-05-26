@@ -30,6 +30,8 @@ export {
   setLoopWsFreeOnly,
   getLoopWsExpiredWithCredits,
   setLoopWsExpiredWithCredits,
+  getLoopWsExpiring,
+  setLoopWsExpiring,
   getLoopWsRefillSoon,
   setLoopWsRefillSoon,
   getLoopWsRefillPriority,
