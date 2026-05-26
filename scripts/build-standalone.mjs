@@ -66,6 +66,7 @@ export const PROJECTS = [
     "lovable-common",
     "lovable-owner-switch",
     "lovable-user-add",
+    "lovable-dashboard",
 ];
 
 const args = process.argv.slice(2);
