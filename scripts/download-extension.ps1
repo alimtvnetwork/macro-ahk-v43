@@ -12,11 +12,13 @@
 
   It simply:
     1. Resolves a version (explicit -Version flag, else GitHub `latest`).
-    2. Downloads `marco-extension-<version>.zip` to the system temp folder.
-    3. Removes the target folder if it already exists (full overwrite).
+    2. Downloads `marco-extension-<version>.zip` **into the current working
+       directory** (kept as a backup — NOT deleted, NOT placed in temp).
+    3. Removes the target extracted folder if it already exists (full overwrite
+       of the unpacked tree only; the ZIP backup is preserved).
     4. Extracts into `<CWD>\<FolderName>` — a flat name with NO `v` prefix
        and NO version hyphen segment (default: "marco-extension").
-    5. Cleans up the temp ZIP.
+    5. Leaves the ZIP in place at `<CWD>\marco-extension-<version>.zip`.
 
   Useful for quick local testing where you want the unpacked extension in
   the folder you are currently standing in, without touching $HOME.
@@ -111,33 +113,36 @@ Write-Ok "Resolved version: $tag"
 # ----------------------------------------------------------------------
 $assetName  = "marco-extension-$tag.zip"
 $downloadUrl = "https://github.com/$Repo/releases/download/$tag/$assetName"
-$tempZip    = Join-Path ([System.IO.Path]::GetTempPath()) "marco-dl-$([guid]::NewGuid())-$assetName"
 $cwd        = (Get-Location).Path
+$zipPath    = Join-Path $cwd $assetName
 $targetDir  = Join-Path $cwd $FolderName
 
 # ----------------------------------------------------------------------
-# 4. Download to temp
+# 4. Download ZIP into CWD (backup kept; never written to temp)
 # ----------------------------------------------------------------------
+if (Test-Path $zipPath) {
+    Write-Step "Backup ZIP already present — overwriting: $zipPath"
+}
 Write-Step "Downloading $downloadUrl"
 try {
-    Invoke-WebRequest -Uri $downloadUrl -OutFile $tempZip -UseBasicParsing -TimeoutSec 120
+    Invoke-WebRequest -Uri $downloadUrl -OutFile $zipPath -UseBasicParsing -TimeoutSec 120
 } catch {
     Write-Err "Download failed: $($_.Exception.Message)"
     Write-Err "URL: $downloadUrl"
     Write-Err "Reason=DownloadFailed; ReasonDetail=Asset '$assetName' may not exist for tag '$tag'."
-    if (Test-Path $tempZip) { Remove-Item -Force $tempZip -ErrorAction SilentlyContinue }
+    if (Test-Path $zipPath) { Remove-Item -Force $zipPath -ErrorAction SilentlyContinue }
     exit 2
 }
-$zipSize = (Get-Item $tempZip).Length
+$zipSize = (Get-Item $zipPath).Length
 if ($zipSize -lt 1024) {
-    Write-Err "Downloaded ZIP is suspiciously small ($zipSize bytes) at $tempZip"
-    Remove-Item -Force $tempZip -ErrorAction SilentlyContinue
+    Write-Err "Downloaded ZIP is suspiciously small ($zipSize bytes) at $zipPath"
+    Remove-Item -Force $zipPath -ErrorAction SilentlyContinue
     exit 3
 }
-Write-Ok "Downloaded $assetName ($([math]::Round($zipSize / 1MB, 2)) MB) -> $tempZip"
+Write-Ok "Downloaded $assetName ($([math]::Round($zipSize / 1MB, 2)) MB) -> $zipPath"
 
 # ----------------------------------------------------------------------
-# 5. Remove existing target folder (if any) and extract
+# 5. Remove existing extracted folder (ZIP backup preserved) and extract
 # ----------------------------------------------------------------------
 if (Test-Path $targetDir) {
     Write-Step "Target folder exists — removing: $targetDir"
@@ -145,22 +150,19 @@ if (Test-Path $targetDir) {
         Remove-Item -Recurse -Force $targetDir
     } catch {
         Write-Err "Failed to remove existing $targetDir : $($_.Exception.Message)"
-        Remove-Item -Force $tempZip -ErrorAction SilentlyContinue
         exit 3
     }
 }
 
 Write-Step "Extracting to $targetDir"
 try {
-    Expand-Archive -Path $tempZip -DestinationPath $targetDir -Force
+    Expand-Archive -Path $zipPath -DestinationPath $targetDir -Force
 } catch {
     Write-Err "Extraction failed: $($_.Exception.Message)"
-    Write-Err "ZIP: $tempZip  Target: $targetDir  Reason=ArchiveCorrupt"
-    Remove-Item -Force $tempZip -ErrorAction SilentlyContinue
+    Write-Err "ZIP: $zipPath  Target: $targetDir  Reason=ArchiveCorrupt"
     exit 3
 }
 
-Remove-Item -Force $tempZip -ErrorAction SilentlyContinue
 
 # ----------------------------------------------------------------------
 # 6. Sanity check + summary
@@ -176,6 +178,8 @@ if (-not (Test-Path $manifest)) {
 Write-Host ''
 Write-Ok "Marco Extension $tag extracted to:"
 Write-Host "       $targetDir" -ForegroundColor White
+Write-Ok "Backup ZIP retained at:"
+Write-Host "       $zipPath" -ForegroundColor White
 Write-Host ''
 Write-Host "  Next step (Chrome): chrome://extensions -> Load unpacked -> select the folder above." -ForegroundColor DarkGray
 exit 0
