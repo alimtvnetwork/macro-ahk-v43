@@ -25,8 +25,13 @@ test("CI Build triggers on every branch push", () => {
     const src = readCiWorkflow();
     assert.match(
         src,
-        /on:\s*\n\s*push:\s*\n\s*branches:\s*\n\s*- "\*\*"/,
-        "ci.yml push trigger must include every branch so Lovable/GitHub branch commits build before PR/main",
+        /on:\s*\n\s*push:\s*\n\s*pull_request:/,
+        "ci.yml push trigger must have no branches/paths filters so every Lovable/GitHub branch commit builds",
+    );
+    assert.doesNotMatch(
+        src,
+        /on:\s*\n\s*push:\s*\n\s*(branches|branches-ignore|paths|paths-ignore):/,
+        "ci.yml push trigger must not use branches/paths filters",
     );
 });
 
