@@ -1069,8 +1069,11 @@ export interface BundlePreview {
 }
 
 /** Reads a .zip file, extracts the SQLite DB, and replaces all data. */
-export async function importFromSqliteZip(file: File): Promise<ImportResult> {
-  const { projects, scripts, configs, prompts } = await extractBundle(file);
+export async function importFromSqliteZip(
+  file: File,
+  options?: ImportOptions,
+): Promise<ImportResult> {
+  const { projects, scripts, configs, prompts } = await extractBundle(file, options);
   await replaceAll(projects, scripts, configs, prompts);
   return {
     projectCount: projects.length,
@@ -1081,8 +1084,11 @@ export async function importFromSqliteZip(file: File): Promise<ImportResult> {
 }
 
 /** Reads a .zip file and merges contents into existing data (no deletions). */
-export async function mergeFromSqliteZip(file: File): Promise<ImportResult> {
-  const { projects, scripts, configs, prompts } = await extractBundle(file);
+export async function mergeFromSqliteZip(
+  file: File,
+  options?: ImportOptions,
+): Promise<ImportResult> {
+  const { projects, scripts, configs, prompts } = await extractBundle(file, options);
   await mergeAll(projects, scripts, configs, prompts);
   return {
     projectCount: projects.length,
