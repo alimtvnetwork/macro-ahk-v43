@@ -47,25 +47,27 @@ curl -fsSL https://github.com/alimtvnetwork/macro-ahk-v40/releases/download/v3.2
 
 ### 📦 Download-only (unpack into current folder)
 
-For quick local testing — downloads the release ZIP and extracts it as a **flat folder** (no `v`, no version suffix) into the directory you run it from. If the target folder already exists it is removed first. No `$HOME` install, no profile changes, no auto-update wiring.
+For quick local testing — downloads the release ZIP **into the current folder as a backup** and extracts it as a flat folder (no `v`, no version suffix). The ZIP is kept next to the extracted folder so you can re-extract or archive it; only the extracted folder is overwritten on re-run. No `$HOME` install, no profile changes, no auto-update wiring.
+
+**Windows · PowerShell — latest into `.\marco-extension`:**
 
 ```powershell
-# Windows · PowerShell — latest into .\marco-extension
 irm https://raw.githubusercontent.com/alimtvnetwork/macro-ahk-v40/main/scripts/download-extension.ps1 | iex
 ```
 
-```powershell
-# Pin a version + custom folder name (env-var form, works with `irm | iex`)
-$env:MARCO_DL_VERSION='v3.26.0'; $env:MARCO_DL_FOLDER='marco'; `
-  irm https://raw.githubusercontent.com/alimtvnetwork/macro-ahk-v40/main/scripts/download-extension.ps1 | iex
-```
+**Windows · PowerShell — pin a version + custom folder name (env-var form, works with `irm | iex`):**
 
 ```powershell
-# Or run a local clone with explicit flags
-.\scripts\download-extension.ps1 -Version v3.26.0 -FolderName marco-extension
+$env:MARCO_DL_VERSION='v3.27.0'; $env:MARCO_DL_FOLDER='marco'; irm https://raw.githubusercontent.com/alimtvnetwork/macro-ahk-v40/main/scripts/download-extension.ps1 | iex
 ```
 
-After it finishes, load the resulting folder via `chrome://extensions → Load unpacked`.
+**Windows · PowerShell — run a local clone with explicit flags:**
+
+```powershell
+.\scripts\download-extension.ps1 -Version v3.27.0 -FolderName marco-extension
+```
+
+After it finishes, load the resulting folder via `chrome://extensions → Load unpacked`. The `marco-extension-v3.27.0.zip` backup sits next to it.
 
 > **v2.243.0 release-asset fix (historical):** the previous release pipeline pointed at a legacy `chrome-extension/dist/` subfolder that no longer exists (the unpacked extension is built into `chrome-extension/` itself — see `vite.config.extension.ts` and `powershell.json → distDir`). That mismatch caused `marco-extension-{VER}.zip` to be silently absent from the GitHub Releases page. The workflow now zips `chrome-extension/` directly and fails fast if the extension zip is missing or `< 10 KiB`. RCA: [`mem://constraints/chrome-extension-dist-path`](.lovable/memory/constraints/chrome-extension-dist-path.md).
 
