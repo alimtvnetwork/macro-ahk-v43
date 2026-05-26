@@ -303,7 +303,7 @@ function headerHtml(wsName: string, state: PanelState): string {
     countText = 'error';
   }
   // v3.4.3 (task 11) — Rename-style popup chrome: compact header "Members — <ws>" + ×
-  return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid ' + cPanelBorder + ';background:rgba(0,0,0,0.25);">'
+  return '<div data-marco-drag-handle="1" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid ' + cPanelBorder + ';background:rgba(0,0,0,0.25);cursor:move;user-select:none;">'
     + '<div style="min-width:0;">'
     +   '<div style="font-size:12px;font-weight:700;color:#f1f5f9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Members — ' + escHtml(wsName) + '</div>'
     +   '<div style="font-size:9px;color:#94a3b8;letter-spacing:0.3px;text-transform:uppercase;">' + countText + ' · sorted by credits used</div>'
