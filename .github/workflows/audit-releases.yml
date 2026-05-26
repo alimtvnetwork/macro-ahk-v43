@@ -48,13 +48,19 @@ jobs:
             "lovable-common-VER.zip"
             "lovable-owner-switch-VER.zip"
             "lovable-user-add-VER.zip"
-            "lovable-dashboard-VER.zip"
             "install.ps1"
             "install.sh"
             "VERSION.txt"
             "changelog.md"
             "checksums.txt"
           )
+
+          version_key() {
+            local raw="${1#v}"
+            local major minor patch
+            IFS=. read -r major minor patch <<< "$raw"
+            printf '%06d%06d%06d' "${major:-0}" "${minor:-0}" "${patch:-0}"
+          }
 
           if [ -n "$SINGLE_TAG" ]; then
             TAGS="$SINGLE_TAG"
@@ -88,7 +94,11 @@ jobs:
               continue
             fi
             MISSING=""
-            for PAT in "${REQUIRED_PATTERNS[@]}"; do
+            REQUIRED_FOR_TAG=("${REQUIRED_PATTERNS[@]}")
+            if [[ "$(version_key "$TAG")" -ge "$(version_key "v3.21.0")" ]]; then
+              REQUIRED_FOR_TAG+=("lovable-dashboard-VER.zip")
+            fi
+            for PAT in "${REQUIRED_FOR_TAG[@]}"; do
               EXPECTED="${PAT//VER/$VER}"
               if ! echo "$ASSETS" | grep -qx "$EXPECTED"; then
                 MISSING="${MISSING} ${EXPECTED}"
