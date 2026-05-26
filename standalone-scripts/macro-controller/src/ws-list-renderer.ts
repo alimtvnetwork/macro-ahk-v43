@@ -152,6 +152,16 @@ export function getLoopWsExpiredWithCredits(): boolean {
   return viewState().getExpiredWithCredits();
 }
 
+/** Get expiring filter state (only show workspaces with display kind = past-due-expiring). */
+export function getLoopWsExpiring(): boolean {
+  return viewState().getExpiring();
+}
+
+/** Set expiring filter state. */
+export function setLoopWsExpiring(val: boolean): void {
+  viewState().setExpiring(val);
+}
+
 /** Get refill-soon filter state (only show workspaces with display kind = refill-soon). */
 export function getLoopWsRefillSoon(): boolean {
   return viewState().getRefillSoon();
