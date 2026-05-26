@@ -37,8 +37,8 @@ function installNavWatchers(onNavigate: () => void): () => void {
 
 function patchHistoryMethod(name: "pushState" | "replaceState", handler: () => void): () => void {
     const original = history[name].bind(history);
-    history[name] = function patched(...args: Parameters<typeof original>) {
-        const result = original(...args);
+    history[name] = function patched(...args: Parameters<typeof history[typeof name]>) {
+        const result = original.apply(history, args);
         handler();
         return result;
     } as typeof history[typeof name];

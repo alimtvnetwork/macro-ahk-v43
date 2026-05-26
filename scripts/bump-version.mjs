@@ -129,6 +129,13 @@ function getTargets(ver) {
       ],
     },
     {
+      // lovable-dashboard (extracted from content-scripts/home-screen v3.21.0)
+      path: "standalone-scripts/lovable-dashboard/src/instruction.ts",
+      replacements: [
+        { pattern: /(\b[Vv]ersion:\s*")[\d.]+(")/, replacement: `$1${ver}$2` },
+      ],
+    },
+    {
       // P20 — Lovable Owner Switch / User Add / Common (registered for unified bump)
       path: "standalone-scripts/lovable-common/src/instruction.ts",
       replacements: [

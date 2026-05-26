@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.1
 
 ---
 
+## [v3.21.0] — 2026-05-26
+
+### Added
+- **Lovable Dashboard standalone script**: migrated the `home-screen` content-script features (workspace credits, nav controls, search bar, macro sync) from `src/content-scripts/home-screen/` into a dedicated standalone-scripts project at `standalone-scripts/lovable-dashboard/`. Built by `vite.config.lovable-dashboard.ts` as an IIFE bundle exposing `window.LovableDashboard`, injected via the standalone-seeder pipeline. Includes full unit-test coverage (pure-helpers + DOM integration) and a build-pipeline wiring test.
+- **Build-pipeline test** (`scripts/__tests__/lovable-dashboard-build-pipeline.test.mjs`): asserts tsconfig, vite config, entry point, package.json script, and orchestration-file registration are correctly wired.
+
+### Fixed
+- **TypeScript spread-error in `url-guard.ts`**: changed `original(...args)` to `original.apply(history, args)` to satisfy `tsc --noEmit` under `tsconfig.lovable-dashboard.json`.
+
+### Changed
+- **URL guard narrowed to exact `/dashboard`**: `AllowedHomeUrl` now contains a single value `DASHBOARD = "https://lovable.dev/dashboard"`; `ROOT` and `ROOT_SLASH` activation removed. Spec and unit tests updated.
+- **Version bump**: 3.20.0 → 3.21.0 across manifest.json, constants.ts, macro-controller shared-state, and every standalone-scripts instruction.ts.
+
+---
+
 ## [v3.20.0] — 2026-05-26
 
 ### Fixed
