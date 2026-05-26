@@ -19,16 +19,41 @@ export {};
 
 declare global {
     /* ============================================================= *
+     *  Caught-error contract                                          *
+     *  Per Unknown Usage Policy: `unknown` is permitted ONLY at this  *
+     *  single leaf, because `try { ... } catch (e)` types `e` as      *
+     *  `unknown` and we cannot narrow it at the type-system boundary. *
+     *  All other call sites MUST use designed types.                  *
+     * ============================================================= */
+
+    type CaughtError = unknown;
+
+    /**
+     * Argument type accepted by the structured console logger.
+     * Mirrors the JSON-serialisable union we actually log; keeps the
+     * door open for Error objects while banning bare `unknown`.
+     */
+    type RiseupAsiaLogArg =
+        | string
+        | number
+        | boolean
+        | null
+        | undefined
+        | Error
+        | ReadonlyArray<RiseupAsiaLogArg>
+        | { readonly [key: string]: RiseupAsiaLogArg };
+
+    /* ============================================================= *
      *  Logger contract                                                *
      * ============================================================= */
 
     interface RiseupAsiaLogger {
-        error(fn: string, msg: string, error?: unknown): void;
+        error(fn: string, msg: string, error?: CaughtError): void;
         warn(fn: string, msg: string): void;
         info(fn: string, msg: string): void;
         debug(fn: string, msg: string): void;
-        console(fn: string, msg: string, ...args: unknown[]): void;
-        stackTrace(fn: string, msg: string, error?: unknown): void;
+        console(fn: string, msg: string, ...args: RiseupAsiaLogArg[]): void;
+        stackTrace(fn: string, msg: string, error?: CaughtError): void;
     }
 
     /* ============================================================= *
