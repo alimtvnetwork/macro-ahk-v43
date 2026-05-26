@@ -442,19 +442,22 @@ export function buildTierBadgeHtml(ws: WorkspaceCredit): string {
 
   const cfg = getWorkspaceLifecycleConfig();
   let statusPillHtml = '';
-  // v3.22.0 — Issue 116 RCA: when the canceled status pill renders, the
-  // red "EXPIRED" tier badge is redundant ("Cancel" already implies
-  // expired). Suppress the EXPIRED tier badge so the row shows a single
-  // muted "Cancel" pill instead of "EXPIRED + Cancel".
+  // v3.24.0 — Issue 117: whenever ANY status pill renders (Cancel, Expire Nd,
+  // Expired Nd, Refill Nd), the red `EXPIRED` tier badge is redundant — the
+  // pill already communicates lifecycle state with the correct tone. Suppress
+  // the tier badge for every non-normal display kind so the row shows at most
+  // one lifecycle indicator. This extends the v3.22.0 Issue 116 fix (which
+  // only suppressed for `canceled`).
   let suppressTierBadge = false;
   if (cfg.enableWorkspaceStatusLabels) {
     const status = getEffectiveStatus(ws, cfg);
     statusPillHtml = buildStatusPillHtml(status, ws);
     if (wsTier === 'EXPIRED') {
       const display = classifyFromStatus(status, ws);
-      if (display.kind === 'canceled') suppressTierBadge = true;
+      if (display.kind !== 'normal') suppressTierBadge = true;
     }
   }
+
 
   let tierBadge = suppressTierBadge
     ? ''
