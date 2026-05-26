@@ -435,16 +435,33 @@ function buildRefillBadgeHtml(ws: WorkspaceCredit): string {
     + days + 'd</span>';
 }
 
-/** Build the inner HTML for a workspace row. */
-function buildTierBadgeHtml(ws: WorkspaceCredit): string {
+/** Build the inner HTML for a workspace row. Exported for tests. */
+export function buildTierBadgeHtml(ws: WorkspaceCredit): string {
   const wsTier = ws.tier || 'FREE';
   const tierMeta = WS_TIER_LABELS[wsTier] || WS_TIER_LABELS['FREE'];
-  let tierBadge = '<span style="font-size:10px;color:' + tierMeta.fg + CSS_BG + tierMeta.bg + ';padding:2px 5px;border-radius:3px;font-weight:700;margin-left:6px;vertical-align:middle;letter-spacing:0.3px;">' + tierMeta.label + '</span>';
 
   const cfg = getWorkspaceLifecycleConfig();
+  let statusPillHtml = '';
+  // v3.22.0 — Issue 116 RCA: when the canceled status pill renders, the
+  // red "EXPIRED" tier badge is redundant ("Cancel" already implies
+  // expired). Suppress the EXPIRED tier badge so the row shows a single
+  // muted "Cancel" pill instead of "EXPIRED + Cancel".
+  let suppressTierBadge = false;
   if (cfg.enableWorkspaceStatusLabels) {
     const status = getEffectiveStatus(ws, cfg);
-    tierBadge += buildStatusPillHtml(status, ws);
+    statusPillHtml = buildStatusPillHtml(status, ws);
+    if (wsTier === 'EXPIRED') {
+      const display = classifyFromStatus(status, ws);
+      if (display.kind === 'canceled') suppressTierBadge = true;
+    }
+  }
+
+  let tierBadge = suppressTierBadge
+    ? ''
+    : '<span style="font-size:10px;color:' + tierMeta.fg + CSS_BG + tierMeta.bg + ';padding:2px 5px;border-radius:3px;font-weight:700;margin-left:6px;vertical-align:middle;letter-spacing:0.3px;">' + tierMeta.label + '</span>';
+
+  if (cfg.enableWorkspaceStatusLabels) {
+    tierBadge += statusPillHtml;
   } else if (wsTier === 'EXPIRED') {
     const days = expiredDays(ws);
     if (days !== null) {
