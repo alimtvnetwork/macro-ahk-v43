@@ -189,8 +189,22 @@ export function getEffectiveStatus(
     return buildStatus('expired', { sinceIso: changedIso, daysSince: daysSinceChange });
   }
 
-  // 5: past_due
+  // 5: past_due — Issue 117 fix. When the wallet still has spendable grants
+  // (CreditBalance.total_remaining > 0, surfaced as ws.available / rollover /
+  // billingAvailable), Stripe `past_due` is "renewal failed, grants valid
+  // until expires_at" — show the billing-period end as a refill date instead
+  // of falsely shouting "Expire Nd". Fall back to about-to-expire only when
+  // the wallet is genuinely empty.
   if (isPastDue) {
+    if (hasLiveGrants(ws)) {
+      const refillIsoLive = pickRefillIso(ws);
+      if (refillIsoLive) {
+        const dToRefillLive = daysUntil(refillIsoLive, nowMs);
+        if (dToRefillLive >= 0) {
+          return buildStatus('about-to-refill', { refillIso: refillIsoLive, daysToRefill: dToRefillLive });
+        }
+      }
+    }
     return buildStatus('about-to-expire', { sinceIso: changedIso, daysSince: daysSinceChange });
   }
 
@@ -214,16 +228,30 @@ export function getEffectiveStatus(
 /**
  * Returns true when the override should apply.
  *
- * Scope:
- *   - expired-canceled, fully-expired, expired — subscription has lapsed
- *   - about-to-expire (past_due / unpaid) — payment is overdue, billing &
- *     rollover should not be counted as spendable until resolved
+ * Scope (Issue 117): only fires for genuinely dead workspaces.
+ *   - expired-canceled, fully-expired, expired — subscription has lapsed.
+ *
+ * `about-to-expire` (past_due / unpaid) is intentionally EXCLUDED — Stripe
+ * past_due keeps grants alive until their individual `expires_at`, so wiping
+ * billing+rollover would discard credits the user can still spend. The
+ * billing API's `total_remaining` is the source of truth for spendability.
  */
 export function shouldApplyCanceledOverride(status: WorkspaceStatus): boolean {
   return status.kind === 'expired-canceled'
       || status.kind === 'fully-expired'
-      || status.kind === 'expired'
-      || status.kind === 'about-to-expire';
+      || status.kind === 'expired';
+}
+
+/**
+ * Issue 117 helper. True when the workspace still has spendable grants.
+ * Reads pre-override credit fields populated from `CreditBalance.total_remaining`
+ * and `grant_type_balances`.
+ */
+export function hasLiveGrants(ws: WorkspaceCredit): boolean {
+  const avail = Number(ws.available) || 0;
+  const roll = Number(ws.rollover) || 0;
+  const bill = Number(ws.billingAvailable) || 0;
+  return avail > 0 || roll > 0 || bill > 0;
 }
 
 /**
