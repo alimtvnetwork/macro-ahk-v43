@@ -726,13 +726,27 @@ function filterAndSortWorkspaces(
     for (const r of sorted) survivors.push(r);
   }
 
+  // v3.30.0 — credit-sort mode (overrides previous ordering when active).
+  // High / Pro-High → DESC by available credits. Low / Pro-Low → ASC.
+  if (fs.creditSortMode !== 'none') {
+    const desc = fs.creditSortMode === 'high' || fs.creditSortMode === 'pro-high';
+    survivors.sort(function (a, b) {
+      const av = a.ws.available || 0;
+      const bv = b.ws.available || 0;
+      return desc ? bv - av : av - bv;
+    });
+  }
+
   return survivors;
 }
 
 function updateWsCountLabel(count: number, total: number, filter: string): void {
   const countLabel = document.getElementById('loop-ws-count-label');
   if (!countLabel) return;
-  countLabel.textContent = (filter || getLoopWsFreeOnly() || getLoopWsExpiredWithCredits() || getLoopWsExpiring() || getLoopWsRefillSoon() || count !== total)
+  const anyFilterActive = filter || getLoopWsFreeOnly() || getLoopWsExpiredWithCredits()
+    || getLoopWsExpiring() || getLoopWsRefillSoon()
+    || viewState().getCreditSortMode() !== 'none' || count !== total;
+  countLabel.textContent = anyFilterActive
     ? 'Workspaces (' + count + '/' + total + ')'
     : 'Workspaces (' + total + ')';
 }
