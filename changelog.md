@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.1
 
 ---
 
+## [v3.26.0] — 2026-05-26
+
+### Added
+- **Release notes now include the "📦 Download-only" section** — `.github/workflows/release.yml` injects the `download-extension.ps1` one-liners (latest, env-var pinned, local clone) into the auto-generated GitHub Release body, mirroring the root README. `${VER}` is interpolated so the pinned snippet always references the current release tag.
+
+### Changed
+- Version bump 3.25.0 → 3.26.0 across all 7 unified-version sites; README pin updated.
+
+---
+
 ## [v3.25.0] — 2026-05-26
 
 ### Fixed — CI/CD release pipeline hardening
