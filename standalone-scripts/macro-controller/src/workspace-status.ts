@@ -13,6 +13,7 @@
  */
 
 import type { WorkspaceCredit } from './types';
+import { isCanceledStatus, isPastDueStatus, isExpiredTier } from './types/subscription-status';
 import type { WorkspaceLifecycleConfig } from './workspace-lifecycle-config';
 
 /* ------------------------------------------------------------------ */
