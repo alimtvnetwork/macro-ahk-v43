@@ -360,6 +360,7 @@ export async function handleSyncLibraryAsset(msg: AssetIdMsg): Promise<{ syncedC
     const pinnedNotified = pinnedLinks.length > 0 ? pinnedLinks[0].values.length : 0;
 
     markDirty();
+    broadcastLibrarySynced({ assetId, syncedCount, pinnedNotified });
     return { syncedCount, pinnedNotified };
 }
 
