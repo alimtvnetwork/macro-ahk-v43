@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.1
 
 ---
 
+## [v3.29.0] — 2026-05-26
+
+### Added
+- **Issue 118 — Past-due workspace lifecycle UI** — workspaces in `past_due` / `unpaid` now resolve to a new `past-due-expiring` display status with an amber → orange → red tone ramp based on days past due (0–4 warning, 5–9 orange, ≥10 danger). Hover card surfaces "Grants remain active" and "Credits will be lost if unpaid" guidance, and the workspace list gains an **Expiring** filter chip sorted by `daysPassed` desc with `available` credits as tiebreaker.
+- **Workspace name resolution hardening** — startup retry now fires unconditionally when the Tier 1 mark-viewed response omits the workspace name (passive mode included), and SPA project switches re-detect the active workspace so the panel never shows a stale name after navigation.
+- **Subscription-status enum source of truth** — new `types/subscription-status.ts` with `SubscriptionStatus`, `WsTierValue`, `PlanName` enums plus `isCanceledStatus` / `isPastDueStatus` / `isHealthyStatus` / `isExpiredTier` predicates; all magic-string status checks across `workspace-status`, `credit-parser`, `status-explainer`, `ws-hover-card`, and renderers now route through the enum helpers.
+
+### Fixed
+- **Past-due workspaces no longer flip to Expired prematurely** — display-status resolver keeps them in the expiring state until the credit-grant window actually closes, and the progress-bar denominator reflects the live grant total instead of the cancelled period budget.
+
+### Changed
+- Version bump: 3.28.0 → 3.29.0 (all version files synced)
+
+---
+
 ## [v3.28.0] — 2026-05-26
 
 ### Added
