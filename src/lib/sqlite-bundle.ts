@@ -861,9 +861,10 @@ function readScripts(db: Database, strict = false): StoredScript[] {
   });
 }
 
-function readConfigs(db: Database): StoredConfig[] {
+function readConfigs(db: Database, strict = false): StoredConfig[] {
   let rows;
   try { rows = db.exec("SELECT * FROM Configs"); } catch {
+    if (strict) return [];
     try { rows = db.exec("SELECT * FROM configs"); } catch { return []; }
   }
   const hasRows = rows.length > 0 && rows[0].values.length > 0;
@@ -873,12 +874,12 @@ function readConfigs(db: Database): StoredConfig[] {
   return rows[0].values.map((row: SqlValue[]) => {
     const obj = Object.fromEntries(cols.map((c: SqlValue, i: number) => [c, row[i]]));
     return {
-      id: resolveUid(obj),
-      name: (col(obj, "Name", "name") as string),
-      description: (col(obj, "Description", "description") as string) ?? undefined,
-      json: (col(obj, "Json", "json") as string),
-      createdAt: (col(obj, "CreatedAt", "created_at") as string),
-      updatedAt: (col(obj, "UpdatedAt", "updated_at") as string),
+      id: resolveUid(obj, strict),
+      name: (col(obj, "Name", "name", strict) as string),
+      description: (col(obj, "Description", "description", strict) as string) ?? undefined,
+      json: (col(obj, "Json", "json", strict) as string),
+      createdAt: (col(obj, "CreatedAt", "created_at", strict) as string),
+      updatedAt: (col(obj, "UpdatedAt", "updated_at", strict) as string),
     } as StoredConfig;
   });
 }
