@@ -484,11 +484,11 @@ function resolveStatusPill(
   ws: WorkspaceCredit, cfg: ReturnType<typeof getWorkspaceLifecycleConfig>,
 ): { pillHtml: string; suppressTier: boolean } {
   if (!cfg.enableWorkspaceStatusLabels) return { pillHtml: '', suppressTier: false };
-  const wsTier = ws.tier || 'FREE';
+  const wsTier = ws.tier || WsTierValue.FREE;
   const status = getEffectiveStatus(ws, cfg);
   const pillHtml = buildStatusPillHtml(status, ws);
   let suppressTier = false;
-  if (wsTier === 'EXPIRED') {
+  if (isExpiredTier(wsTier)) {
     const display = classifyFromStatus(status, ws);
     if (display.kind !== 'normal') suppressTier = true;
   }
