@@ -23,6 +23,8 @@ _None — all known CI/CD issues resolved._
 | 06 | [`06-release-watcher-dispatches-old-tag-workflow.md`](./cicd-issues/06-release-watcher-dispatches-old-tag-workflow.md) | Release watcher dispatches old tag workflow, so asset fixes do not run | `.github/workflows/release-watcher.yml` + `.github/workflows/release.yml` | ✅ Resolved | 2026-05-18 |
 | 07 | [`07-release-recovery-is-async-and-not-gated.md`](./cicd-issues/07-release-recovery-is-async-and-not-gated.md) | Release recovery is async and not gated, so source-only releases can remain published | `.github/workflows/release-watcher.yml` + `.github/workflows/release.yml` | ✅ Resolved | 2026-05-18 |
 | 08 | [`08-stale-release-tag-cannot-contain-recovery-fixes.md`](./cicd-issues/08-stale-release-tag-cannot-contain-recovery-fixes.md) | Stale release tag cannot contain recovery fixes | `.github/workflows/release-watcher.yml` + `.github/workflows/release.yml` | ✅ Resolved | 2026-05-19 |
+| 09 | [`09-ci-not-triggering-on-branch-commits.md`](./cicd-issues/09-ci-not-triggering-on-branch-commits.md) | CI Build not triggering on branch commits (post PR #45) | `.github/workflows/ci.yml` + `.github/workflows/ping.yml` | ✅ Resolved (workflow-side) | 2026-05-26 |
+
 
 ---
 
