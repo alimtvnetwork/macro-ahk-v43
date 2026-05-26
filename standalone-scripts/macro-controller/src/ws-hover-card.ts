@@ -238,7 +238,7 @@ function buildExpirySection(ws: WorkspaceCredit, status: WorkspaceStatus): strin
     const date = formatDateDDMMMYY(status.sinceIso);
     const dur = formatDayCount(status.daysSince);
     let color = '#fca5a5';
-    if (status.kind === 'about-to-expire' || status.kind === 'past-due-expiring') color = '#fde68a';
+    if (status.kind === 'about-to-expire' || status.kind === KIND_PAST_DUE_EXPIRING) color = '#fde68a';
     out.push(rowHtml(expiryLabelFor(status.kind), date + ' (' + dur + ')', color));
   } else {
     out.push(rowHtml('Status', escHtml(status.label), '#fca5a5'));
@@ -255,7 +255,7 @@ function buildExpirySection(ws: WorkspaceCredit, status: WorkspaceStatus): strin
  * subscription remains unpaid. Only renders for `past-due-expiring` rows.
  */
 function buildPastDueSection(ws: WorkspaceCredit, status: WorkspaceStatus): string {
-  if (status.kind !== 'past-due-expiring') return '';
+  if (status.kind !== KIND_PAST_DUE_EXPIRING) return '';
   const out: string[] = [sectionHeaderHtml('Past Due')];
   out.push(rowHtml('Status', 'Grants remain active', '#34d399'));
   if (ws.billingPeriodEndAt) {
@@ -448,7 +448,7 @@ function expiresCompactRow(ws: WorkspaceCredit, status: WorkspaceStatus): string
 
 /** Issue 118: compact past-due warning row for the hover card header. */
 function pastDueCompactRow(status: WorkspaceStatus): string {
-  if (status.kind !== 'past-due-expiring') return '';
+  if (status.kind !== KIND_PAST_DUE_EXPIRING) return '';
   const days = status.daysSince || 0;
   const html = SPAN_COLOR_OPEN + C_DESTRUCTIVE + ';font-weight:700;">past due ' + formatDayCount(days) + '</span>'
     + SPAN_COLOR_OPEN + C_MUTED + ';font-weight:400;"> — pay to keep credits</span>';
