@@ -435,29 +435,39 @@ function buildRefillBadgeHtml(ws: WorkspaceCredit): string {
     + days + 'd</span>';
 }
 
+function resolveStatusPill(
+  ws: WorkspaceCredit, cfg: ReturnType<typeof getWorkspaceLifecycleConfig>,
+): { pillHtml: string; suppressTier: boolean } {
+  if (!cfg.enableWorkspaceStatusLabels) return { pillHtml: '', suppressTier: false };
+  const wsTier = ws.tier || 'FREE';
+  const status = getEffectiveStatus(ws, cfg);
+  const pillHtml = buildStatusPillHtml(status, ws);
+  let suppressTier = false;
+  if (wsTier === 'EXPIRED') {
+    const display = classifyFromStatus(status, ws);
+    if (display.kind !== 'normal') suppressTier = true;
+  }
+  return { pillHtml, suppressTier };
+}
+
+function buildLegacyExpiredBadge(ws: WorkspaceCredit): string {
+  const days = expiredDays(ws);
+  if (days === null) return '';
+  const startDate = formatExpiryStartDate(ws);
+  const duration = formatExpiredDuration(ws);
+  const tipParts = ['Expired'];
+  if (startDate) tipParts.push('since ' + startDate);
+  if (duration) tipParts.push('(' + duration + ')');
+  const tip = tipParts.join(' ').replace(/"/g, '&quot;');
+  return '<span style="font-size:10px;color:#fca5a5;background:rgba(127,29,29,0.55);padding:2px 5px;border-radius:3px;font-weight:600;margin-left:3px;vertical-align:middle;" data-marco-tip="' + tip + '">·' + days + 'd</span>';
+}
+
 /** Build the inner HTML for a workspace row. Exported for tests. */
 export function buildTierBadgeHtml(ws: WorkspaceCredit): string {
   const wsTier = ws.tier || 'FREE';
   const tierMeta = WS_TIER_LABELS[wsTier] || WS_TIER_LABELS['FREE'];
-
   const cfg = getWorkspaceLifecycleConfig();
-  let statusPillHtml = '';
-  // v3.24.0 — Issue 117: whenever ANY status pill renders (Cancel, Expire Nd,
-  // Expired Nd, Refill Nd), the red `EXPIRED` tier badge is redundant — the
-  // pill already communicates lifecycle state with the correct tone. Suppress
-  // the tier badge for every non-normal display kind so the row shows at most
-  // one lifecycle indicator. This extends the v3.22.0 Issue 116 fix (which
-  // only suppressed for `canceled`).
-  let suppressTierBadge = false;
-  if (cfg.enableWorkspaceStatusLabels) {
-    const status = getEffectiveStatus(ws, cfg);
-    statusPillHtml = buildStatusPillHtml(status, ws);
-    if (wsTier === 'EXPIRED') {
-      const display = classifyFromStatus(status, ws);
-      if (display.kind !== 'normal') suppressTierBadge = true;
-    }
-  }
-
+  const { pillHtml: statusPillHtml, suppressTier: suppressTierBadge } = resolveStatusPill(ws, cfg);
 
   let tierBadge = suppressTierBadge
     ? ''
@@ -466,16 +476,7 @@ export function buildTierBadgeHtml(ws: WorkspaceCredit): string {
   if (cfg.enableWorkspaceStatusLabels) {
     tierBadge += statusPillHtml;
   } else if (wsTier === 'EXPIRED') {
-    const days = expiredDays(ws);
-    if (days !== null) {
-      const startDate = formatExpiryStartDate(ws);
-      const duration = formatExpiredDuration(ws);
-      const tipParts = ['Expired'];
-      if (startDate) tipParts.push('since ' + startDate);
-      if (duration) tipParts.push('(' + duration + ')');
-      const tip = tipParts.join(' ').replace(/"/g, '&quot;');
-      tierBadge += '<span style="font-size:10px;color:#fca5a5;background:rgba(127,29,29,0.55);padding:2px 5px;border-radius:3px;font-weight:600;margin-left:3px;vertical-align:middle;" data-marco-tip="' + tip + '">·' + days + 'd</span>';
-    }
+    tierBadge += buildLegacyExpiredBadge(ws);
   }
   if (!cfg.enableWorkspaceStatusLabels) {
     tierBadge += buildRefillBadgeHtml(ws);

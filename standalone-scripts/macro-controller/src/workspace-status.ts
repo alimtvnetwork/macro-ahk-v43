@@ -158,6 +158,51 @@ function buildStatus(
  *   6. refill within window      → about-to-refill (suppressed for past_due/canceled/expired)
  *   7. otherwise                 → normal
  */
+function resolveCanceledStatus(
+  changedIso: string | undefined, daysSinceChange: number, grace: number,
+): WorkspaceStatus {
+  if (changedIso && daysSinceChange >= grace) {
+    return buildStatus('fully-expired', { sinceIso: changedIso, daysSince: daysSinceChange });
+  }
+  return buildStatus('expired-canceled', { sinceIso: changedIso, daysSince: daysSinceChange });
+}
+
+function resolveTierExpiredStatus(
+  changedIso: string | undefined, daysSinceChange: number, grace: number,
+): WorkspaceStatus {
+  if (changedIso && daysSinceChange >= grace) {
+    return buildStatus('fully-expired', { sinceIso: changedIso, daysSince: daysSinceChange });
+  }
+  return buildStatus('expired', { sinceIso: changedIso, daysSince: daysSinceChange });
+}
+
+function resolvePastDueStatus(
+  ws: WorkspaceCredit, changedIso: string | undefined, daysSinceChange: number, nowMs?: number,
+): WorkspaceStatus {
+  if (hasLiveGrants(ws)) {
+    const refillIsoLive = pickRefillIso(ws);
+    if (refillIsoLive) {
+      const dToRefillLive = daysUntil(refillIsoLive, nowMs);
+      if (dToRefillLive >= 0) {
+        return buildStatus('about-to-refill', { refillIso: refillIsoLive, daysToRefill: dToRefillLive });
+      }
+    }
+  }
+  return buildStatus('about-to-expire', { sinceIso: changedIso, daysSince: daysSinceChange });
+}
+
+function resolveRefillStatus(
+  ws: WorkspaceCredit, cfg: WorkspaceLifecycleConfig, nowMs?: number,
+): WorkspaceStatus | null {
+  const refillIso = pickRefillIso(ws);
+  if (!refillIso) return null;
+  const dToRefill = daysUntil(refillIso, nowMs);
+  if (dToRefill >= 0 && dToRefill <= cfg.refillWarningThresholdDays) {
+    return buildStatus('about-to-refill', { refillIso, daysToRefill: dToRefill });
+  }
+  return null;
+}
+
 export function getEffectiveStatus(
   ws: WorkspaceCredit,
   cfg: WorkspaceLifecycleConfig,
@@ -172,52 +217,13 @@ export function getEffectiveStatus(
   const isCanceled = status === 'canceled' || status === 'cancelled';
   const isPastDue = status === 'past_due' || status === 'unpaid';
 
-  // 1 & 2: canceled
-  if (isCanceled) {
-    if (changedIso && daysSinceChange >= grace) {
-      return buildStatus('fully-expired', { sinceIso: changedIso, daysSince: daysSinceChange });
-    }
-    return buildStatus('expired-canceled', { sinceIso: changedIso, daysSince: daysSinceChange });
-  }
+  if (isCanceled) return resolveCanceledStatus(changedIso, daysSinceChange, grace);
+  if (tier === 'EXPIRED' && !isPastDue) return resolveTierExpiredStatus(changedIso, daysSinceChange, grace);
+  if (isPastDue) return resolvePastDueStatus(ws, changedIso, daysSinceChange, nowMs);
 
-  // 3 & 4: tier-driven expired (covers past_due workspaces that resolveWsTier marks as EXPIRED)
-  // We split past_due out below so that tier === 'EXPIRED' here only fires for non-past_due.
-  if (tier === 'EXPIRED' && !isPastDue) {
-    if (changedIso && daysSinceChange >= grace) {
-      return buildStatus('fully-expired', { sinceIso: changedIso, daysSince: daysSinceChange });
-    }
-    return buildStatus('expired', { sinceIso: changedIso, daysSince: daysSinceChange });
-  }
+  const refillStatus = resolveRefillStatus(ws, cfg, nowMs);
+  if (refillStatus) return refillStatus;
 
-  // 5: past_due — Issue 117 fix. When the wallet still has spendable grants
-  // (CreditBalance.total_remaining > 0, surfaced as ws.available / rollover /
-  // billingAvailable), Stripe `past_due` is "renewal failed, grants valid
-  // until expires_at" — show the billing-period end as a refill date instead
-  // of falsely shouting "Expire Nd". Fall back to about-to-expire only when
-  // the wallet is genuinely empty.
-  if (isPastDue) {
-    if (hasLiveGrants(ws)) {
-      const refillIsoLive = pickRefillIso(ws);
-      if (refillIsoLive) {
-        const dToRefillLive = daysUntil(refillIsoLive, nowMs);
-        if (dToRefillLive >= 0) {
-          return buildStatus('about-to-refill', { refillIso: refillIsoLive, daysToRefill: dToRefillLive });
-        }
-      }
-    }
-    return buildStatus('about-to-expire', { sinceIso: changedIso, daysSince: daysSinceChange });
-  }
-
-  // 6: about-to-refill
-  const refillIso = pickRefillIso(ws);
-  if (refillIso) {
-    const dToRefill = daysUntil(refillIso, nowMs);
-    if (dToRefill >= 0 && dToRefill <= cfg.refillWarningThresholdDays) {
-      return buildStatus('about-to-refill', { refillIso, daysToRefill: dToRefill });
-    }
-  }
-
-  // 7: normal
   return buildStatus('normal', {});
 }
 
