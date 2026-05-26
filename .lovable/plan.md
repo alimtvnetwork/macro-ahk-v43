@@ -47,26 +47,36 @@ Spec: `plan.md` ("Release Page CI/CD Hardening Plan — 8 Steps")
 - [x] Step 7 — Validate without publishing a real release. (All workflow YAMLs pass YAML syntax validation; `scripts/release-publish.mjs` dry-run + syntax check passed.)
 - [x] Step 8 — Final version bump + changelog/readme updates. (Bumped to v3.14.2 via `bump-version.mjs`; updated root + macro-controller changelogs; updated readme.md pinned version references.)
 
-### Active — Issue 117: Macro toolbar minimize/expand button squish RCA (5 steps)
-Trigger: User reports a long-term bug where the Macro Controller toolbar buttons become squished together after minimizing the toolbar and expanding it again. Screenshot shows the top action row/buttons losing expected spacing after restore.
-Scope: Root-cause analysis first, then targeted fix. Do not broaden into unrelated panel redesign.
+### Completed — Issue 117: Macro toolbar minimize/expand button squish RCA (5 steps, v3.15.0) ✅
+Trigger: User reports a long-term bug where the Macro Controller toolbar buttons become squished together after minimizing the toolbar and expanding it again.
+1. [x] Step 1 — Lifecycle map documented in `spec/22-app-issues/117-toolbar-button-squish/01-step1-lifecycle-map.md`.
+2. [x] Step 2 — Root cause confirmed: `toggleMinimize` wipes inline `display:flex` via `el.style.display = 'none'|''`. Evidence: `02-step2-rca-evidence.md`.
+3. [x] Step 3 — Fix: stash-and-restore of inline `display` in `panel-layout.ts`.
+4. [x] Step 4 — Regression tests (5 tests, all pass).
+5. [x] Step 5 — Version bump 3.14.2 → 3.15.0.
 
-1. [x] Step 1 — Reproduce and map the minimize→expand lifecycle. Inspect `standalone-scripts/macro-controller/src/ui/panel-header.ts`, `panel-controls.ts`, redock/viewport logic, and the action-button row creation path. Document the exact DOM/classes/styles before minimize, during minimized state, and after expand. → `spec/22-app-issues/117-toolbar-button-squish/01-step1-lifecycle-map.md`. Provisional RCA: `toggleMinimize` uses `el.style.display = 'none' / ''` which wipes the btn-row's inline `display:flex` (written via `cssText`), reverting it to `<div>` default `block` → flex `gap`/wrap/justify collapse → buttons render flush ("squished"). Step 2 to confirm in DOM.
-2. [x] Step 2 — Identify the real root cause. **CONFIRMED:** `btnRow` is in `plCtx.bodyElements` (`panel-builder.ts:152`). `toggleMinimize` sets `el.style.display = 'none'` then later `el.style.display = ''`, which REMOVES the inline `display` property — falling back to `<div>` default `block`. The btn-row's `display:flex` (set via `cssText` in `panel-controls.ts:130`) is wiped, so `gap`, `flex-wrap`, `justify-content`, `align-items` all become inert. Buttons render flush, separated only by per-button `margin:2px 3px`. Evidence: `spec/22-app-issues/117-toolbar-button-squish/02-step2-rca-evidence.md`. Explains why every prior fix (v2.195.0 → v3.10.0) failed: they added defenses inside the same inline `cssText` whose `display` flag gets wiped on every expand.
-3. [x] Step 3 — Implemented stash-and-restore of inline `display` per body element in `panel-layout.ts` (`_hideBodyElement` / `_showBodyElement` using `data-macro-prev-display` attr). Replaced raw `el.style.display = 'none'|''` in `toggleMinimize`, `restorePanel`, and `_restoreMinimizedPanel` (via new exported `hideBodyElementForMinimize`). Result: btn-row's inline `display:flex` is preserved across any minimize→expand/restore cycle, so `gap`/`flex-wrap`/`justify-content`/`align-items` keep working. Typecheck clean. Touched: `panel-layout.ts`, `panel-sections.ts`, `panel-builder.ts`.
-4. [x] Step 4 — Regression coverage: `standalone-scripts/macro-controller/src/__tests__/panel-minimize-expand-display.test.ts` — 5 tests covering: (a) btn-row keeps `display:flex` across minimize→expand; (b) 5 repeat cycles without drift; (c) plain elements without `display` stay empty (no invented value); (d) `restorePanel` restores stashed display; (e) `hideBodyElementForMinimize` is idempotent (won't overwrite stash with `none`). All 5 pass.
-5. [x] Step 5 — Version bump 3.14.2 → 3.15.0 (minor bump), root + macro-controller changelogs updated with Issue 117 fix summary, readme.md pinned to `v3.15.0`.
+### Completed — Ctrl+Shift+Down shortcut fix (v3.20.0) ✅
+Fixed in v3.20.0: keyboard shortcut and context-menu "Run scripts now" now always send `forceReload: true`, matching the popup Run button. Double-injection guard on forced manual launch splices script id out of body marker before dedup check.
+
+### Completed — Gitsync "Open GitHub repo" fix (v3.19.0) ✅
+Fixed in v3.19.0: rewrote `gitsync-api.ts` to route through `window.marco.api.call("projects.gitsync", …)` SDK path so `Authorization: Bearer` header is always attached.
+
+### Completed — Lovable Dashboard standalone script (v3.21.0) ✅
+Migrated `home-screen` content-script features into `standalone-scripts/lovable-dashboard/`. Build-pipeline test added.
 
 ### Blocked on user input / secrets
-- **P1 — Release installer hardening v0.2 (SLSA + minisign signing)** — *Still blocked on `MINISIGN_SECRET_KEY` GitHub secret.* Independent of the CI/CD hardening plan above.
+- **P1 — Release installer hardening v0.2 (SLSA + minisign signing)** — *Blocked on `MINISIGN_SECRET_KEY` GitHub secret.*
+- **Empty-workspace bug diagnosis** — *Blocked: needs clean `\run.ps1 -d` build log + browser console output.*
 
 ### Deferred
 - **P2 — P Store spec** — *Discuss-later mode per user instruction.*
 - **Cross-Project Sync & Shared Library** — *Depends on P Store.*
 - **Prompt Click E2E (52/53)** — *Deferred.*
+- **S-055 — P Store Backend API** — *Blocked on P2.*
 
 ### In-memory audit not yet on active backlog
 - **Idle loop perf audit (2026-04-25)** — ✅ All actionable items fixed (PERF-1..13). PERF-14/15 are Low/no-action. See `mem://performance/idle-loop-audit-2026-04-25`.
+- **S-021 — Chrome Extension Test Coverage Expansion** — ✅ Done. 2190 tests passing as of v3.21.0.
 
 ---
 
