@@ -119,20 +119,52 @@ function buildTasksToggleButton(): HTMLElement {
   const btn = document.createElement('span');
   btn.setAttribute('data-tasks-toggle', '1');
   btn.textContent = '🎯 Tasks ▸';
-  btn.title = 'Plan Task + Task Next controls';
-  btn.style.cssText = 'cursor:pointer;padding:3px 8px;border-radius:4px;font-size:9px;font-weight:600;color:' + cPrimaryLight + ';background:rgba(124,58,237,0.18);border:1px solid rgba(124,58,237,0.35);user-select:none;';
-  btn.onmouseover = function() { btn.style.background = 'rgba(124,58,237,0.32)'; };
-  btn.onmouseout = function() { btn.style.background = 'rgba(124,58,237,0.18)'; };
-  btn.onclick = function(e: Event) {
-    e.stopPropagation();
+  btn.title = 'Plan Task + Task Next controls — hover or click to open';
+  btn.style.cssText = 'cursor:pointer;padding:5px 10px;border-radius:5px;font-size:11px;font-weight:700;color:' + cPrimaryLight + ';background:rgba(124,58,237,0.22);border:1px solid rgba(124,58,237,0.5);user-select:none;letter-spacing:0.3px;';
+
+  function findGroup(): HTMLElement | null {
     const dropdown = btn.closest('[data-prompts-dropdown]') as HTMLElement | null
       ?? (btn.parentElement?.parentElement as HTMLElement | null);
-    const group = dropdown?.querySelector('[data-tasks-group]') as HTMLElement | null;
+    return dropdown?.querySelector('[data-tasks-group]') as HTMLElement | null;
+  }
+  function openGroup(): void {
+    const group = findGroup();
     if (!group) return;
-    const open = group.style.display !== 'none';
-    group.style.display = open ? 'none' : 'block';
-    btn.textContent = open ? '🎯 Tasks ▸' : '🎯 Tasks ▾';
+    group.style.display = 'block';
+    btn.textContent = '🎯 Tasks ▾';
+    btn.style.background = 'rgba(124,58,237,0.4)';
+  }
+  function closeGroup(): void {
+    const group = findGroup();
+    if (!group) return;
+    group.style.display = 'none';
+    btn.textContent = '🎯 Tasks ▸';
+    btn.style.background = 'rgba(124,58,237,0.22)';
+  }
+  // Hover-open with small grace period so users can move into the panel.
+  let closeTimer: ReturnType<typeof setTimeout> | null = null;
+  function cancelClose(): void { if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; } }
+  function scheduleClose(): void {
+    cancelClose();
+    closeTimer = setTimeout(function() {
+      const group = findGroup();
+      if (group && group.matches(':hover')) return;
+      if (btn.matches(':hover')) return;
+      closeGroup();
+    }, 180);
+  }
+
+  btn.onmouseenter = function() { cancelClose(); openGroup(); };
+  btn.onmouseleave = scheduleClose;
+  btn.onclick = function(e: Event) {
+    e.stopPropagation();
+    const group = findGroup();
+    const open = group ? group.style.display !== 'none' : false;
+    if (open) closeGroup(); else openGroup();
   };
+  // Group teardown wiring runs once it exists — handled at render time via
+  // the data-tasks-group attribute below in _appendHeaderAndSubmenu.
+  btn.setAttribute('data-tasks-hover-bound', '1');
   return btn;
 }
 
@@ -228,6 +260,20 @@ function _appendHeaderAndSubmenu(
   ].join(';') + ';';
   renderTaskNextSubmenu(tasksGroup, ctx, taskNextDeps);
   renderPlanTaskSubmenu(tasksGroup, ctx);
+  // Auto-close the floating Tasks panel when the pointer leaves it, so the
+  // hover-open UX behaves like a real menu (no need to click outside).
+  tasksGroup.onmouseleave = function() {
+    setTimeout(function() {
+      const toggle = container.querySelector('[data-tasks-toggle]') as HTMLElement | null;
+      if (toggle && toggle.matches(':hover')) return;
+      if (tasksGroup.matches(':hover')) return;
+      tasksGroup.style.display = 'none';
+      if (toggle) {
+        toggle.textContent = '🎯 Tasks ▸';
+        toggle.style.background = 'rgba(124,58,237,0.22)';
+      }
+    }, 180);
+  };
   container.appendChild(tasksGroup);
 
   const categories = collectUniqueCategories(entries);
