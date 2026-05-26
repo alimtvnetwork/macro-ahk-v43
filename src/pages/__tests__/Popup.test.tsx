@@ -17,7 +17,7 @@ vi.mock("@/hooks/use-popup-data", () => ({
             bootStep: "ready",
         },
         health: { ok: true },
-        opfsStatus: { ok: true },
+        opfsStatus: { healthy: true, dirExists: true, files: [] },
         injections: [],
         scripts: [],
         loading: false,
