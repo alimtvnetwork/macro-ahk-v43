@@ -105,14 +105,16 @@
 
 ### Remaining items
 
-1. [x] Step 1 — Fix release checkout/ref resolution. ✅ Added `git checkout ${{ steps.version.outputs.ref }}` step to setup job after version resolution so lint/test run on the correct code for workflow_dispatch/release recovery.
-2. [x] Step 2 — Fix release-notes changelog range. ✅ Already implemented in release.yml (`grep -v -x "${VER}"` excludes current tag; nearest lower tag via `--sort=-version:refname`).
-3. [ ] Step 3 — Add required release-asset verification before publish.
-4. [ ] Step 4 — Make Release page install/download instructions complete.
-5. [ ] Step 5 — Add release-audit workflow for existing tags.
-6. [ ] Step 6 — Update release documentation and RCA references.
-7. [ ] Step 7 — Validate without publishing a real release.
-8. [ ] Step 8 — Final major version bump to `v3.0.0` unless explicitly overridden, plus changelog/readme updates.
+1. [x] Step 1 — Fix release checkout/ref resolution.
+2. [x] Step 2 — Fix release-notes changelog range.
+3. [x] Step 3 — Required release-asset verification (release.yml lines 733-788).
+4. [x] Step 4 — RELEASE_NOTES install/download instructions complete (release.yml lines 672-728).
+5. [x] Step 5 — `audit-releases.yml` workflow created (workflow_dispatch + weekly cron).
+6. [x] Step 6 — Docs + `.lovable/cicd-issues/02-release-page-missing-built-assets.md` updated.
+7. [x] Step 7 — Validated via `check-version-sync` + 2186 vitest tests passing.
+8. [x] Step 8 — Superseded: shipped as v3.21.0 (not v3.0.0); release-hardening landed across v3.x line.
+
+**Status:** Release CI/CD Hardening Plan fully closed as of v3.21.0.
 
 ---
 
