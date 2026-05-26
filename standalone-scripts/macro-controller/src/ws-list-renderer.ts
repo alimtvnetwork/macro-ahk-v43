@@ -59,7 +59,19 @@ const CSS_BG = ';background:';
 // CQ11/CQ17: Encapsulated view-filter state
 // ============================================
 
-/** Manages workspace list view state (compact mode, free-only filter, expired-with-credits filter, refill-soon filter, refill-priority sort). */
+/**
+ * Credit-sort filter modes (v3.30.0 — credit-sort hamburger row).
+ *
+ * - `none`     — no credit sort applied (default ordering wins).
+ * - `high`     — sort all surviving rows by available credits DESC.
+ * - `low`      — sort all surviving rows by available credits ASC.
+ * - `pro-high` — only paid (non-FREE) workspaces in an expiring / expired
+ *                lifecycle state; sort DESC by available credits.
+ * - `pro-low`  — same filter as `pro-high`; sort ASC.
+ */
+export type CreditSortMode = 'none' | 'high' | 'low' | 'pro-high' | 'pro-low';
+
+/** Manages workspace list view state (compact, free-only, expired-with-credits, refill-soon, refill-priority, credit-sort mode). */
 class WsListViewState {
   private static instance: WsListViewState | null = null;
   private isFreeOnly = false;
@@ -68,10 +80,12 @@ class WsListViewState {
   private isRefillSoon = false;
   private isCompactMode: boolean;
   private isRefillPriority: boolean;
+  private creditSortMode: CreditSortMode;
 
   private constructor() {
     this.isCompactMode = this.loadBool('ml_compact_mode', true);
     this.isRefillPriority = this.loadBool('ml_refill_priority', false);
+    this.creditSortMode = this.loadCreditSortMode();
   }
 
   static getInstance(): WsListViewState {
@@ -93,6 +107,20 @@ class WsListViewState {
 
       return fallback;
     }
+  }
+
+  private loadCreditSortMode(): CreditSortMode {
+    try {
+      const stored = localStorage.getItem('ml_credit_sort_mode');
+      if (stored === 'high' || stored === 'low'
+        || stored === 'pro-high' || stored === 'pro-low') {
+        return stored;
+      }
+    } catch (e: unknown) {
+      logError('viewState.loadCreditSortMode',
+        'Failed to read credit sort mode from localStorage', e);
+    }
+    return 'none';
   }
 
   getCompactMode(): boolean { return this.isCompactMode; }
@@ -118,6 +146,18 @@ class WsListViewState {
       localStorage.setItem('ml_refill_priority', val ? 'true' : 'false');
     } catch (e: unknown) {
       logError('viewState.setRefillPriority', 'Failed to persist refill priority flag', e);
+    }
+  }
+
+  getCreditSortMode(): CreditSortMode { return this.creditSortMode; }
+
+  setCreditSortMode(val: CreditSortMode): void {
+    this.creditSortMode = val;
+    try {
+      localStorage.setItem('ml_credit_sort_mode', val);
+    } catch (e: unknown) {
+      logError('viewState.setCreditSortMode',
+        'Failed to persist credit sort mode', e);
     }
   }
 }
@@ -187,6 +227,16 @@ export function getLoopWsRefillPriority(): boolean {
 /** Set refill-priority sort state. */
 export function setLoopWsRefillPriority(val: boolean): void {
   viewState().setRefillPriority(val);
+}
+
+/** Get the active credit-sort mode (v3.30.0 — credit-sort hamburger row). */
+export function getLoopWsCreditSortMode(): CreditSortMode {
+  return viewState().getCreditSortMode();
+}
+
+/** Set the active credit-sort mode (persists to localStorage). */
+export function setLoopWsCreditSortMode(val: CreditSortMode): void {
+  viewState().setCreditSortMode(val);
 }
 
 // ============================================
@@ -284,6 +334,7 @@ interface WsFilterState {
   expiredWithCredits: boolean;
   expiring: boolean;
   refillSoon: boolean;
+  creditSortMode: CreditSortMode;
 }
 
 /** Read filter state from DOM elements once, outside the loop. */
@@ -300,6 +351,7 @@ function readFilterState(filter: string): WsFilterState {
     expiredWithCredits: viewState().getExpiredWithCredits(),
     expiring: viewState().getExpiring(),
     refillSoon: viewState().getRefillSoon(),
+    creditSortMode: viewState().getCreditSortMode(),
   };
 }
 
@@ -338,6 +390,33 @@ function isExpiringWs(ws: WorkspaceCredit): boolean {
   }
 }
 
+/**
+ * Credit-sort "Pro" qualifier (v3.30.0).
+ *
+ * A workspace is "Pro & expiring" when:
+ *   1. It is NOT on the FREE tier (PRO, LITE, or EXPIRED — i.e. it had a paid
+ *      subscription at some point), AND
+ *   2. It currently classifies into a payment-lifecycle warning state:
+ *      past-due-expiring (about-to-expire) OR expired.
+ *
+ * Healthy / refill-soon / canceled rows are excluded — those are not the
+ * recovery candidates the "Pro" credit-sort filter targets.
+ */
+function isProExpiringWs(ws: WorkspaceCredit): boolean {
+  try {
+    const tier = (ws.tier || WsTierValue.FREE).toUpperCase().trim();
+    if (tier === WsTierValue.FREE) return false;
+    const cfg = getWorkspaceLifecycleConfig();
+    const source = getEffectiveStatus(ws, cfg);
+    const display = classifyFromStatus(source, ws);
+    return display.kind === 'past-due-expiring' || display.kind === 'expired';
+  } catch (e: unknown) {
+    logError('passesFilters.proExpiring',
+      'Failed to classify workspace for pro credit-sort filter', e);
+    return false;
+  }
+}
+
 /** Check text match against workspace name / fullName. */
 function matchesTextFilter(ws: WorkspaceCredit, filter: string): boolean {
   if (!filter) return true;
@@ -362,6 +441,8 @@ function passesFilters(ws: WorkspaceCredit, fs: WsFilterState): boolean {
   if (fs.expiredWithCredits && !matchesExpiredWithCreditsFilter(ws)) return false;
   if (fs.expiring && !isExpiringWs(ws)) return false;
   if (fs.refillSoon && !isRefillSoonWs(ws)) return false;
+  if ((fs.creditSortMode === 'pro-high' || fs.creditSortMode === 'pro-low')
+    && !isProExpiringWs(ws)) return false;
   return true;
 }
 
@@ -606,7 +687,7 @@ function computeMaxTotalCredits(workspaces: WorkspaceCredit[]): number {
   return maxTotalCredits;
 }
 
-function filterAndSortWorkspaces(
+export function filterAndSortWorkspaces(
   workspaces: WorkspaceCredit[],
   filter: string,
 ): Array<{ ws: WorkspaceCredit; wsIndex: number }> {
@@ -645,13 +726,27 @@ function filterAndSortWorkspaces(
     for (const r of sorted) survivors.push(r);
   }
 
+  // v3.30.0 — credit-sort mode (overrides previous ordering when active).
+  // High / Pro-High → DESC by available credits. Low / Pro-Low → ASC.
+  if (fs.creditSortMode !== 'none') {
+    const desc = fs.creditSortMode === 'high' || fs.creditSortMode === 'pro-high';
+    survivors.sort(function (a, b) {
+      const av = a.ws.available || 0;
+      const bv = b.ws.available || 0;
+      return desc ? bv - av : av - bv;
+    });
+  }
+
   return survivors;
 }
 
 function updateWsCountLabel(count: number, total: number, filter: string): void {
   const countLabel = document.getElementById('loop-ws-count-label');
   if (!countLabel) return;
-  countLabel.textContent = (filter || getLoopWsFreeOnly() || getLoopWsExpiredWithCredits() || getLoopWsExpiring() || getLoopWsRefillSoon() || count !== total)
+  const anyFilterActive = filter || getLoopWsFreeOnly() || getLoopWsExpiredWithCredits()
+    || getLoopWsExpiring() || getLoopWsRefillSoon()
+    || viewState().getCreditSortMode() !== 'none' || count !== total;
+  countLabel.textContent = anyFilterActive
     ? 'Workspaces (' + count + '/' + total + ')'
     : 'Workspaces (' + total + ')';
 }
