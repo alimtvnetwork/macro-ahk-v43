@@ -35,10 +35,10 @@ export type WorkspaceDisplayKind =
 
 /** Abstract tone names. Renderer maps these to CSS. */
 export type WorkspaceDisplayTone =
-  | 'muted'      // canceled — gray bg, light text, no red
-  | 'danger'     // expired — red
-  | 'warning'    // expire-soon / past-due 0–4d — amber
-  | 'orange'     // past-due 5–9d — orange
+  | 'muted'      // canceled / past-due 0–2d — gray bg, light text, no red
+  | 'danger'     // expired / expire-soon / past-due ≥10d — red
+  | 'warning'    // past-due 3–9d — amber
+  | 'orange'     // reserved fallback
   | 'info'       // refill-soon — sky
   | 'none';      // normal — no badge
 
@@ -66,8 +66,8 @@ export interface WorkspaceDisplayStatus {
 export const WORKSPACE_BADGE_DISPLAY: Record<WorkspaceDisplayKind, { tone: WorkspaceDisplayTone }> = {
   'canceled':           { tone: 'muted' },
   'expired':            { tone: 'danger' },
-  'expire-soon':        { tone: 'warning' },
-  'past-due-expiring':  { tone: 'orange' },
+  'expire-soon':        { tone: 'danger' },
+  'past-due-expiring':  { tone: 'warning' },
   'refill-soon':        { tone: 'info' },
   'normal':             { tone: 'none' },
 };
@@ -114,17 +114,17 @@ export function formatPassedLabel(daysPassed: number): string {
 /* ------------------------------------------------------------------ */
 
 /**
- * Issue 118: pick the display tone for a past-due row based on how many
+ * Issue 118 rev: pick the display tone for a past-due row based on how many
  * days have passed since subscription_status_changed_at.
- *   0–4d  → warning (amber)
- *   5–9d  → orange
+ *   0–2d  → muted (gray)
+ *   3–9d  → warning (amber)
  *   ≥10d  → danger (red)
  */
 export function pickPastDueTone(daysPassed: number): WorkspaceDisplayTone {
-  if (!Number.isFinite(daysPassed) || daysPassed < 0) return 'warning';
+  if (!Number.isFinite(daysPassed) || daysPassed < 0) return 'muted';
   if (daysPassed >= 10) return 'danger';
-  if (daysPassed >= 5) return 'orange';
-  return 'warning';
+  if (daysPassed >= 3) return 'warning';
+  return 'muted';
 }
 
 /* ------------------------------------------------------------------ */
@@ -177,7 +177,7 @@ export function classifyFromStatus(
     return {
       kind: 'expire-soon',
       label: daysUntilExpiry !== null ? formatExpireSoonLabel(daysUntilExpiry) : 'Expire soon',
-      tone: 'warning',
+      tone: 'danger',
       tooltip: 'Past due — ' + (source.sinceIso || 'no date'),
       source,
     };
