@@ -115,7 +115,7 @@ export class NamespaceLogger {
      * @param msg - Human-readable message
      * @param error - Optional error; its stack is used if provided, otherwise a fresh stack is captured
      */
-    static stackTrace(fn: string, msg: string, error?: unknown): void {
+    static stackTrace(fn: string, msg: string, error?: CaughtError): void {
         const base = `${PREFIX} [${fn}] ${msg}`;
         const stack = captureStack(error);
         console.error(base + "\n" + stack);
