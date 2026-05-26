@@ -21,6 +21,7 @@
  */
 
 import type { WorkspaceCredit } from './types/credit-types';
+import { isHealthyStatus, isPastDueStatus, isCanceledStatus, SubscriptionStatus } from './types/subscription-status';
 import type { WorkspaceStatus } from './workspace-status';
 import {
   getEffectiveStatus,
@@ -139,9 +140,9 @@ function buildSubscriptionSection(ws: WorkspaceCredit): string {
   if (subStatus) {
     const norm = subStatus.toLowerCase();
     let color = '#e2e8f0';
-    if (norm === 'active' || norm === 'trialing') color = '#34d399';
-    else if (norm === 'past_due' || norm === 'unpaid') color = '#fde68a';
-    else if (norm === 'canceled' || norm === 'cancelled' || norm === 'expired') color = '#fca5a5';
+    if (isHealthyStatus(norm)) color = '#34d399';
+    else if (isPastDueStatus(norm)) color = '#fde68a';
+    else if (isCanceledStatus(norm) || norm === SubscriptionStatus.EXPIRED) color = '#fca5a5';
     out.push(rowHtml('Status', escHtml(subStatus), color));
   }
   if (changedIso) {

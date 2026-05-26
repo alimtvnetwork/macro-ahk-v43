@@ -12,6 +12,7 @@
  * No DOM access. No side effects. Stays in lockstep with `getEffectiveStatus`.
  */
 import type { WorkspaceCredit } from './types';
+import { isCanceledStatus, isPastDueStatus, isExpiredTier, WsTierValue } from './types/subscription-status';
 import type { WorkspaceLifecycleConfig } from './workspace-lifecycle-config';
 import type { WorkspaceStatus, WorkspaceStatusKind } from './workspace-status';
 import { daysBetween, daysUntil, getEffectiveStatus } from './workspace-status';
@@ -74,8 +75,8 @@ export function explainEffectiveStatus(
   const refillWindow = cfg.refillWarningThresholdDays;
   const dToRefill = refillIso ? daysUntil(refillIso, nowMs) : -1;
 
-  const isCanceled = subStatus === 'canceled' || subStatus === 'cancelled';
-  const isPastDue = subStatus === 'past_due' || subStatus === 'unpaid';
+  const isCanceled = isCanceledStatus(subStatus);
+  const isPastDue = isPastDueStatus(subStatus);
 
   const steps: StatusTraceStep[] = [];
   const finalStatus = getEffectiveStatus(ws, cfg, nowMs);
@@ -111,13 +112,15 @@ export function explainEffectiveStatus(
   );
 
   // 3 & 4. tier === EXPIRED (non-past_due)
-  const tierExpired = tier === 'EXPIRED' && !isPastDue;
+  const isTierExpired = isExpiredTier(tier);
+  const tierExpired = isTierExpired && !isPastDue;
+  const notExpiredTierReason = 'tier is "' + (tier || 'empty') + '" (not ' + WsTierValue.EXPIRED + ')';
   add(
     'tier=EXPIRED + grace exceeded',
     'tier is EXPIRED (non past_due) AND days since change ≥ grace (' + grace + 'd) → fully-expired',
     tierExpired && !!changedIso && daysSinceChange >= grace,
-    tier !== 'EXPIRED'
-      ? 'tier is "' + (tier || 'empty') + '" (not EXPIRED)'
+    !isTierExpired
+      ? notExpiredTierReason
       : isPastDue
         ? 'subscription_status is past_due — handled by rule 5 instead'
         : !changedIso
@@ -128,8 +131,8 @@ export function explainEffectiveStatus(
     'tier=EXPIRED (within grace)',
     'tier is EXPIRED (non past_due) → expired',
     tierExpired && !(changedIso && daysSinceChange >= grace),
-    tier !== 'EXPIRED'
-      ? 'tier is "' + (tier || 'empty') + '" (not EXPIRED)'
+    !isTierExpired
+      ? notExpiredTierReason
       : isPastDue
         ? 'subscription_status is past_due — handled by rule 5 instead'
         : 'rule 3 already fired',
