@@ -95,8 +95,9 @@ function stripComments(src) {
 /**
  * Count `unknown` occurrences as a standalone identifier, excluding
  * the one sanctioned `type CaughtError = unknown;` declaration.
+ * Exported for unit tests.
  */
-function countUnknown(src) {
+export function countUnknown(src) {
     const code = stripComments(src);
     const withoutCaught = code.replace(
         /\btype\s+CaughtError\s*=\s*unknown\s*;/g,
