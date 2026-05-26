@@ -172,3 +172,52 @@ jobs:
     with:
       version: ${{ needs.resolve-release.outputs.tag }}
       source_ref: ${{ needs.resolve-release.outputs.source_ref }}
+
+  release-asset-guard:
+    name: Verify release page has built assets
+    needs: run-release
+    if: always() && needs.resolve-release.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Fail fast if Release page is missing required assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          VER: ${{ needs.resolve-release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          REQUIRED=(
+            "marco-extension-${VER}.zip"
+            "macro-controller-${VER}.zip"
+            "marco-sdk-${VER}.zip"
+            "xpath-${VER}.zip"
+            "payment-banner-hider-${VER}.zip"
+            "lovable-common-${VER}.zip"
+            "lovable-owner-switch-${VER}.zip"
+            "lovable-user-add-${VER}.zip"
+            "lovable-dashboard-${VER}.zip"
+            "install.ps1"
+            "install.sh"
+            "VERSION.txt"
+            "changelog.md"
+            "checksums.txt"
+          )
+          ASSETS=$(gh release view "${VER}" --repo "${REPO}" --json assets --jq '.assets[].name' 2>/dev/null || true)
+          if [[ -z "${ASSETS}" ]]; then
+            echo "::error::Release ${VER} has NO uploaded assets — release.yml never produced or uploaded them."
+            exit 1
+          fi
+          MISSING=0
+          for a in "${REQUIRED[@]}"; do
+            if ! printf '%s\n' "${ASSETS}" | grep -qx "${a}"; then
+              echo "::error::Release ${VER} missing asset: ${a}"
+              MISSING=$((MISSING+1))
+            fi
+          done
+          if [[ "${MISSING}" -gt 0 ]]; then
+            echo "::error::${MISSING} required asset(s) missing on Release ${VER}"
+            exit 1
+          fi
+          echo "✅ Release ${VER} has all required built assets"
