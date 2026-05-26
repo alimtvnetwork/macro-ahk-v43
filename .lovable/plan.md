@@ -1,8 +1,8 @@
 # Plan
 
-**Active workstream:** Issue 117 — Macro toolbar minimize/expand button squish RCA — 5 steps queued.
+**Active workstream:** None — all queued workstreams complete as of v3.21.0.
 
-**Recently shipped:** **Issue 116 — Credit Totals Modal** (2026-05-25, v3.14.1).
+**Recently shipped:** **v3.21.0 — Lovable Dashboard standalone script** (2026-05-25).
 **Recently shipped:** **Issue 113 — Workspace tooltip + Members popup** (2026-05-25).
 **Recently shipped:** **v3.12.0 — Workspace Label Refinement** (2026-05-25).
 

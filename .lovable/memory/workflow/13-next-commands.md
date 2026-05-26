@@ -36,7 +36,7 @@ Trigger phrases the user may type to query this file:
 
 ## P1 — Ready to Implement
 
-- [ ] **Issue 114 — pro_0 Credit Balance Calculation** — spec written (`spec/22-app-issues/114-pro-zero-credit-balance-calculation.md`), 5 steps queued; target v3.11.0. Step 1 = pure calculator + 12 unit tests.
+- [x] **Issue 114 — pro_0 Credit Balance Calculation** — completed v3.11.1 (5 steps, 12 unit tests + UI wiring + E2E fixtures).
 - [ ] **Release installer hardening v0.2** — SLSA provenance attestation via GitHub Attestations added to release workflow; minisign signing conditional on MINISIGN_SECRET_KEY secret — needs operator to add secret for full v0.2 completion
 - [x] **Cross-Project Sync Phase 3** — ProjectGroup UI, drag-assign, sync notifications — completed 2026-05-22 (v9 migration, picker UI, handler wiring, drag-to-assign, cross-tab broadcast)
 - [x] **TS Migration V2 Phase 02** — class architecture (S-046) — verified complete 2026-04-23 (v2.225.0)
