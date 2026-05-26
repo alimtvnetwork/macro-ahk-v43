@@ -281,6 +281,7 @@ interface WsFilterState {
   billingOnly: boolean;
   minCredits: number;
   expiredWithCredits: boolean;
+  expiring: boolean;
   refillSoon: boolean;
 }
 
