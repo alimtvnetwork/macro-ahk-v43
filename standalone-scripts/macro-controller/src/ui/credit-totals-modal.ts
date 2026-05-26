@@ -17,6 +17,7 @@ import { cPanelBg, cPrimary, cPrimaryBgA, cPrimaryLighter, cPanelFgDim, loopCred
 import { aggregateCreditTotals, type CreditTotals } from '../credit-totals';
 import { logError } from '../error-utils';
 import type { WorkspaceCredit } from '../types';
+import { makeDraggable } from './drag-window';
 
 const DIALOG_ID = 'marco-credit-totals-modal';
 const ATTR_ARIA_LABEL = 'aria-label';
@@ -507,7 +508,9 @@ export function showCreditTotalsModal(): void {
   panel.setAttribute(ATTR_ARIA_LABEL, 'Credit Totals');
   panel.tabIndex = -1;
 
-  panel.appendChild(buildTitleBar());
+  const titleBar = buildTitleBar();
+  panel.appendChild(titleBar);
+  makeDraggable(panel, titleBar);
 
   const workspaces = loopCreditState.perWorkspace || [];
   const totals = aggregateCreditTotals(workspaces);

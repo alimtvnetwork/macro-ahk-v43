@@ -23,6 +23,7 @@ import { formatDateDDMMMYY } from './workspace-status';
 import { inviteMember, removeMember, updateMemberRole } from './ws-members-mutations';
 import { showToast } from './toast';
 import { onCreditPollTick } from './credit-poll-events';
+import { makeDraggable } from './ui/drag-window';
 
 const PANEL_ID = 'marco-ws-members-panel';
 const Z_INDEX = 100002;
@@ -302,7 +303,7 @@ function headerHtml(wsName: string, state: PanelState): string {
     countText = 'error';
   }
   // v3.4.3 (task 11) — Rename-style popup chrome: compact header "Members — <ws>" + ×
-  return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid ' + cPanelBorder + ';background:rgba(0,0,0,0.25);">'
+  return '<div data-marco-drag-handle="1" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid ' + cPanelBorder + ';background:rgba(0,0,0,0.25);cursor:move;user-select:none;">'
     + '<div style="min-width:0;">'
     +   '<div style="font-size:12px;font-weight:700;color:#f1f5f9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Members — ' + escHtml(wsName) + '</div>'
     +   '<div style="font-size:9px;color:#94a3b8;letter-spacing:0.3px;text-transform:uppercase;">' + countText + ' · sorted by credits used</div>'
@@ -430,6 +431,9 @@ function positionPanel(el: HTMLElement, x: number, y: number): void {
 function render(el: HTMLElement, wsName: string, state: PanelState): void {
   // v3.4.3 (task 11) — 3-section chrome: header + body + footer (Rename-style)
   el.innerHTML = headerHtml(wsName, state) + buildBodyHtml(state) + footerHtml();
+  // v3.30.0 — make the panel draggable by its header.
+  const handle = el.querySelector('[data-marco-drag-handle="1"]') as HTMLElement | null;
+  if (handle) makeDraggable(el, handle);
 }
 
 function findFooter(el: HTMLElement): HTMLElement | null {
