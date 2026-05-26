@@ -50,22 +50,22 @@ export const WS_TIER_LABELS: Record<string, { label: string; bg: string; fg: str
  */
 export function resolveWsTier(plan: string, subStatus: string, billingLimit: number): string {
   const p = (plan || '').toLowerCase().trim();
-  const s = (subStatus || '').toLowerCase().trim();
+  const s = normalizeSubscriptionStatus(subStatus);
 
   // Lite / ktlo plan
-  if (p === 'ktlo' || p === 'lite') return 'LITE';
+  if (p === PlanName.KTLO || p === PlanName.LITE) return WsTierValue.LITE;
 
   // Has billing = was/is pro
-  if (billingLimit > 0 || (p && p !== 'free')) {
-    if (s === 'active') return 'PRO';
-    if (s === 'canceled' || s === 'cancelled' || s === 'past_due') return 'EXPIRED';
-    return 'PRO'; // default if billing exists
+  if (billingLimit > 0 || (p && p !== PlanName.FREE)) {
+    if (s === SubscriptionStatus.ACTIVE) return WsTierValue.PRO;
+    if (isCanceledStatus(s) || s === SubscriptionStatus.PAST_DUE) return WsTierValue.EXPIRED;
+    return WsTierValue.PRO; // default if billing exists
   }
 
   // Free plan + canceled sub = expired trial/pro
-  if (s === 'canceled' || s === 'cancelled') return 'EXPIRED';
+  if (isCanceledStatus(s)) return WsTierValue.EXPIRED;
 
-  return 'FREE';
+  return WsTierValue.FREE;
 }
 
 // ============================================
@@ -78,8 +78,7 @@ export function resolveWsTier(plan: string, subStatus: string, billingLimit: num
  * Centralised here so the filter, badge, and sort code share one definition.
  */
 export function isExpiredWs(ws: import('./types').WorkspaceCredit): boolean {
-  const s = (ws.subscriptionStatus || '').toLowerCase().trim();
-  return s === 'canceled' || s === 'cancelled' || s === 'past_due' || s === 'unpaid';
+  return isExpiredSubscriptionStatus(ws.subscriptionStatus);
 }
 
 /**
