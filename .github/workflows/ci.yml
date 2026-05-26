@@ -19,7 +19,7 @@ name: CI Build
 on:
   push:
     branches:
-      - main
+      - "**"
   pull_request:
     branches:
       - main
@@ -1558,7 +1558,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >-
       github.event_name == 'pull_request' ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      github.event_name == 'push'
     outputs:
       matrix: ${{ steps.derive.outputs.matrix }}
     steps:
@@ -1622,7 +1622,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >-
       github.event_name == 'pull_request' ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      github.event_name == 'push'
     outputs:
       changed: ${{ steps.filter.outputs.changed }}
     steps:
