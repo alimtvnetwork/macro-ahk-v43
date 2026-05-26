@@ -79,6 +79,10 @@ completion. Known causes:
 - Any Release Watcher guard that uses `needs.resolve-release.outputs.tag` must
   list `resolve-release` in its own `needs` array, alongside `run-release`; do
   not rely on transitive `needs` outputs.
+- Asset-audit/guard scripts must use an unambiguous placeholder token (e.g.
+  `__VER__`) when templating expected filenames in bash. A bare `VER`
+  placeholder will be replaced inside literal filenames such as `VERSION.txt`
+  (yielding `${tag}SION.txt`) and produce false "missing asset" failures.
 
 ## Operator rule
 
