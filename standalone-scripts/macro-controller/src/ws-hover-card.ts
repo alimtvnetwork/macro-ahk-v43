@@ -36,6 +36,8 @@ import { explainEffectiveStatus, type StatusExplanation } from './status-explain
 const HOVERCARD_ID = 'marco-ws-hovercard';
 const SEL_WS_ITEM = '.loop-ws-item';
 const SEL_WS_NAME = '.loop-ws-name';
+const LABEL_PAST_DUE_SINCE = 'Past due since';
+const KIND_PAST_DUE_EXPIRING: WorkspaceStatus['kind'] = 'past-due-expiring';
 
 /** Lookup workspace by id from the cached credit state. */
 type WsLookup = (wsId: string) => WorkspaceCredit | null;
@@ -223,8 +225,8 @@ function buildRefillSection(
 function expiryLabelFor(kind: WorkspaceStatus['kind']): string {
   if (kind === 'expired-canceled') return 'Canceled on';
   if (kind === 'fully-expired') return 'Fully expired since';
-  if (kind === 'about-to-expire') return 'Past due since';
-  if (kind === 'past-due-expiring') return 'Past due since';
+  if (kind === 'about-to-expire') return LABEL_PAST_DUE_SINCE;
+  if (kind === KIND_PAST_DUE_EXPIRING) return LABEL_PAST_DUE_SINCE;
   if (kind === 'expired') return 'Expired since';
   return 'Since';
 }
@@ -236,7 +238,7 @@ function buildExpirySection(ws: WorkspaceCredit, status: WorkspaceStatus): strin
     const date = formatDateDDMMMYY(status.sinceIso);
     const dur = formatDayCount(status.daysSince);
     let color = '#fca5a5';
-    if (status.kind === 'about-to-expire' || status.kind === 'past-due-expiring') color = '#fde68a';
+    if (status.kind === 'about-to-expire' || status.kind === KIND_PAST_DUE_EXPIRING) color = '#fde68a';
     out.push(rowHtml(expiryLabelFor(status.kind), date + ' (' + dur + ')', color));
   } else {
     out.push(rowHtml('Status', escHtml(status.label), '#fca5a5'));
@@ -253,7 +255,7 @@ function buildExpirySection(ws: WorkspaceCredit, status: WorkspaceStatus): strin
  * subscription remains unpaid. Only renders for `past-due-expiring` rows.
  */
 function buildPastDueSection(ws: WorkspaceCredit, status: WorkspaceStatus): string {
-  if (status.kind !== 'past-due-expiring') return '';
+  if (status.kind !== KIND_PAST_DUE_EXPIRING) return '';
   const out: string[] = [sectionHeaderHtml('Past Due')];
   out.push(rowHtml('Status', 'Grants remain active', '#34d399'));
   if (ws.billingPeriodEndAt) {
@@ -446,7 +448,7 @@ function expiresCompactRow(ws: WorkspaceCredit, status: WorkspaceStatus): string
 
 /** Issue 118: compact past-due warning row for the hover card header. */
 function pastDueCompactRow(status: WorkspaceStatus): string {
-  if (status.kind !== 'past-due-expiring') return '';
+  if (status.kind !== KIND_PAST_DUE_EXPIRING) return '';
   const days = status.daysSince || 0;
   const html = SPAN_COLOR_OPEN + C_DESTRUCTIVE + ';font-weight:700;">past due ' + formatDayCount(days) + '</span>'
     + SPAN_COLOR_OPEN + C_MUTED + ';font-weight:400;"> — pay to keep credits</span>';
