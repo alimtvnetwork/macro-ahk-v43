@@ -1,5 +1,12 @@
 # Macro Controller — Changelog
 
+## v3.34.2 (2026-05-29)
+
+### Changed
+- **Totals modal "Remaining" tile adopts `remaining / granted` framing** (Issue 122 follow-up) — visual parity with workspace-row 💰 chips. `0/100` instead of bare `0` when the pool is fully consumed; falls back to bare number when `granted=0`. New regression test `issue-122-totals-modal-remaining-over-granted.test.ts` (4 tests); existing modal suite (16 tests) unaffected.
+
+---
+
 ## v3.34.1 (2026-05-29)
 
 ### Fixed
