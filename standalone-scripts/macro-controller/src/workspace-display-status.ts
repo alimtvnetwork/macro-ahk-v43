@@ -166,9 +166,20 @@ export function classifyFromStatus(
     };
   }
 
-  // Issue 118: past-due-expiring — always Expire + Passed Nd / Today.
+  // Issue 118 + 119: past-due-expiring.
+  //   < grace days → two-pill amber: "Expire" + "Passed Nd".
+  //   ≥ grace days → single red/white pill: "Expired Nd".
   if (source.kind === 'past-due-expiring') {
     const daysPassed = source.daysSince;
+    if (clampDays(daysPassed) >= PAST_DUE_GRACE_DAYS) {
+      return {
+        kind: 'expired-hard',
+        label: formatExpiredLabel(daysPassed),
+        tone: 'danger',
+        tooltip: 'Past due since ' + (source.sinceIso || 'unknown') + ' — grace exhausted',
+        source,
+      };
+    }
     return {
       kind: 'past-due-expiring',
       label: 'Expire',
