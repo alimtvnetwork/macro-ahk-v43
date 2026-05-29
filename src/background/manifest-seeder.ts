@@ -22,7 +22,7 @@
  *     error so a stale build cannot silently corrupt the seed pass.
  */
 
-import type { StoredScript, StoredConfig } from "../shared/script-config-types";
+import type { StoredScript, StoredConfig, UrlRule } from "../shared/script-config-types";
 import type {
     SeedManifest,
     SeedProjectEntry,
