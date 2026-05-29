@@ -1,5 +1,5 @@
 ---
-name: readme.txt strict prohibitions (SP-1..SP-7)
+name: readme.txt strict prohibitions (SP-1..SP-9)
 description: Sequenced hard ban on programmatic writes, time/clock/timestamp, date utilities, git/build update stamps, and format prompts for readme.txt; honor only explicit one-shot user writes
 type: constraint
 ---
@@ -28,6 +28,7 @@ type: constraint
 | **SP-6** | Never ask the user to choose, confirm, or "improve" a `readme.txt` format. The format is fixed; do not request alternatives. |
 | **SP-7** | If a user message **explicitly orders** a one-time `readme.txt` write (e.g., "write readme.txt with X"), honor that single write **exactly as specified**, then re-apply SP-1 through SP-6 for every subsequent message. Honoring an explicit one-shot does **not** open the door to follow-ups, refresh suggestions, scheduled updates, formatters, or automation around it. An explicit one-shot also does **not** override SP-2/SP-4/SP-8 — a one-shot whose payload IS prohibited content (time, clock, 12-hr/24-hr, AM/PM, Malaysia time, UTC, git-update/commit/build/deploy stamp) is still refused; the user must re-target to a non-readme.txt file or amend this memory. |
 | **SP-8** | Never suggest, insert, comment, or script a **git update time, git commit time, last-update time, last-modified time, build time, deploy time, or any "stamp"** anywhere in `readme.txt` — not in the body, not in a header/footer, not as a comment, not "somewhere in the readme", not in a sibling helper, sidecar, or generator that targets readme.txt. Closes the "somewhere in the readme" loophole. AI agents reading this rule MUST commit it to working memory under "strictly prohibited — readme.txt" on first read and never re-propose it. |
+| **SP-9** | Never **ask, prompt, suggest, recommend, or surface a `readme.txt` update as an action item** — not in clarifying questions, not in "next steps", not in remaining-task lists, not in changelog/version-bump checklists, not as a post-commit reminder, not in any form. `readme.txt` is invisible to the AI's task surface. The user writes it manually on their own schedule; the AI never raises it. Mentioning it (even to ask "should I update readme.txt?") is a violation. |
 
 ## Enforcement
 
