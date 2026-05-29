@@ -166,29 +166,10 @@ export function classifyFromStatus(
     };
   }
 
-  // Issue 118 + 119: past-due-expiring.
-  //   < grace days → two-pill amber: "Expire" + "Passed Nd".
-  //   ≥ grace days → single red/white pill: "Expired Nd".
   if (source.kind === 'past-due-expiring') {
-    const daysPassed = source.daysSince;
-    if (clampDays(daysPassed) >= PAST_DUE_GRACE_DAYS) {
-      return {
-        kind: 'expired-hard',
-        label: formatExpiredLabel(daysPassed),
-        tone: 'danger',
-        tooltip: 'Past due since ' + (source.sinceIso || 'unknown') + ' — grace exhausted',
-        source,
-      };
-    }
-    return {
-      kind: 'past-due-expiring',
-      label: 'Expire',
-      sublabel: formatPassedLabel(daysPassed),
-      tone: pickPastDueTone(daysPassed),
-      tooltip: 'Past due since ' + (source.sinceIso || 'unknown'),
-      source,
-    };
+    return classifyPastDueExpiring(source);
   }
+
 
   // about-to-expire: kept for backward compat; no longer produced by
   // getEffectiveStatus for past_due as of Issue 118.
