@@ -468,9 +468,15 @@ export function buildBody(totals: CreditTotals, workspaces: ReadonlyArray<Worksp
 
   const cardsRow = document.createElement('div');
   cardsRow.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
+  // v3.34.2 (Issue 122 follow-up): adopt the "remaining/limit" framing the
+  // workspace-row chips use, so a fully-consumed pool reads `0/100` instead
+  // of bare `0`. Consistent across row chips and the Totals modal.
+  const remainingValue = totals.granted > 0
+    ? formatCount(totals.remaining) + ' / ' + formatCount(totals.granted)
+    : formatCount(totals.remaining);
   cardsRow.appendChild(buildCard('This Billing Cycle', [
     { label: 'Used', value: formatCount(totals.used), tone: 'used' },
-    { label: 'Remaining', value: formatCount(totals.remaining), tone: 'ok' },
+    { label: 'Remaining', value: remainingValue, tone: 'ok' },
     { label: 'Total grant', value: formatCount(totals.granted), tone: 'total' },
   ]));
   cardsRow.appendChild(buildCard('Free Daily Credits', [
