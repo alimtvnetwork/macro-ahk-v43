@@ -249,9 +249,25 @@ async function seedScriptsFromManifest(
 /**
  * Extracts target-url glob patterns from the seed project so auto-attach
  * (mem://features/auto-attach-policy.md, C2) has data to match against.
+ *
+ * Returns the legacy `string[]` shape (glob-only). Use `extractUrlMatchRules`
+ * for the rich `UrlRule[]` shape that preserves `MatchType`.
  */
 function extractUrlMatches(project: SeedProjectEntry): string[] {
     return (project.TargetUrls ?? []).map((t) => t.Pattern);
+}
+
+/**
+ * Extracts target-url rules with `MatchType` preserved. Required for projects
+ * like `lovable-dashboard` whose seed declares `MatchType: "exact"` —
+ * collapsing those to globs causes false negatives on tabs with query
+ * strings or trailing-slash differences.
+ */
+function extractUrlMatchRules(project: SeedProjectEntry): UrlRule[] {
+    return (project.TargetUrls ?? []).map((t) => ({
+        pattern: t.Pattern,
+        matchType: t.MatchType,
+    }));
 }
 
 function buildStoredScript(def: SeedScriptEntry, project: SeedProjectEntry, manifest: SeedManifest): StoredScript {
