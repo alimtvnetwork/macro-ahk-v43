@@ -146,9 +146,7 @@ export function pickPastDueTone(daysPassed: number): WorkspaceDisplayTone {
  *   < grace days → two-pill amber: "Expire" + "Passed Nd".
  *   ≥ grace days → single red/white pill: "Expired Nd".
  */
-function classifyPastDueExpiring(
-  source: Extract<WorkspaceStatus, { kind: 'past-due-expiring' }>,
-): WorkspaceDisplayStatus {
+function classifyPastDueExpiring(source: WorkspaceStatus): WorkspaceDisplayStatus {
   const daysPassed = source.daysSince;
   if (clampDays(daysPassed) >= PAST_DUE_GRACE_DAYS) {
     return {
