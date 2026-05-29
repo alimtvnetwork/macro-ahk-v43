@@ -69,6 +69,10 @@ export interface WorkspaceDisplayStatus {
 
 type PastDueExpiringStatus = WorkspaceStatus & { kind: 'past-due-expiring' };
 
+function isPastDueExpiringStatus(source: WorkspaceStatus): source is PastDueExpiringStatus {
+  return source.kind === 'past-due-expiring';
+}
+
 /* ------------------------------------------------------------------ */
 /*  Display token map — tone names only. Renderer owns the CSS.        */
 /* ------------------------------------------------------------------ */
@@ -196,7 +200,7 @@ export function classifyFromStatus(
     };
   }
 
-  if (source.kind === 'past-due-expiring') {
+  if (isPastDueExpiringStatus(source)) {
     return classifyPastDueExpiring(source);
   }
 
