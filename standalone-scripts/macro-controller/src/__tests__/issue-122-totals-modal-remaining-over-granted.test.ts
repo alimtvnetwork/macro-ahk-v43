@@ -22,11 +22,10 @@ function totals(p: Partial<CreditTotals>): CreditTotals {
 }
 
 function tileText(body: HTMLElement, label: string): string {
-  const tiles = Array.from(body.querySelectorAll('div'))
-    .filter((d) => d.textContent === label);
-  if (tiles.length === 0) return '';
-  const valueEl = tiles[0].previousElementSibling || tiles[0].nextElementSibling;
-  return (valueEl?.textContent || '').replace(/\s+/g, ' ').trim();
+  const labelEl = Array.from(body.querySelectorAll('span'))
+    .find((s) => (s.textContent || '').trim() === label);
+  const value = labelEl?.nextElementSibling;
+  return (value?.textContent || '').replace(/\s+/g, ' ').trim();
 }
 
 describe('Issue 122 — Totals modal "Remaining" tile uses remaining/granted framing', () => {
