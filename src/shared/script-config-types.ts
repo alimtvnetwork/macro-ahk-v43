@@ -34,14 +34,41 @@ export interface StoredScript {
      * URL glob patterns this script targets. Populated by manifest-seeder from
      * the seed project's `TargetUrls[].Pattern`. Consumed by auto-attach (C2)
      * in src/background/auto-attach.ts. Absence → no auto-attach (safe default).
+     *
+     * NOTE: legacy `string[]` shape — does NOT carry `MatchType`. Glob is
+     * implied. Use `urlMatchRules` (below) when the distinction between
+     * `exact`, `glob`, and `regex` matters (e.g. lovable-dashboard's exact
+     * `https://lovable.dev/dashboard` match). Kept for back-compat with
+     * ~50+ readers; see `mem://constraints/no-storage-pascalcase-migration`.
      */
     urlMatches?: string[];
+    /**
+     * Rich URL-rule list with `MatchType` preserved. Populated by
+     * manifest-seeder alongside `urlMatches`. Consumers that need to honor
+     * exact / regex semantics MUST prefer this field when present and fall
+     * back to globbing `urlMatches` only when it is absent.
+     */
+    urlMatchRules?: UrlRule[];
     /** Remote URL to fetch the latest version of this script. */
     updateUrl?: string;
     /** Last time the script was updated from its updateUrl (ISO string). */
     lastUpdateCheck?: string;
     createdAt: string;
     updatedAt: string;
+}
+
+/**
+ * URL match rule with the original `MatchType` preserved.
+ *
+ * `glob`  — wildcard pattern (Chrome match-pattern style, e.g. `https://*.example.com/*`)
+ * `exact` — strict string equality on the full href
+ * `regex` — JavaScript `RegExp` source, evaluated against the full href
+ *
+ * Mirrors `standalone-scripts/types/instruction/seed/target-url.ts`.
+ */
+export interface UrlRule {
+    pattern: string;
+    matchType: "glob" | "exact" | "regex";
 }
 
 /** A stored JSON config record. */
