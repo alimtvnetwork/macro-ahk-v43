@@ -28,10 +28,18 @@ import { daysBetween, getEffectiveStatus, type WorkspaceStatus } from './workspa
 export type WorkspaceDisplayKind =
   | 'canceled'
   | 'expired'
+  | 'expired-hard'
   | 'expire-soon'
   | 'past-due-expiring'
   | 'refill-soon'
   | 'normal';
+
+/**
+ * Issue 119: grace period in days after a workspace enters `past-due-expiring`
+ * before the row is considered fully expired and rendered as a single red/white
+ * `expired-hard` pill instead of the two-pill amber `Expire` + `Passed Nd`.
+ */
+export const PAST_DUE_GRACE_DAYS = 10;
 
 /** Abstract tone names. Renderer maps these to CSS. */
 export type WorkspaceDisplayTone =
