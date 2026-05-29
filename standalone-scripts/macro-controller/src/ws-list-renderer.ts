@@ -409,13 +409,19 @@ function isProExpiringWs(ws: WorkspaceCredit): boolean {
     const config = getWorkspaceLifecycleConfig();
     const source = getEffectiveStatus(ws, config);
     const display = classifyFromStatus(source, ws);
-    // v3.32.1: 'canceled' rows are intentionally EXCLUDED — user request:
-    // "the free version or the canceled ones should not be there". Only
-    // recoverable past-due / about-to-expire rows qualify for the Pro
-    // credit-sort filter.
-    return display.kind === 'past-due-expiring'
+    // v3.32.1: user-canceled rows are EXCLUDED — user request: "the free
+    // version or the canceled ones should not be there". Naturally-expired
+    // PRO rows (subscriptionStatus='expired') still qualify because they
+    // hold recoverable credits — the display layer collapses them into the
+    // 'canceled' bucket, so we additionally check the subscriptionStatus.
+    if (display.kind === 'past-due-expiring'
       || display.kind === 'expired-hard'
-      || display.kind === 'expire-soon';
+      || display.kind === 'expire-soon') return true;
+    if (display.kind === 'canceled') {
+      const sub = (ws.subscriptionStatus || '').toLowerCase().trim();
+      return sub !== 'canceled' && sub !== 'cancelled';
+    }
+    return false;
   } catch (e: unknown) {
     logError('passesFilters.proExpiring',
       'Failed to classify workspace for pro credit-sort filter', e);
