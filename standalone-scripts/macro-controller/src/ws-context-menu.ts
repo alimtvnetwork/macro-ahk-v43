@@ -156,7 +156,7 @@ export function showWsContextMenu(
   // per-ws + 5s inter-ws throttle (force=true) and persists to SQLite.
   menu.appendChild(buildCtxMenuItem('💰 Credit Refresh', function () {
     removeWsContextMenu();
-    fetchAndPersist(wsId, { force: true, source: 'context-menu-refresh' })
+    fetchAndPersist(wsId, { force: true, source: 'manual' })
       .then(function (result) {
         if (result.outcome === 'fetched') {
           showToast('💰 Credit refreshed for "' + wsName + '"', 'success');
