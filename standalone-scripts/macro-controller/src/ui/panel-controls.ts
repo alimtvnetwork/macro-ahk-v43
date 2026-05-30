@@ -58,6 +58,7 @@ import type { PromptEntry } from '../types';
 import type { TaskNextDeps } from './task-next-ui';
 import { logError } from '../error-utils';
 import { showToast } from '../toast';
+import { batchRefreshProOneCreditBalances } from '../credit-balance/batch-refresh';
 import { CssFragment } from '../types';
 // ============================================
 
