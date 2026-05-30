@@ -95,6 +95,11 @@ export function bootstrap(deps: {
     });
   });
 
+  // Spec 122a — hydrate the credit-balance throttle map + cached numbers
+  // from SQLite before any /credit-balance call so the 10s per-ws cooldown
+  // survives reloads and the panel can paint last-known values immediately.
+  void hydrateCreditBalanceFromCache();
+
   setupPersistenceObserver(function () {
     const mc = MacroController.getInstance();
     if (tryCreateUiNow(mc)) {
